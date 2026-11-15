@@ -2,7 +2,7 @@
 
 import { clsx } from "clsx";
 import { m } from "motion/react";
-import { Box, Droplet, FlaskConical, LocateFixed, Minus, Orbit as OrbitIcon, Pause, Play, Plus, RotateCcw, RotateCw, Sprout, Square, Star } from "lucide-react";
+import { Box, Maximize2, Minimize2, Droplet, FlaskConical, LocateFixed, Minus, Orbit as OrbitIcon, Pause, Play, Plus, RotateCcw, RotateCw, Sprout, Square, Star } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { AnalyzeResponse, CropId, Level, Strategy } from "@/types/api";
@@ -58,6 +58,18 @@ function hasWebGL() {
 export function FieldTwin({ data, list, bestId, autoPlay = false, className }: { data: AnalyzeResponse; list: { s: Strategy; score: number; i: number }[]; bestId: string; autoPlay?: boolean; className?: string }) {
   const cam = useRef<CameraApi | null>(null);
   const [orbit, setOrbit] = useState(autoPlay);
+  const [full, setFull] = useState(false);
+  useEffect(() => {
+    if (!full) return;
+    const prev = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setFull(false);
+    addEventListener("keydown", onKey);
+    return () => {
+      document.documentElement.style.overflow = prev;
+      removeEventListener("keydown", onKey);
+    };
+  }, [full]);
   function camera(k: CamKey) {
     const c = cam.current;
     if (!c) return;
@@ -120,12 +132,23 @@ export function FieldTwin({ data, list, bestId, autoPlay = false, className }: {
   const maxW = Math.max(...list.map((x) => x.s.waterM3PerHa), limit ?? 0, 1);
 
   return (
-    <div className={clsx("relative h-[clamp(320px,52vh,500px)] overflow-hidden rounded-[26px] bg-[#0d1512] shadow-[var(--shadow-card)]", className)}>
+    <div
+      className={clsx(
+        "overflow-hidden bg-[#0d1512]",
+        full ? "fixed inset-0 z-[80] h-[100dvh] rounded-none" : clsx("relative h-[clamp(320px,52vh,500px)] rounded-[26px] shadow-[var(--shadow-card)]", className),
+      )}
+      role={full ? "dialog" : undefined}
+      aria-modal={full || undefined}
+      aria-label={full ? L("3D dala, to'liq ekran", "3D field, full screen") : undefined}
+    >
       {gl ? <Scene3D polygon={data.field.polygon} state={state} onReady={() => setLoaded(true)} apiRef={cam} autoOrbit={autoPlay} /> : null}
 
       {/* camera: any angle, one tap */}
       {gl && loaded && (
         <div className="lg absolute top-[106px] right-3 flex flex-col gap-0.5 rounded-[18px] p-1 sm:top-[62px]" role="toolbar" aria-label={L("Kamera", "Camera")}>
+          <button type="button" onClick={() => setFull((f) => !f)} title={full ? t("tw.exit" as never) : t("tw.full" as never)} aria-label={full ? t("tw.exit" as never) : t("tw.full" as never)} className="press flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--fg)] text-[var(--bg)]">
+            {full ? <Minimize2 size={17} strokeWidth={1.9} /> : <Maximize2 size={17} strokeWidth={1.9} />}
+          </button>
           {CAM_BUTTONS.map((b) => {
             const label = b.k === "orbit" ? (orbit ? L("Aylanishni to'xtatish", "Stop orbit") : L("Atrofida aylanish", "Orbit")) : L(b.uz, b.en);
             const active = b.k === "orbit" && orbit;
@@ -144,7 +167,7 @@ export function FieldTwin({ data, list, bestId, autoPlay = false, className }: {
       )}
 
       {/* mode switch */}
-      <div className="lg absolute top-3 left-3 flex gap-0.5 rounded-full p-1" role="tablist" aria-label="3D">
+      <div className="lg absolute top-[max(12px,env(safe-area-inset-top))] left-3 flex gap-0.5 rounded-full p-1" role="tablist" aria-label="3D">
         {([["crop", <><Sprout size={14} /> {L("Ekinlar", "Crops")}</>], ["water", <><Droplet size={14} /> {L("Suv", "Water")}</>], ["salt", <><FlaskConical size={14} /> {L("Sho'r", "Salt")}</>]] as const).map(([k, lbl]) => (
           <button key={k} role="tab" aria-selected={mode === k} type="button" onClick={() => setMode(k)} className={clsx("press relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold", mode === k ? "text-[var(--fg)]" : "text-[var(--fg-2)]")}>
             {mode === k && <m.span layoutId="twin-mode" transition={spring} className="absolute inset-0 -z-10 rounded-full bg-[var(--surface)]" />}
@@ -167,7 +190,7 @@ export function FieldTwin({ data, list, bestId, autoPlay = false, className }: {
       )}
 
       {/* bottom panel */}
-      <div className="lg absolute inset-x-3 bottom-3 rounded-[20px] p-2.5">
+      <div className={clsx("lg absolute inset-x-3 bottom-[max(12px,env(safe-area-inset-bottom))] rounded-[20px] p-2.5", full && "mx-auto max-w-3xl")}>
         {mode === "crop" && (
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"} className="press flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--accent-fill)] text-white">

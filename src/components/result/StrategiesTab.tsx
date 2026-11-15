@@ -2,7 +2,7 @@
 
 import { EconomicsCard } from "./Extras";
 import { Fold } from "./Sections";
-import { ChartColumn, Coins, Scale } from "lucide-react";
+import { ChartColumn, Coins, Droplet, FlaskConical, Scale, TrendingDown, TrendingUp } from "lucide-react";
 
 import { clsx } from "clsx";
 import { AnimatePresence, m } from "motion/react";
@@ -123,7 +123,7 @@ function StrategyCard({ st, score, gross, color, isBest, open, onToggle }: { st:
       {st.isNearest && !st.isCurrent && <div className="mt-1 text-[12px] font-medium text-[var(--warn-fg)]">{t("st.nearest").split(".")[0]}</div>}
       <div className="mt-3 flex items-baseline gap-2">
         <AnimatedNumber value={score} className="text-[30px] leading-none font-semibold tracking-[-0.03em]" />
-        <span className="text-[12px] text-[var(--fg-3)]">/ 100</span>
+        <span className="text-[12px] text-[var(--fg-3)]" title={t("score.help" as Key)}>{t("score.unit" as Key)}</span>
       </div>
       <ScoreBar value={score} color={color} className="mt-2" />
       {st.robustness && (
@@ -131,11 +131,25 @@ function StrategyCard({ st, score, gross, color, isBest, open, onToggle }: { st:
           <RobustnessBadge score={st.robustness.score} worst={st.robustness.worstScore} />
         </div>
       )}
-      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[var(--fg-2)]">
-        <span className="tnum">💧 {num(gross)} {t("m3ha")}</span>
-        <span title={t("mt.salinity")}>🧂 {st.saltFit === "ok" ? "✅" : st.saltFit === "warn" ? "⚠️" : "❌"}</span>
-        <span title={t("mt.soil")}>🌱 {st.metrics.soil == null ? "❓" : st.metrics.soil >= 60 ? "⬆⬆" : st.metrics.soil >= 40 ? "⬆" : "⬇"}</span>
-      </div>
+      {/* three facts a farmer asks about, each named (not glyphs) */}
+      <dl className="mt-3 grid gap-1 text-[13px]">
+        <div className="flex items-center justify-between gap-2">
+          <dt className="flex items-center gap-1.5 text-[var(--fg-3)]"><Droplet size={13} /> {t("mt.water")}</dt>
+          <dd className="font-semibold tnum">{num(gross)} <span className="font-normal text-[var(--fg-3)]">{t("m3ha")}</span></dd>
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <dt className="flex items-center gap-1.5 text-[var(--fg-3)]"><FlaskConical size={13} /> {t("mt.salinity")}</dt>
+          <dd className="font-semibold" style={{ color: st.saltFit === "ok" ? "var(--level-low-fg)" : st.saltFit === "warn" ? "var(--level-medium-fg)" : "var(--level-high-fg)" }}>
+            {st.saltFit === "ok" ? t("fit.ok" as Key) : st.saltFit === "warn" ? t("fit.warn" as Key) : t("fit.bad" as Key)}
+          </dd>
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <dt className="flex items-center gap-1.5 text-[var(--fg-3)]"><Sprout size={13} /> {t("mt.soil")}</dt>
+          <dd className="flex items-center gap-1 font-semibold">
+            {st.metrics.soil == null ? "-" : st.metrics.soil >= 50 ? <><TrendingUp size={14} className="text-[var(--level-low-fg)]" /> {t("soil.better" as Key)}</> : <><TrendingDown size={14} className="text-[var(--level-high-fg)]" /> {t("soil.worse" as Key)}</>}
+          </dd>
+        </div>
+      </dl>
       <button type="button" onClick={onToggle} aria-expanded={open} className="mt-auto flex items-center gap-1 self-start pt-3 text-[13.5px] font-semibold text-[var(--accent)]">
         {open ? t("hide") : t("details")}
         <ChevronDown size={15} className={clsx("transition-transform duration-300", open && "rotate-180")} />

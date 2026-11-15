@@ -58,7 +58,7 @@ export function AnswerCard({ data, best, bestScore, water, onMore }: { data: Ana
             <Trophy size={13} className="text-[var(--gold)]" /> {keep ? L("Hozirgisi eng yaxshi", "Current is best") : L("Tavsiya", "Recommended")}
           </span>
           <span className="text-[30px] font-semibold tracking-[-0.03em] text-[var(--accent)] tnum">{bestScore}</span>
-          <span className="text-[13px] text-[var(--fg-3)]">/100</span>
+          <span className="text-[13px] text-[var(--fg-3)]" title={t("score.help" as never)}>{t("score.unit" as never)}</span>
           {best.robustness && <RobustnessBadge score={best.robustness.score} worst={best.robustness.worstScore} />}
         </div>
       </div>

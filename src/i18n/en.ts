@@ -532,4 +532,13 @@ export const en: Record<keyof typeof uz, string> = {
   "f.capacity": "Capacity and advice",
   "f.pickHint": "Tap a card: why, evidence, risks",
   "f.weightsHint": "Water, income, soil… which matters more to you? Scores update instantly",
+  "fit.ok": "fits",
+  "fit.warn": "borderline",
+  "fit.bad": "does not fit",
+  "soil.better": "improves",
+  "soil.worse": "depletes soil",
+  "score.unit": "/100 pts",
+  "score.help": "Score 0-100 by your priorities (water, salt, soil…). Higher fits better.",
+  "tw.full": "Full screen",
+  "tw.exit": "Close",
 };

@@ -116,9 +116,13 @@ export default function Scene3D({ polygon, state, onReady, apiRef, autoOrbit = f
     m.on("zoomstart", (e) => e.originalEvent && stop());
     const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting));
     io.observe(el.current);
+    // full-screen toggle / layout changes: keep the canvas matched to its box
+    const ro = new ResizeObserver(() => m.resize());
+    ro.observe(el.current);
     return () => {
       cancelAnimationFrame(raf);
       io.disconnect();
+      ro.disconnect();
       m.remove();
       map.current = null;
       ready.current = false;

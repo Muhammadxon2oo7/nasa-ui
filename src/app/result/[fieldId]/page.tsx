@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, m } from "motion/react";
-import { Beef, CalendarDays, Info, CloudSun, Droplet, Flame, FlaskConical, Globe, Layers, Leaf, Map, MapPin, ScrollText, Sprout, ThermometerSun, Wheat } from "lucide-react";
+import { Beef, CalendarDays, Check, Info, CloudSun, Droplet, Flame, FlaskConical, Globe, Layers, Leaf, Map, MapPin, ScrollText, Sprout, ThermometerSun, Wheat } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import type { AnalyzeRequest } from "@/types/api";
@@ -35,17 +35,44 @@ export default function ResultPage() {
   );
 }
 
+const STAGES = [
+  { s: 0, uz: "NASA POWER: 20 yillik kunlik iqlim", en: "NASA POWER: 20 years of daily climate" },
+  { s: 3, uz: "Sentinel-2: dalaning yillar bo'yicha tarixi", en: "Sentinel-2: the field's history by year" },
+  { s: 7, uz: "FAO-56: har bir rotatsiyaning suv talabi", en: "FAO-56: water need of every rotation" },
+  { s: 11, uz: "ECMWF: 7 kunlik va mavsumiy prognoz", en: "ECMWF: 7-day and seasonal forecast" },
+  { s: 15, uz: "Strategiyalarni solishtirish va tushuntirish", en: "Comparing and explaining the strategies" },
+];
+
+/** Analysis in progress: show what is being computed and for how long, never a silent grey page. */
 function Loading() {
+  const { lang } = useT();
+  const [sec, setSec] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setSec((x) => x + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const cur = STAGES.reduce((k, st, i) => (sec >= st.s ? i : k), 0);
   return (
     <div className="mx-auto grid max-w-6xl gap-3 px-4 sm:px-6">
-      <Skeleton className="h-16" />
-      <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-        {[0, 1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-32" />
-        ))}
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
+        <div className="relative flex h-[clamp(320px,52vh,500px)] items-center justify-center overflow-hidden rounded-[26px] bg-[#0d1512]">
+          <div className="shimmer absolute inset-0 opacity-20" />
+          <div className="relative grid w-[min(380px,85%)] gap-2.5" role="status" aria-live="polite">
+            <p className="text-[13px] font-medium text-white/60 tnum">{lang === "uz" ? `Tahlil qilinmoqda · ${sec} s` : `Analysing · ${sec} s`}</p>
+            {STAGES.map((st, i) => (
+              <div key={st.s} className={`flex items-center gap-3 text-[14.5px] transition-opacity duration-500 ${i <= cur ? "opacity-100" : "opacity-35"}`}>
+                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${i < cur ? "border-[var(--brand-green)] bg-[var(--brand-green)]" : i === cur ? "border-white" : "border-white/40"}`}>
+                  {i < cur ? <Check size={12} className="text-white" strokeWidth={3} /> : i === cur ? <span className="h-2 w-2 animate-pulse rounded-full bg-white motion-reduce:animate-none" /> : null}
+                </span>
+                <span className="text-white">{lang === "uz" ? st.uz : st.en}</span>
+              </div>
+            ))}
+            {sec > 25 && <p className="mt-1 text-[12.5px] text-white/60">{lang === "uz" ? "Yangi dala uchun birinchi tahlil 1 daqiqagacha davom etishi mumkin. Keyingi safar bir necha soniyada ochiladi." : "The first analysis of a new field can take up to a minute. Next time it opens in seconds."}</p>}
+          </div>
+        </div>
+        <Skeleton className="h-[clamp(320px,52vh,500px)] rounded-[26px]" />
       </div>
-      <Skeleton className="h-28" />
-      <Skeleton className="h-80" />
+      <Skeleton className="h-24" />
     </div>
   );
 }

@@ -530,4 +530,13 @@ export const uz = {
   "f.capacity": "Sig'im va tavsiyalar",
   "f.pickHint": "Kartani bosing: nega, dalillar, xavflar",
   "f.weightsHint": "Suv, daromad, tuproq… qaysi biri siz uchun muhimroq? Ball darhol qayta hisoblanadi",
+  "fit.ok": "mos",
+  "fit.warn": "chegarada",
+  "fit.bad": "mos emas",
+  "soil.better": "yaxshilaydi",
+  "soil.worse": "tuproqni charchatadi",
+  "score.unit": "/100 ball",
+  "score.help": "Ball: sizning ustuvorliklaringiz (suv, sho'r, tuproq…) bo'yicha 0-100. Qanchalik yuqori, shuncha mos.",
+  "tw.full": "To'liq ekran",
+  "tw.exit": "Yopish",
 };
