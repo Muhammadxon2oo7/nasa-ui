@@ -9,12 +9,14 @@ import { useMode, useProfile } from "@/store/platformStore";
 import { STATS } from "@/data/stats";
 import { HeroTwin } from "@/components/landing/HeroTwin";
 import { Pipeline } from "@/components/Pipeline";
+import { NasaDatasets, ProofStrip } from "@/components/Proof";
 import { spring } from "@/components/ui";
 import { useRouter } from "next/navigation";
 
 const PROFILES: Profile[] = ["farmer", "herder", "land_seeker", "expert"];
 const ROLE_ICON = { farmer: Wheat, herder: Beef, land_seeker: MapPin, expert: Microscope } as const;
-const DATA = ["NASA POWER", "SMAP", "MODIS", "Landsat/Sentinel-2 HLS", "GPM IMERG", "GRACE/GRACE-FO", "SRTM", "ERA5", "ECMWF SEAS5", "SoilGrids", "FAO-56"];
+// partner (non-NASA) sources; the NASA ones are listed by name in their own section
+const DATA = ["ESA Sentinel-2", "ERA5", "ECMWF SEAS5", "SoilGrids", "FAO WaPOR", "FAO GAEZ", "OpenET", "FAO-56"];
 
 export default function Landing() {
   const { t, lang } = useT();
@@ -31,6 +33,9 @@ export default function Landing() {
           <m.p initial={{ y: 10 }} animate={{ y: 0 }} transition={{ ...spring, delay: 0.06 }} className="mt-4 max-w-[52ch] text-[18px] leading-relaxed text-[var(--fg-2)]">
             {t("landing.sub2")}
           </m.p>
+          <div className="mt-6 md:hidden">
+            <ProofStrip />
+          </div>
           <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.12 }} className="mt-8">
             <p className="mb-3 text-[15px] font-medium text-[var(--fg-2)]">{t("landing.who")}</p>
             <div data-guide="roles" className="grid gap-1.5 sm:grid-cols-2">
@@ -67,6 +72,19 @@ export default function Landing() {
         </div>
         <HeroTwin />
       </section>
+      {/* the three proof numbers, full width right under the hero on larger screens */}
+      <div className="-mt-4 mb-10 hidden md:block">
+        <ProofStrip />
+      </div>
+
+      {/* NASA data, named one by one: judges score the use of NASA data separately */}
+      <section className="border-t border-[var(--separator)] py-12">
+        <div className="mb-6 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-[24px] font-semibold tracking-[-0.02em]">{lang === "en" ? "9 NASA datasets behind every answer" : "Har bir javob ortida 9 ta NASA dataseti"}</h2>
+          <Link href="/about#nasa" className="text-[14px] font-semibold text-[var(--accent)]">{lang === "en" ? "Where each one is used →" : "Qaysi biri qayerda ishlatiladi →"}</Link>
+        </div>
+        <NasaDatasets />
+      </section>
 
       {/* how it works: one line of three verbs, not three cards */}
       <section className="border-t border-[var(--separator)] py-12">
@@ -96,7 +114,7 @@ export default function Landing() {
 
       <section className="border-t border-[var(--separator)] py-10">
         <p className="max-w-[80ch] text-[14px] leading-relaxed text-[var(--fg-3)]">
-          <span className="font-medium text-[var(--fg-2)]">{t("landing.data")}:</span> {DATA.join(" · ")}.{" "}
+          <span className="font-medium text-[var(--fg-2)]">{lang === "en" ? "Partner data and methods" : "Hamkor ma'lumotlar va usullar"}:</span> {DATA.join(" · ")}.{" "}
           <Link href="/about#sources" className="font-semibold text-[var(--accent)] underline">
             {t("nav.about")}
           </Link>

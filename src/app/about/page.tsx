@@ -7,6 +7,7 @@ import { getModels } from "@/api/client";
 import { GLOSSARY } from "@/data/glossary";
 import { BacktestSection, NasaDataUsageTable, ValidationNotes } from "@/components/AboutValidation";
 import { Pipeline } from "@/components/Pipeline";
+import { NasaDatasets, ProofStrip } from "@/components/Proof";
 import { useT } from "@/i18n";
 import { Card, SourceBadge } from "@/components/ui";
 
@@ -97,7 +98,10 @@ export default function About() {
       <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5">
         <section id="about">
           <h1 className="text-[clamp(28px,4.5vw,40px)] font-semibold tracking-[-0.03em]">{L("Metodologiya", "Methodology")}</h1>
-          <p className="mt-3 max-w-[32rem] text-[16px] leading-relaxed text-[var(--fg-2)]">
+          <ProofStrip className="mt-5" />
+          <h2 className="mt-8 mb-3 text-[18px] font-semibold tracking-[-0.01em]">{L("9 ta NASA dataseti", "9 NASA datasets")}</h2>
+          <NasaDatasets />
+          <p className="mt-6 max-w-[32rem] text-[16px] leading-relaxed text-[var(--fg-2)]">
             {L(
               "TerraVision dehqon, chorvador, yer tanlovchi va mutaxassis uchun NASA va hamkor agentliklar ma'lumotlarini oladi. Dala uchun tarix, iqlim xavfi, sho'rlanish va suv talabini hisoblaydi va kamida 3 ta rotatsiya strategiyasini hozirgi rotatsiya bilan solishtiradi. Yaylov uchun holatni 20 yillik me'yor bilan, sig'imni, issiqlik stressini va eng yaqin suvni ko'rsatadi. Yer tanlashda 2-4 joyni maqsad bo'yicha solishtiradi. Tavsiyalarni qoidalar va ballash tizimi beradi, LLM esa faqat tushuntirish yozadi. Har bir raqamning manbasi ko'rsatiladi.",
               "TerraVision pulls NASA and partner-agency data for farmers, herders, land seekers and experts. For a field it computes history, climate risk, salinity and water need, then compares at least 3 rotation strategies with the current one. For a pasture it shows condition vs the 20-year norm, grazing capacity, heat stress and the nearest water. For land selection it compares 2-4 places by goal. Recommendations come from rules and scoring; an LLM only writes explanations. Every number shows its source.",

@@ -5,6 +5,28 @@ NASA Space Apps Challenge 2026 · *Field Shift: Adapting Farms with NASA Data*
 
 > Dalangizni xaritada chizing. Biz NASA ma'lumotlari bilan uning tarixini o'qib, kamida 3 ta rotatsiya strategiyasini suv, tuproq, daromad va iqlim xavfi bo'yicha solishtirib beramiz va har birini nega tavsiya qilganimizni tushuntiramiz.
 
+## Isbot: 3 raqam
+
+1. **1 / 9** - eng qurg'oqchil 3 yilda (2014, 2021, 2023) tavsiya etilgan rotatsiya 9 ta variantdan 1-o'rinda (backtest, paxta pilot dalasi, NASA POWER).
+2. **3 500-4 400 m³/ga** - o'sha yillarda hozirgi rotatsiyaga nisbatan har gektarda tejalgan suv (backtest, FAO-56).
+3. **r = 0.96** - suv sarfi usulimiz AQShda mustaqil OpenET bahosi bilan solishtirilganda (Kaliforniya va Arizona dalalari).
+
+## 9 ta NASA dataseti
+
+| # | Dataset | Nima uchun | Aniqlik |
+|---|---|---|---|
+| 1 | **NASA POWER** | 20 yillik kunlik iqlim: suv ehtiyoji (ET0), sovuq, jazirama | 0.5°, 1981- |
+| 2 | **SMAP L4** | Tuproq namligi va harorati: qurg'oqchilik, ekish vaqti | 9 km, 2015- |
+| 3 | **GPM IMERG** | Kuchli yog'in kunlari va eroziya xavfi | 0.1°, 2000- |
+| 4 | **Landsat 8/9** | 2013-2017 dala tarixi, yozgi yuza harorati (suv stressi zonalari) | 30 m, 2013- |
+| 5 | **HLS (Landsat + Sentinel-2)** | Dalaning 30 metrli suratlari, oyma-oy eng toza kun | 30 m, 2-3 kunda |
+| 6 | **MODIS** | Yaylov ko'kligi (NDVI), sig'im (NPP), qor, bug'lanish | 250-500 m, 2000- |
+| 7 | **GRACE / GRACE-FO** | Hududning yer osti va yer usti suv zaxirasi trendi | ~300 km, 2002- |
+| 8 | **SRTM** | Balandlik va qiyalik: eroziya, suv oqimi | 30 m |
+| 9 | **ECOSTRESS** | Haqiqiy suv sarfini mustaqil tekshirish (issiqlik surati) | 70 m, 2018- |
+
+Hamkor ma'lumotlar va usullar: ESA Sentinel-2, ERA5, ECMWF SEAS5, SoilGrids, FAO WaPOR, FAO GAEZ, OpenET, FAO-56.
+
 ## Muammo
 
 - O'zbekistonda **1.75 mln ga** sug'oriladigan yer sho'rlangan (O'zbekkosmos, 2025).
