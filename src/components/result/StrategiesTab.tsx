@@ -3,7 +3,7 @@
 import { EconomicsCard } from "./Extras";
 import { IncomeDetail, incomeShort, NormsDetail } from "./Economics";
 import { SoilEffects } from "./Insights";
-import { Fold, reasonFromData } from "./Sections";
+import { Fold, reasonFromData, weakReason } from "./Sections";
 import { ChartColumn, Coins, Droplet, FlaskConical, Minus, Scale, TrendingDown, TrendingUp } from "lucide-react";
 
 import { clsx } from "clsx";
@@ -126,7 +126,7 @@ function StrategyCard({ st, score, gross, color, isBest, open, onToggle }: { st:
       {st.isNearest && !st.isCurrent && <div className="mt-1 text-[12px] font-medium text-[var(--warn-fg)]">{t("st.nearest").split(".")[0]}</div>}
       <div className="mt-3 flex items-baseline gap-2">
         <AnimatedNumber value={score} className="text-[30px] leading-none font-semibold tracking-[-0.03em]" />
-        <span className="text-[12px] text-[var(--fg-3)]" title={t("score.help" as Key)}>{t("score.unit" as Key)}</span>
+        <span className="text-[12px] whitespace-nowrap text-[var(--fg-3)]" title={t("score.help" as Key)}>{t("score.unit" as Key)}</span>
       </div>
       <ScoreBar value={score} color={color} className="mt-2" />
       {st.robustness && (
@@ -148,8 +148,8 @@ function StrategyCard({ st, score, gross, color, isBest, open, onToggle }: { st:
         </div>
         <div className="flex items-center justify-between gap-2">
           <dt className="flex items-center gap-1.5 text-[var(--fg-3)]"><Sprout size={13} /> {t("mt.soil")}</dt>
-          <dd className="flex items-center gap-1 font-semibold">
-            {st.metrics.soil == null ? "-" : st.metrics.soil >= 60 ? <><TrendingUp size={14} className="text-[var(--level-low-fg)]" /> {t("soil.better" as Key)}</> : st.metrics.soil <= 40 ? <><TrendingDown size={14} className="text-[var(--level-high-fg)]" /> {t("soil.worse" as Key)}</> : <><Minus size={14} className="text-[var(--fg-3)]" /> {t("soil.same" as Key)}</>}
+          <dd className="flex items-center gap-1 font-semibold tnum" title={t("mt.soil")}>
+            {st.metrics.soil == null ? "-" : <>{st.metrics.soil >= 60 ? <TrendingUp size={14} className="text-[var(--level-low-fg)]" /> : st.metrics.soil <= 40 ? <TrendingDown size={14} className="text-[var(--fg-3)]" /> : <Minus size={14} className="text-[var(--fg-3)]" />}{st.metrics.soil}<span className="font-normal text-[var(--fg-3)]">/100</span></>}
           </dd>
         </div>
         {st.income && (
@@ -330,7 +330,7 @@ function StrategyDetail({ data, st, color }: { data: AnalyzeResponse; st: Strate
       </div>
       <div className="grid gap-2.5 md:grid-cols-2">
         <Block icon={<Compass size={15} />} title={t("st.why")}>
-          <p>{!e.why || e.why.startsWith(st.name) || e.why.length < 40 ? reasonFromData(st, data.strategies.find((x) => x.isCurrent), st.waterM3PerHa, lang === "en" ? "en" : "uz") ?? e.why : e.why}</p>
+          <p>{weakReason(e.why, st.name) ? (reasonFromData(st, data.strategies.find((x) => x.isCurrent), st.waterM3PerHa, lang === "en" ? "en" : "uz") ?? e.why) : e.why}</p>
         </Block>
         <Block icon={<ListChecks size={15} />} title={t("st.evidence")}>
           <ul className="grid gap-1.5">

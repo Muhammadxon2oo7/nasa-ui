@@ -64,6 +64,12 @@ export function reasonFromData(best: Strategy, cur: Strategy | undefined, water:
 
 const CURRENT_PREFIX = /^(Hozirgi|Current):\s*/i;
 
+/** The engine's sentence is unusable for a farmer when it echoes the name, dumps metrics or names internals. */
+export function weakReason(text: string | undefined, name: string) {
+  const s = (text ?? "").trim();
+  return !s || s.startsWith(name) || s.length < 40 || s.length > 320 || /JSON|ko'rsatkichlar bo'yicha|ball oladi:|metrics|score of/i.test(s);
+}
+
 export function AnswerCard({ data, best, bestScore, water, onMore, currentScore }: { data: AnalyzeResponse; best: Strategy; bestScore: number; water: number; onMore: () => void; currentScore?: number }) {
   const { t, lang } = useT();
   const L = (uz: string, en: string) => (lang === "uz" ? uz : en);
@@ -71,7 +77,7 @@ export function AnswerCard({ data, best, bestScore, water, onMore, currentScore 
   const keep = cur && cur.id === best.id;
   const diff = cur && !keep ? Math.round((water - cur.waterM3PerHa) / 100) * 100 : 0;
   const own = best.explanation.why?.trim() ?? "";
-  const echoes = !own || own.startsWith(best.name) || own.length < 40;
+  const echoes = weakReason(own, best.name);
   const why = (echoes ? reasonFromData(best, cur, water, lang === "en" ? "en" : "uz") : own) || own || data.summary.text;
   const trend = (data.soil.salinityTrendPct ?? 0) > 5 && data.soil.salinityLevel !== "low";
   return (
@@ -83,7 +89,7 @@ export function AnswerCard({ data, best, bestScore, water, onMore, currentScore 
             <Trophy size={13} className="text-[var(--gold)]" /> {data.preliminary ? L("Dastlabki baho", "First estimate") : keep ? L("Hozirgisi eng yaxshi", "Current is best") : L("Tavsiya", "Recommended")}
           </span>
           <span className="text-[30px] font-semibold tracking-[-0.03em] text-[var(--accent)] tnum">{bestScore}</span>
-          <span className="text-[13px] text-[var(--fg-3)]" title={t("score.help" as never)}>{t("score.unit" as never)}</span>
+          <span className="text-[13px] whitespace-nowrap text-[var(--fg-3)]" title={t("score.help" as never)}>{t("score.unit" as never)}</span>
           {best.robustness && <RobustnessBadge score={best.robustness.score} worst={best.robustness.worstScore} />}
         </div>
       </div>

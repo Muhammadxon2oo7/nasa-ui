@@ -287,7 +287,12 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
           <AnswerCard data={data} best={best.s} bestScore={best.score} water={best.gross} currentScore={ranked.list.find((x) => x.s.isCurrent)?.score} onMore={() => setTab("plan", mod)} />
         </div>
       )}
-      <p className="-mt-1 flex items-center gap-1.5 px-1 text-[12px] text-[var(--fg-3)]"><Info size={13} /> {t("disclaimer")}</p>
+      <p className="-mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 px-1 text-[12px] text-[var(--fg-3)]">
+        {mod !== "livestock" && (
+          <span className="mr-2">{lang === "en" ? "3D: pick a plan (A–D), switch Crops / Water / Salt, press ▶ to play the 3 years month by month." : "3D: variantni tanlang (A–D), Ekinlar / Suv / Sho'r ko'rinishini almashtiring, ▶ bilan 3 yillik rejani oyma-oy ko'ring."}</span>
+        )}
+        <span className="flex items-center gap-1.5"><Info size={13} /> {t("disclaimer")}</span>
+      </p>
       {mod !== "general" && active !== "calendar" && <ThisWeekCard data={data} livestock={mod === "livestock"} onOpen={() => setTab("calendar", mod)} />}
       <div className="lg sticky top-[calc(76px+env(safe-area-inset-top))] z-30 -mx-1 rounded-full p-1">
         <div className="no-scrollbar overflow-x-auto">

@@ -60,6 +60,21 @@ export function ThisWeekCard({ data, onOpen, livestock }: { data: AnalyzeRespons
   const keep = (e: { type: string }) => livestock || e.type !== "livestock";
   const c = { ...raw, thisWeek: raw.thisWeek.filter(keep), next90Days: raw.next90Days.filter(keep) };
   const end = new Date(new Date(c.today).getTime() + 6 * 864e5).toISOString().slice(0, 10);
+  if (!c.thisWeek.length && onOpen) {
+    const next = c.next90Days[0];
+    return (
+      <button type="button" onClick={onOpen} className="press flex w-full flex-wrap items-center gap-x-2 gap-y-0.5 rounded-2xl bg-[var(--surface)] px-4 py-3 text-left text-[14px] shadow-[var(--shadow-card)]">
+        <CalendarDays size={16} className="text-[var(--fg-3)]" />
+        <b className="font-semibold">{lang === "en" ? "Nothing urgent this week." : "Bu hafta shoshilinch ish yo'q."}</b>
+        {next && (
+          <span className="text-[var(--fg-2)]">
+            {lang === "en" ? "Next:" : "Keyingisi:"} {isoDM(next.date, lang)} · {next.title}
+          </span>
+        )}
+        <span className="ml-auto text-[13.5px] font-semibold text-[var(--accent)]">{t("tab.calendar")} →</span>
+      </button>
+    );
+  }
   return (
     <Card className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-2">

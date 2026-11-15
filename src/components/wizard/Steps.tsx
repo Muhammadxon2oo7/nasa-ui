@@ -503,7 +503,7 @@ function CropForm() {
             </button>
           )}
         </div>
-        {!w.priorities.length && <p className="mt-1 text-[13px] text-[var(--danger-fg)]">{t("s2.needPriority")}</p>}
+        {!w.priorities.length && <p className="mt-1 text-[13px] text-[var(--fg-3)]">{t("s2.needPriority")}</p>}
       </Card>
 
       <Card>
