@@ -178,7 +178,7 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
   const reasons: string[] = [
     ...new Set<string>(
       (b.degraded ?? [])
-        .filter((d: Any) => d.part !== "explanation")
+        .filter((d: Any) => d.part !== "explanation" && d.code !== "pending")
         .map((d: Any) => FRIENDLY[d.part]?.[lang] ?? (typeof d.reason === "string" && !SECRETISH.test(d.reason) ? d.reason : generic)),
     ),
   ];
@@ -268,12 +268,14 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
     autumnSowing: Array.isArray(cal?.autumnSowing) ? cal.autumnSowing.map((a: Any) => ({ ...a, crop: crop(a.crop) })) : undefined,
   };
   return {
+    preliminary: b.preliminary ? true : undefined,
+    complete: b.complete === false ? false : undefined,
     insights,
     fieldId: b.fieldId,
     sourceId: b.fieldId,
     backend: "fastapi",
     field: { areaHa: field.areaHa, centroid: field.centroid, periodStart: field.periodStart, periodEnd: field.periodEnd, polygon: field.polygon ?? req?.polygon, elevationM: field.elevationM ?? b.soil?.terrain?.elevationM ?? null, slopeDeg: b.soil?.terrain?.slopeDeg ?? null },
-    summary: { text: b.summary?.text ?? "", salinity: level, waterNeedM3PerHa: b.summary?.waterNeedM3PerHa ?? 0, mainRisk: b.summary?.mainRisk ?? "-", bestStrategyId: L(b.summary?.bestStrategyId ?? strategies[1]?.id ?? "A") },
+    summary: { text: b.summary?.text ?? "", salinity: level, waterNeedM3PerHa: b.summary?.waterNeedM3PerHa ?? 0, mainRisk: b.summary?.mainRisk ?? "-", bestStrategyId: L(b.summary?.bestStrategyId ?? b.bestStrategyId ?? strategies[1]?.id ?? "A") },
     history,
     climate: {
       lastSpringFrost: { median: c.lastSpringFrost?.median ?? "-", latest: c.lastSpringFrost?.latest ?? "-", latestYear: c.lastSpringFrost?.latest_year ?? c.lastSpringFrost?.latestYear ?? 0 },
@@ -334,7 +336,7 @@ const sleep = (ms: number, signal?: AbortSignal) =>
  * POST /py/api/analyze?async=true → 200 (cached, full result) or 202 {jobId}; then GET /api/jobs/{id}
  * until done. No request outlives the gateway, so a new field never ends in a 502.
  */
-export async function analyzeFastApi(req: AnalyzeRequest, signal?: AbortSignal): Promise<AnalyzeResponse> {
+export async function analyzeFastApi(req: AnalyzeRequest, signal?: AbortSignal, onPartial?: (p: AnalyzeResponse) => void): Promise<AnalyzeResponse> {
   const lang = req.lang === "en" ? "en" : "uz";
   const { useJob } = await import("@/store/jobStore");
   const job = useJob.getState();
@@ -347,15 +349,39 @@ export async function analyzeFastApi(req: AnalyzeRequest, signal?: AbortSignal):
     if (res.status !== 202 && !j.jobId) return fromBackend(dashes(j), req);
     job.set({ jobId: j.jobId, stage: "queued", progress: 0 });
     const t0 = Date.now();
+    let sentPartial = false;
     for (;;) {
-      await sleep(2500, signal);
+      await sleep(sentPartial ? 2500 : 1500, signal);
       const r = await fetch(`/py/api/jobs/${encodeURIComponent(j.jobId)}`, { signal });
       const q: Any = await r.json().catch(() => ({}));
       if (!r.ok) throw apiError(q, r.status, lang);
       job.set({ stage: q.stage ?? null, progress: typeof q.progress === "number" ? q.progress : null });
+      if (q.partial && !sentPartial && onPartial && q.status !== "done") {
+        sentPartial = true;
+        onPartial({ ...fromBackend(dashes(q.partial), req), preliminary: true, pendingJobId: j.jobId });
+      }
       if (q.status === "done" && q.result) return fromBackend(dashes(q.result), req);
       if (q.status === "error") throw apiError(q.error ?? q, 500, lang);
       if (Date.now() - t0 > 180_000) throw apiError({ code: "timeout" }, 504, lang);
+    }
+  } finally {
+    useJob.getState().reset();
+  }
+}
+
+/** Keep polling a job started elsewhere (wizard handed over a preliminary result). */
+export async function resumeJobFastApi(jobId: string, lang: "uz" | "en", signal?: AbortSignal): Promise<AnalyzeResponse | null> {
+  const t0 = Date.now();
+  const { useJob } = await import("@/store/jobStore");
+  try {
+    for (;;) {
+      const r = await fetch(`/py/api/jobs/${encodeURIComponent(jobId)}`, { signal });
+      const q: Any = await r.json().catch(() => ({}));
+      if (!r.ok) return null;
+      useJob.getState().set({ jobId, stage: q.stage ?? null, progress: typeof q.progress === "number" ? q.progress : null });
+      if (q.status === "done" && q.result) return fromBackend(dashes(q.result), { lang } as AnalyzeRequest);
+      if (q.status === "error" || Date.now() - t0 > 180_000) return null;
+      await sleep(2500, signal);
     }
   } finally {
     useJob.getState().reset();

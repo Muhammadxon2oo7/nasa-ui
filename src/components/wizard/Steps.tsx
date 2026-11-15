@@ -627,11 +627,18 @@ export function Step3({ onBack }: { onBack: () => void }) {
       placeType: w.placeType ?? "polygon",
       livestock: modules.includes("livestock") ? (w.livestock ?? DEFAULT_LS) : undefined,
     };
-    analyzeField(
-      req,
-      ctrl.signal,
-    )
+    let handedOver = false;
+    analyzeField(req, ctrl.signal, (p) => {
+      // the backend's first answer (~4 s): open the result now, the page keeps polling the job
+      handedOver = true;
+      saveAnalysis(p);
+      try {
+        localStorage.setItem(`fs:req:${p.fieldId}`, JSON.stringify(req));
+      } catch {}
+      router.push(`/result/${p.fieldId}`);
+    })
       .then((d) => {
+        if (handedOver) return;
         saveAnalysis(d);
         try {
           localStorage.setItem(`fs:req:${d.fieldId}`, JSON.stringify(req));

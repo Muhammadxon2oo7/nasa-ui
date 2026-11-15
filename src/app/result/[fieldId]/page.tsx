@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, m } from "motion/react";
-import { Beef, CalendarDays, Check, Info, CloudSun, Droplet, Flame, FlaskConical, Globe, Leaf, MapPin, Satellite, ScrollText, Sprout, ThermometerSun, Wheat } from "lucide-react";
+import { Beef, CalendarDays, Check, Info, Loader2, CloudSun, Droplet, Flame, FlaskConical, Globe, Leaf, MapPin, Satellite, ScrollText, Sprout, ThermometerSun, Wheat } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import type { AnalyzeRequest } from "@/types/api";
@@ -10,6 +10,7 @@ import { initialWeights } from "@/lib/scoring";
 import { useAnalysis } from "@/lib/useAnalysis";
 import { useT, type Key } from "@/i18n";
 import { useResultUi } from "@/store/resultUiStore";
+import { useJob } from "@/store/jobStore";
 import { FieldHeader, LivestockCards } from "@/components/result/ResultHeader";
 import { AnswerCard, Fold } from "@/components/result/Sections";
 import { FieldTwin } from "@/components/twin/FieldTwin";
@@ -57,6 +58,43 @@ function ModuleProgress() {
         </span>
       ))}
       {sec > 30 && <span className="text-[12.5px] text-[var(--fg-3)]">{lang === "uz" ? "Yaylov uchun birinchi hisob 1-2 daqiqa olishi mumkin." : "The first pasture analysis can take 1-2 minutes."}</span>}
+    </div>
+  );
+}
+
+/** The backend's first answer is on screen; the satellite part is still computing. */
+function PreliminaryBar() {
+  const { lang } = useT();
+  const progress = useJob((s) => s.progress);
+  const [sec, setSec] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setSec((x) => x + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+  // time-based floor: the job's own progress can stall while parallel parts run
+  const pct = Math.max(Math.min(95, Math.round((1 - Math.exp(-sec / 14)) * 100)), Math.round((progress ?? 0) * 100) || 0);
+  return (
+    <div role="status" aria-live="polite" className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-2xl bg-[var(--surface)] px-4 py-3 shadow-[var(--shadow-card)]">
+      <Loader2 size={16} className="animate-spin text-[var(--accent)] motion-reduce:animate-none" />
+      <span className="text-[14px] font-medium">{lang === "en" ? "First result: climate and strategies are ready." : "Dastlabki natija: iqlim va strategiyalar tayyor."}</span>
+      <span className="text-[13.5px] text-[var(--fg-2)]">{lang === "en" ? "Field history, soil, water and zones are still computing from satellite." : "Dala tarixi, tuproq, suv va zonalar sun'iy yo'ldoshdan hisoblanmoqda."}</span>
+      <span className="ml-auto flex min-w-[120px] items-center gap-2 text-[12px] text-[var(--fg-3)] tnum">
+        <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--surface-3)]"><span className="block h-full origin-left rounded-full bg-[var(--accent-fill)] transition-transform duration-500" style={{ transform: `scaleX(${pct / 100})` }} /></span>
+        {sec} s
+      </span>
+    </div>
+  );
+}
+
+function PendingSection() {
+  const { lang } = useT();
+  return (
+    <div className="grid gap-3">
+      <div className="rounded-[22px] bg-[var(--surface)] p-5 text-[14.5px] text-[var(--fg-2)] shadow-[var(--shadow-card)]">
+        {lang === "en" ? "This section opens when the full analysis finishes (usually within 40 s). The page updates by itself." : "Bu bo'lim to'liq tahlil tugashi bilan ochiladi (odatda 40 s ichida). Sahifa o'zi yangilanadi."}
+      </div>
+      <Skeleton className="h-48 rounded-[22px]" />
+      <Skeleton className="h-28 rounded-[22px]" />
     </div>
   );
 }
@@ -169,7 +207,7 @@ function Result() {
       </div>
     );
 
-  return <Body data={data} tab={tab} setTab={setTab} recompute={recompute} busy={busy} />;
+  return <Body key={data.preliminary ? "preliminary" : (data.generatedAt ?? "full")} data={data} tab={tab} setTab={setTab} recompute={recompute} busy={busy} />;
 }
 
 type ModuleTab = "crop" | "livestock" | "general";
@@ -219,7 +257,7 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
   // a shared link straight to the livestock module computes it on arrival
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetches over the network, state settles later
-    if (mod === "livestock" && !data.livestock) void loadLivestock();
+    if (mod === "livestock" && !data.livestock && !data.preliminary) void loadLivestock();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mod]);
 
@@ -227,6 +265,7 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
     <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] gap-3 px-3 sm:px-6">
       <FieldHeader data={data} />
       {data.degraded && <DegradedNotice items={data.degraded} />}
+      {data.preliminary && <PreliminaryBar />}
       <div className="flex items-center gap-2">
         <Segmented<ModuleTab>
           value={mod}
@@ -258,6 +297,11 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
       {busy && <Skeleton className="h-24" />}
       {loadingLs && <ModuleProgress />}
       <AnimatePresence mode="wait" initial={false}>
+        {data.preliminary && active !== "plan" ? (
+          <m.div key={`pending-${active}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={spring}>
+            <PendingSection />
+          </m.div>
+        ) : (
         <m.div key={mod + active} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={spring}>
           {active === "plan" && (
             <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
@@ -314,6 +358,7 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
           {!loadingLs && active === "heat" && <HeatTab data={data} />}
           {!loadingLs && active === "wsrc" && <WaterSourcesTab data={data} />}
         </m.div>
+        )}
       </AnimatePresence>
       <FeedbackPrompt data={data} />
     </div>

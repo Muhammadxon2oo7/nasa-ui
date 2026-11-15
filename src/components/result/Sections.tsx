@@ -80,7 +80,7 @@ export function AnswerCard({ data, best, bestScore, water, onMore, currentScore 
         <h2 className="w-full min-w-0 shrink-0 text-[clamp(21px,2.6vw,27px)] leading-tight font-semibold tracking-[-0.025em] text-balance">{best.name}</h2>
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_oklab,var(--gold)_16%,transparent)] px-2.5 py-1 text-[12.5px] font-semibold text-[var(--fg)]">
-            <Trophy size={13} className="text-[var(--gold)]" /> {keep ? L("Hozirgisi eng yaxshi", "Current is best") : L("Tavsiya", "Recommended")}
+            <Trophy size={13} className="text-[var(--gold)]" /> {data.preliminary ? L("Dastlabki baho", "First estimate") : keep ? L("Hozirgisi eng yaxshi", "Current is best") : L("Tavsiya", "Recommended")}
           </span>
           <span className="text-[30px] font-semibold tracking-[-0.03em] text-[var(--accent)] tnum">{bestScore}</span>
           <span className="text-[13px] text-[var(--fg-3)]" title={t("score.help" as never)}>{t("score.unit" as never)}</span>
@@ -94,7 +94,11 @@ export function AnswerCard({ data, best, bestScore, water, onMore, currentScore 
           <span className="tnum">· {currentScore} {t("score.unit" as never)}</span>
         </p>
       )}
-      <p className="mt-2 max-w-[70ch] text-[14.5px] leading-relaxed text-[var(--fg-2)] line-clamp-3">{why}</p>
+      <p className="mt-2 max-w-[70ch] text-[14.5px] leading-relaxed text-[var(--fg-2)] line-clamp-3">
+        {data.preliminary
+          ? L("Faqat iqlim bo'yicha baho. Sho'rlanish va dala tarixi qo'shilgach tavsiya o'zgarishi mumkin.", "Based on climate only. The pick can change once salinity and field history are in.")
+          : why}
+      </p>
       <dl className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1">
         <div className="rounded-2xl bg-[var(--surface-2)] px-3.5 py-2.5">
           <dt className="flex items-center gap-1.5 text-[12.5px] text-[var(--fg-3)]"><Droplet size={13} /> {L("Suv, yiliga", "Water per year")}</dt>
@@ -108,12 +112,12 @@ export function AnswerCard({ data, best, bestScore, water, onMore, currentScore 
         <div className="rounded-2xl bg-[var(--surface-2)] px-3.5 py-2.5">
           <dt className="flex items-center gap-1.5 text-[12.5px] text-[var(--fg-3)]"><FlaskConical size={13} /> {L("Sho'rlanish", "Salinity")}</dt>
           <dd className="mt-1 flex items-center gap-1.5">
-            <LevelBadge level={data.summary.salinity} /> {trend && <span className="text-[12.5px] text-[var(--fg-2)]">↑ {L("ortmoqda", "rising")}</span>}
+            {data.preliminary ? <span className="shimmer inline-block h-5 w-20 rounded-full bg-[var(--surface-3)]" aria-label={L("hisoblanmoqda", "computing")} /> : <LevelBadge level={data.summary.salinity} />} {trend && <span className="text-[12.5px] text-[var(--fg-2)]">↑ {L("ortmoqda", "rising")}</span>}
           </dd>
         </div>
         <div className="rounded-2xl bg-[var(--surface-2)] px-3.5 py-2.5">
           <dt className="flex items-center gap-1.5 text-[12.5px] text-[var(--fg-3)]"><AlertTriangle size={13} /> {L("Asosiy xavf", "Main risk")}</dt>
-          <dd className="text-[17px] font-semibold">{data.summary.mainRisk}</dd>
+          <dd className="text-[17px] font-semibold">{data.preliminary && (!data.summary.mainRisk || data.summary.mainRisk === "-") ? <span className="shimmer inline-block h-5 w-28 rounded-full bg-[var(--surface-3)]" /> : data.summary.mainRisk}</dd>
         </div>
       </dl>
       <button type="button" onClick={onMore} className="press mt-auto inline-flex self-start pt-4 items-center gap-1.5 text-[14.5px] font-semibold text-[var(--accent)]">

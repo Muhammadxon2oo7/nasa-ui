@@ -11,6 +11,7 @@ export function useAnalysis(fieldId: string) {
   const [state, setState] = useState<{ data: AnalyzeResponse | null; status: "loading" | "ok" | "missing" }>({ data: mem.get(fieldId) ?? null, status: mem.has(fieldId) ? "ok" : "loading" });
   useEffect(() => {
     let dead = false;
+    const ctrl = new AbortController();
     (async () => {
       let d = mem.get(fieldId) ?? readAnalysis(fieldId);
       // live demo boundaries were redrawn from imagery: a copy saved with an older polygon is stale
@@ -48,9 +49,40 @@ export function useAnalysis(fieldId: string) {
         mem.set(fieldId, d);
         setState({ data: d, status: "ok" });
       } else setState({ data: null, status: "missing" });
+      if (!d || d.backend !== "fastapi") return;
+      const lang = document.documentElement.lang === "en" ? "en" : "uz";
+      const swap = (next: AnalyzeResponse) => {
+        const merged = { ...next, fieldId, field: { ...next.field, region: next.field.region ?? d!.field.region } };
+        mem.set(fieldId, merged);
+        saveAnalysis(merged);
+        if (!dead) setState({ data: merged, status: "ok" });
+        return merged;
+      };
+      // preliminary answer from the wizard: keep polling the job and swap in the full result
+      if (d.preliminary && d.pendingJobId) {
+        const { resumeJobFastApi } = await import("@/api/fastapi");
+        const full = await resumeJobFastApi(d.pendingJobId, lang, ctrl.signal).catch(() => null);
+        if (dead) return;
+        if (full) d = swap(full);
+        else {
+          // job lost (server restart): the stored analysis is the next best thing
+          const { getAnalysisFastApi } = await import("@/api/fastapi");
+          const saved = await getAnalysisFastApi(d.sourceId ?? fieldId, lang).catch(() => null);
+          if (saved && !dead) d = swap(saved);
+        }
+      }
+      // optional parts (GAEZ, M1, ...) finish in the background: ask once more a little later
+      if (d && d.complete === false && !dead) {
+        await new Promise((r) => setTimeout(r, 90_000));
+        if (dead) return;
+        const { getAnalysisFastApi } = await import("@/api/fastapi");
+        const later = await getAnalysisFastApi(d.sourceId ?? fieldId, lang).catch(() => null);
+        if (later && !dead) swap(later);
+      }
     })();
     return () => {
       dead = true;
+      ctrl.abort();
     };
   }, [fieldId]);
   return state;

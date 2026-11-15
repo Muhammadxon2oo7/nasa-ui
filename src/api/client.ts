@@ -41,11 +41,11 @@ const USE_FASTAPI = process.env.NEXT_PUBLIC_USE_FASTAPI !== "false";
  * Primary: the team's FastAPI backend (via /py rewrite). A 422 (bad input) is shown to the user as is;
  * any other failure falls back to the built-in Next.js analysis so the demo never dies.
  */
-export const analyzeField = async (req: AnalyzeRequest, signal?: AbortSignal): Promise<AnalyzeResponse> => {
+export const analyzeField = async (req: AnalyzeRequest, signal?: AbortSignal, onPartial?: (p: AnalyzeResponse) => void): Promise<AnalyzeResponse> => {
   if (USE_FASTAPI && !DEMO_MODE) {
     try {
       const { analyzeFastApi } = await import("./fastapi");
-      return await analyzeFastApi(req, signal);
+      return await analyzeFastApi(req, signal, onPartial);
     } catch (e) {
       const x = e as Error & { status?: number; code?: string };
       if (x.status === 422) throw new ApiError(CODE[x.code ?? ""] ?? x.code ?? "validation_error", 422, x.message);

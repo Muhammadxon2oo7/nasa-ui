@@ -60,6 +60,12 @@ export interface ZoneProps { kind: ZoneKind; level: Level; areaHa: number; value
 export interface ZonesData { features: { type: "Feature"; geometry: GeoJSON.Polygon | GeoJSON.MultiPolygon; properties: ZoneProps }[]; method?: string; sources?: string[]; reason?: string; failedKinds?: string[] }
 
 export interface AnalyzeResponse {
+  /** first answer from a running backend job: climate + strategies only, the rest is still computing */
+  preliminary?: boolean;
+  /** job to resume polling on the result page while `preliminary` */
+  pendingJobId?: string;
+  /** false when optional parts (GAEZ, M1, ...) were still pending; refetch later */
+  complete?: boolean;
   insights?: Insights;
   fieldId: string;
   field: FieldInfo;
