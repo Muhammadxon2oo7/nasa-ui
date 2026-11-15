@@ -81,7 +81,7 @@ export function useAnalysis(fieldId: string) {
         }
       }
       // optional parts (GAEZ, M1, ...) finish in the background: ask once more a little later
-      if (d && d.complete === false && !dead) {
+      if (d && (d.complete === false || d.explanationStatus === "pending") && !dead) {
         await new Promise((r) => setTimeout(r, 90_000));
         if (dead) return;
         const { getAnalysisFastApi } = await import("@/api/fastapi");

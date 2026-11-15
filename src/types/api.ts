@@ -50,7 +50,7 @@ export interface Insights {
   /** SMAP root-zone moisture this month vs the long-term normal */
   moistureAnomaly?: { month: string; valueM3M3: number; normalM3M3: number; zScore: number; level: "dry" | "normal" | "wet"; yearsInNormal?: number; source?: string; resolution?: string };
   /** salinity estimated from satellite when the farmer gave none */
-  salinityEstimate?: { level: Level; eceEstDsM: number | null; confidence: "high" | "medium" | "low"; method?: string; source?: string; note?: string };
+  salinityEstimate?: { level: Level; eceEstDsM: number | null; confidence: "high" | "medium" | "low"; method?: string; source?: string; note?: string; usedLevel?: Level; usedReason?: string };
   salinitySource?: "lab" | "user" | "satellite";
   autumnSowing?: { crop: CropId; windowFrom: string; windowTo: string; rule: string; source?: string }[];
 }
@@ -66,6 +66,10 @@ export interface AnalyzeResponse {
   pendingJobId?: string;
   /** false when optional parts (GAEZ, M1, ...) were still pending; refetch later */
   complete?: boolean;
+  /** false in a preliminary answer: no recommendation yet, strategies are still being ranked */
+  rankingFinal?: boolean;
+  /** "pending" while the AI explanation is still being written in the background */
+  explanationStatus?: "pending" | "llm" | "template";
   insights?: Insights;
   fieldId: string;
   field: FieldInfo;
@@ -129,6 +133,10 @@ export interface HistoryData {
   seasons: { year: number; crops: DetectedCrop[] }[];
   bareWindows: { start: string; end: string; days: number }[];
   model?: { name: string; accuracy?: number };
+  /** which satellite each part of the NDVI series comes from (Landsat 2013-2017, Sentinel-2 2018+) */
+  sensors?: { sensor: string; from: string | number; to: string | number; name: string }[];
+  /** crop model warning, e.g. field far from the training area */
+  modelWarning?: string;
 }
 
 export interface ClimateData {
@@ -227,6 +235,8 @@ export interface Strategy {
     gaps: string[];
     risks: string[];
     generatedBy: "llm" | "template";
+    /** 1-2 sentence AI summary when generatedBy is "llm" */
+    summary?: string;
   };
 }
 

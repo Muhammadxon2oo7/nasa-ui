@@ -564,6 +564,13 @@ export function FeedbackPrompt({ data }: { data: AnalyzeResponse }) {
     const e: FeedbackEntry = { fieldId: data.fieldId, at: new Date().toISOString(), rating: rating || undefined, yieldTPerHa: Number(yieldT) || undefined };
     if (consent) safeSet(key, e);
     setFb(e);
+    // the team's feedback dataset (backend analyses only): ratings and reported yields improve the model
+    if (data.backend === "fastapi") {
+      void import("@/api/fastapi").then(({ sendFeedbackFastApi }) => {
+        if (e.rating) sendFeedbackFastApi({ fieldId: data.sourceId ?? data.fieldId, kind: "rating", rating: e.rating });
+        if (e.yieldTPerHa) sendFeedbackFastApi({ fieldId: data.sourceId ?? data.fieldId, kind: "yield", yieldTHa: e.yieldTPerHa });
+      });
+    }
   };
   if (fb)
     return (

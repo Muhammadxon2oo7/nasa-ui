@@ -133,6 +133,8 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
           ? h.bareWindows.map((x: Any) => ({ start: `${x.year}-${x.from}`, end: `${x.year}-${x.to}`, days: Math.round((Date.parse(`${x.year}-${x.to}`) - Date.parse(`${x.year}-${x.from}`)) / 864e5) + 1 }))
           : (h.bareSummers ?? []).filter((x: Any) => x.days > 0).map((x: Any) => ({ start: `${x.year}-06-15`, end: `${x.year}-10-15`, days: x.days })),
         model: h.model ? { name: h.model.name, accuracy: h.model.accuracy ?? undefined } : undefined,
+        sensors: Array.isArray(h.sensors) ? h.sensors : undefined,
+        modelWarning: h.m1?.warning ?? undefined,
       }
     : { ndvi: [], seasons: [], bareWindows: [] };
 
@@ -156,7 +158,7 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
               frozenRisk: (cal.leaching.frozenRisk ?? []).map((f: Any) => ({ dekad: `${f.month}-${f.dekad}`, pct: Math.round(f.pct) })),
             }
           : undefined,
-        soilTempSowing: (b.sowing?.crops ?? cal.soilTempSowing ?? []).map((x: Any) => ({
+        soilTempSowing: (b.sowing?.crops ?? cal.soilTempSowing ?? []).filter((x: Any) => x.inPlan !== false).map((x: Any) => ({
           crop: crop(x.crop),
           thresholdC: x.thresholdC,
           typicalDate: x.typicalStart ?? x.typicalDate ?? "",
@@ -267,14 +269,16 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
     waterStorage: b.water?.storage?.series?.length ? b.water.storage : undefined,
     extremeRain: c.extremeRain ?? undefined,
     erosionRisk: c.erosionRisk ? { ...c.erosionRisk, level: LV(c.erosionRisk.level) } : undefined,
-    vulnerableWindows: Array.isArray(c.vulnerableWindows) ? c.vulnerableWindows.map((v: Any) => ({ ...v, crop: crop(v.crop) })) : undefined,
+    vulnerableWindows: Array.isArray(c.vulnerableWindows) ? c.vulnerableWindows.filter((v: Any) => v.inPlan !== false).map((v: Any) => ({ ...v, crop: crop(v.crop) })) : undefined,
     moistureAnomaly: b.soil?.moistureAnomaly ?? undefined,
-    salinityEstimate: sal ? { level: LV(sal.level), eceEstDsM: sal.eceEstDsM ?? null, confidence: sal.confidence ?? "low", method: sal.method, source: sal.source, note: sal.note } : undefined,
+    salinityEstimate: sal ? { level: LV(sal.level), eceEstDsM: sal.eceEstDsM ?? null, confidence: sal.confidence ?? "low", method: sal.method, source: sal.source, note: sal.note, usedLevel: sal.usedLevel ? LV(sal.usedLevel) : undefined, usedReason: sal.usedReason ?? undefined } : undefined,
     salinitySource: b.soil?.salinitySource ?? undefined,
     autumnSowing: Array.isArray(cal?.autumnSowing) ? cal.autumnSowing.map((a: Any) => ({ ...a, crop: crop(a.crop) })) : undefined,
   };
   return {
     preliminary: b.preliminary ? true : undefined,
+    rankingFinal: b.rankingFinal === false ? false : undefined,
+    explanationStatus: b.explanationStatus ?? undefined,
     complete: b.complete === false ? false : undefined,
     insights,
     fieldId: b.fieldId,
@@ -394,6 +398,11 @@ export async function resumeJobFastApi(jobId: string, lang: "uz" | "en", signal?
   }
 }
 
+/** C3: farmer feedback (rating, yield, crop check). Fire-and-forget; the UI keeps its local copy. */
+export function sendFeedbackFastApi(body: { fieldId?: string; kind: "rating" | "yield" | "crop_check" | "comment"; rating?: number; yieldTHa?: number; year?: number; correct?: boolean; actualCrop?: string; detectedCrop?: string; comment?: string }) {
+  void fetch("/py/api/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), keepalive: true }).catch(() => {});
+}
+
 /** Fire-and-forget: start the backend job for this polygon so GEE results are cached by step 3. */
 export async function prewarmFastApi(polygon: GeoJSON.Polygon) {
   await fetch("/py/api/analyze?async=true", {
@@ -413,12 +422,13 @@ export async function getAnalysisFastApi(fieldId: string, lang: "uz" | "en"): Pr
 }
 
 /** Field-level vulnerability zones (A3). Slow the first time (GEE), cached after. */
-export async function getZonesFastApi(fieldId: string, signal?: AbortSignal): Promise<import("@/types/api").ZonesData | null> {
-  let res = await fetch(`/py/api/zones/${encodeURIComponent(fieldId)}`, { signal });
+export async function getZonesFastApi(fieldId: string, signal?: AbortSignal, lang: "uz" | "en" = "uz"): Promise<import("@/types/api").ZonesData | null> {
+  const url = `/py/api/zones/${encodeURIComponent(fieldId)}?lang=${lang}`;
+  let res = await fetch(url, { signal });
   for (let i = 0; res.status === 202 && i < 24; i++) {
     const wait = Math.min(10, Math.max(2, Number((await res.json().catch(() => ({})))?.retryAfterS) || 5));
     await sleep(wait * 1000, signal);
-    res = await fetch(`/py/api/zones/${encodeURIComponent(fieldId)}`, { signal });
+    res = await fetch(url, { signal });
   }
   if (!res.ok) return null;
   const j = dashes(await res.json().catch(() => null));

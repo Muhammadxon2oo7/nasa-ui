@@ -221,6 +221,7 @@ export function SoilNowCard({ data }: { data: AnalyzeResponse }) {
             {s.eceEstDsM != null && <b className="tnum">≈ {num(s.eceEstDsM, 1)} dS/m · </b>}
             {L("Laboratoriya natijasi bo'lsa, uni kiriting: tavsiya darhol aniqlashadi.", "If you have a lab result, enter it: the advice sharpens immediately.")}
           </p>
+          {s.usedReason && <p className="mt-1 text-[12.5px] text-[var(--fg-2)]">{s.usedReason}</p>}
           {s.method && <p className="mt-1 text-[12px] text-[var(--fg-3)]">{s.method}</p>}
         </div>
       )}
@@ -283,11 +284,11 @@ export function ZonesCard({ data }: { data: AnalyzeResponse }) {
     if (data.backend !== "fastapi" || !id?.startsWith("f-")) return;
     const ac = new AbortController();
     import("@/api/fastapi")
-      .then(({ getZonesFastApi }) => getZonesFastApi(id, ac.signal))
+      .then(({ getZonesFastApi }) => getZonesFastApi(id, ac.signal, lang === "en" ? "en" : "uz"))
       .then((r) => setZ(r ?? "none"))
       .catch(() => !ac.signal.aborted && setZ("none"));
     return () => ac.abort();
-  }, [id, data.backend]);
+  }, [id, data.backend, lang]);
   if (z === "none") return null;
   const feats = z === "loading" || !z ? [] : z.features;
   const kinds = (Object.keys(ZONE) as ZoneKind[]).filter((k) => feats.some((f) => f.properties.kind === k));

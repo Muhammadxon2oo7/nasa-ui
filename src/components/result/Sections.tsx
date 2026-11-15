@@ -78,12 +78,15 @@ export function AnswerCard({ data, best, bestScore, water, onMore, currentScore 
   const diff = cur && !keep ? Math.round((water - cur.waterM3PerHa) / 100) * 100 : 0;
   const own = best.explanation.why?.trim() ?? "";
   const echoes = weakReason(own, best.name);
-  const why = (echoes ? reasonFromData(best, cur, water, lang === "en" ? "en" : "uz") : own) || own || data.summary.text;
+  const ai = best.explanation.generatedBy === "llm" ? best.explanation.summary?.trim() : undefined;
+  const why = (ai && !weakReason(ai, best.name) ? ai : null) ?? ((echoes ? reasonFromData(best, cur, water, lang === "en" ? "en" : "uz") : own) || own || data.summary.text);
+  const ranking = data.preliminary && data.rankingFinal === false;
   const trend = (data.soil.salinityTrendPct ?? 0) > 5 && data.soil.salinityLevel !== "low";
   return (
     <m.article data-guide="answer" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="relative flex flex-col overflow-hidden rounded-[26px] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] ring-1 ring-[var(--gold)]/40 sm:p-6">
       <div className="mt-1.5 flex flex-wrap items-end gap-x-4 gap-y-2">
-        <h2 className="w-full min-w-0 shrink-0 text-[clamp(21px,2.6vw,27px)] leading-tight font-semibold tracking-[-0.025em] text-balance">{best.name}</h2>
+        <h2 className="w-full min-w-0 shrink-0 text-[clamp(21px,2.6vw,27px)] leading-tight font-semibold tracking-[-0.025em] text-balance">{ranking ? L("Strategiyalar baholanmoqda…", "Ranking the strategies…") : best.name}</h2>
+        {!ranking && (
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_oklab,var(--gold)_16%,transparent)] px-2.5 py-1 text-[12.5px] font-semibold text-[var(--fg)]">
             <Trophy size={13} className="text-[var(--gold)]" /> {data.preliminary ? L("Dastlabki baho", "First estimate") : keep ? L("Hozirgisi eng yaxshi", "Current is best") : L("Tavsiya", "Recommended")}
@@ -92,6 +95,7 @@ export function AnswerCard({ data, best, bestScore, water, onMore, currentScore 
           <span className="text-[13px] whitespace-nowrap text-[var(--fg-3)]" title={t("score.help" as never)}>{t("score.unit" as never)}</span>
           {best.robustness && <RobustnessBadge score={best.robustness.score} worst={best.robustness.worstScore} />}
         </div>
+        )}
       </div>
       {cur && !keep && currentScore != null && (
         <p className="mt-2 flex flex-wrap items-baseline gap-x-1.5 text-[13px] text-[var(--fg-3)]">
@@ -101,9 +105,11 @@ export function AnswerCard({ data, best, bestScore, water, onMore, currentScore 
         </p>
       )}
       <p className="mt-2 max-w-[70ch] text-[14.5px] leading-relaxed text-[var(--fg-2)] line-clamp-3">
-        {data.preliminary
-          ? L("Faqat iqlim bo'yicha baho. Sho'rlanish va dala tarixi qo'shilgach tavsiya o'zgarishi mumkin.", "Based on climate only. The pick can change once salinity and field history are in.")
-          : why}
+        {ranking
+          ? L("Iqlim tayyor. Sho'rlanish va dala tarixi hisobga olinmoqda: yakuniy tavsiya bir necha soniyada chiqadi.", "Climate is ready. Salinity and field history are being added: the final pick appears in a few seconds.")
+          : data.preliminary
+            ? L("Faqat iqlim bo'yicha baho. Sho'rlanish va dala tarixi qo'shilgach tavsiya o'zgarishi mumkin.", "Based on climate only. The pick can change once salinity and field history are in.")
+            : why}
       </p>
       <dl className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1">
         <div className="rounded-2xl bg-[var(--surface-2)] px-3.5 py-2.5">

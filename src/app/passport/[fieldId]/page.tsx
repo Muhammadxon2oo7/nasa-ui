@@ -99,7 +99,7 @@ function Passport() {
   useEffect(() => {
     if (data?.backend !== "fastapi" || !data.sourceId) return;
     let dead = false;
-    fetch(`/py/api/passport/${data.sourceId}`)
+    fetch(`/py/api/passport/${data.sourceId}?lang=${lang === "en" ? "en" : "uz"}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => !dead && j?.passportNo && setOfficial({ passportNo: j.passportNo, onlineUrl: j.onlineUrl }))
       .catch(() => {});

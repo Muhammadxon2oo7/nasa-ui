@@ -45,7 +45,11 @@ export function HistoryTab({ data }: { data: AnalyzeResponse }) {
     <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
       <Card>
         <CardTitle source="Sentinel-2 · rules"><G e="🤖" /> {t("h.detected")}</CardTitle>
-        <p className="-mt-2 mb-3 text-[12.5px] text-[var(--fg-3)]">{t("h.model")}</p>
+        <p className="-mt-2 mb-3 text-[12.5px] text-[var(--fg-3)]">
+          {t("h.model")}
+          {h.sensors?.length ? ` · ${h.sensors.map((x) => `${x.name} ${x.from}-${x.to}`).join(", ")}` : ""}
+        </p>
+        {h.modelWarning && <p className="-mt-1 mb-3 rounded-xl bg-[var(--warn-bg)] px-3 py-2 text-[13px] text-[var(--warn-fg)]">{h.modelWarning}</p>}
         <div className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
           {h.seasons.map((s) => {
             const conf = Math.min(...s.crops.map((c) => c.confidence));

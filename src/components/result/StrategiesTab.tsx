@@ -382,7 +382,10 @@ function StrategyDetail({ data, st, color }: { data: AnalyzeResponse; st: Strate
           ))}
         </div>
       </div>
-      <p className="mt-3 text-[12px] text-[var(--fg-3)]">{e.generatedBy === "llm" ? t("aiText") : t("templateText")}</p>
+      <p className="mt-3 flex items-center gap-1.5 text-[12px] text-[var(--fg-3)]">
+        {e.generatedBy === "llm" && <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 font-semibold text-[var(--accent)]">AI</span>}
+        {e.generatedBy === "llm" ? (lang === "en" ? "Text written by AI; every number is calculated from NASA data." : "Matnni AI yozgan, barcha raqamlar NASA ma'lumotidan hisoblangan.") : t("templateText")}
+      </p>
     </Card>
   );
 }
