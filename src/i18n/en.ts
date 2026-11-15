@@ -72,7 +72,7 @@ export const en: Record<keyof typeof uz, string> = {
   "s1.region": "Region",
   "s1.or": "or",
   "s1.demo": "Demo fields",
-  "s1.hint": "Tap ✏️ and click the field corners one by one. Click the first point again to close the shape.",
+  "s1.hint": "Tap \"Draw\" and click the field corners one by one. Click the first point again to close the shape.",
   "s1.empty": "No field drawn yet",
   "err.tooSmall": "Field too small (at least 0.1 ha)",
   "err.tooLarge": "Field too large. Select up to 500 ha",

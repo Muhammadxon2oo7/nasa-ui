@@ -70,7 +70,7 @@ export const uz = {
   "s1.region": "Viloyat",
   "s1.or": "yoki",
   "s1.demo": "Demo dalalar",
-  "s1.hint": "Xaritada ✏️ tugmasini bosing va dala burchaklarini birma-bir belgilang. Birinchi nuqtaga qaytsangiz, poligon yopiladi.",
+  "s1.hint": "Xaritada \"Chizish\" tugmasini bosing va dala burchaklarini birma-bir belgilang. Birinchi nuqtaga qaytsangiz, poligon yopiladi.",
   "s1.empty": "Hali dala chizilmagan",
   "err.tooSmall": "Dala juda kichik (kamida 0.1 ga)",
   "err.tooLarge": "Dala juda katta. 500 ga gacha bo'lgan qismini tanlang",

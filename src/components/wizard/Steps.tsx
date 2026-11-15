@@ -651,7 +651,7 @@ export function Step3({ onBack }: { onBack: () => void }) {
         <i />
       </span>
       <div className="rounded-[27px] bg-[var(--surface)] p-6" role="status" aria-live="polite">
-        <h2 className="flex items-center gap-2 text-[20px] font-semibold">🛰️ {t("s3.title")}</h2>
+        <h2 className="flex items-center gap-2 text-[20px] font-semibold"><Satellite size={20} className="text-[var(--fg-3)]" /> {t("s3.title")}</h2>
         <ul className="mt-4 grid gap-2">
           {STEPS.map((k, i) => (
             <li key={k} className={clsx("flex items-center gap-2.5 text-[14.5px] transition-colors", i < current ? "text-[var(--fg)]" : i === current ? "font-semibold text-[var(--fg)]" : "text-[var(--fg-3)]")}>
