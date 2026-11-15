@@ -454,9 +454,9 @@ function LegendBar({ id }: { id: LayerId }) {
 }
 
 /** "From space": NASA layers over the field - 30 m HLS scenes, regional GIBS layers by month, GRACE by year. */
-export function MapTab({ data }: { data: AnalyzeResponse }) {
+export function MapTab({ data, initialLayer = "field30" }: { data: AnalyzeResponse; initialLayer?: LayerId }) {
   const { t, lang } = useT();
-  const [layer, setLayer] = useState<LayerId>("field30");
+  const [layer, setLayer] = useState<LayerId>(initialLayer);
   const [opacityBy, setOpacityBy] = useState<Partial<Record<LayerId, number>>>({});
   const opacity = opacityBy[layer] ?? (layer === "field30" ? 100 : 75);
   const setOpacity = (v: number) => setOpacityBy((o) => ({ ...o, [layer]: v }));
@@ -520,7 +520,7 @@ export function MapTab({ data }: { data: AnalyzeResponse }) {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div className="relative isolate h-[min(72dvh,640px)] min-h-[420px] overflow-hidden rounded-[24px] shadow-[var(--shadow-card)]">
-        <FieldMap value={data.field.polygon} basemap="sat" readOnly overlay={overlay} apiRef={api} fitMaxZoom={14} />
+        <FieldMap value={data.field.polygon} basemap="sat" readOnly overlay={overlay} apiRef={api} fitMaxZoom={zoomFor(initialLayer)} />
         {/* layer chips */}
         <div className="no-scrollbar absolute inset-x-3 top-3 z-[600] overflow-x-auto [mask-image:linear-gradient(90deg,#000_calc(100%-28px),transparent)]">
           <div className="lg mr-7 flex w-max gap-0.5 rounded-full p-1" role="radiogroup" aria-label={t("map.layers")}>

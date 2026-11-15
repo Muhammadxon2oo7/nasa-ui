@@ -286,7 +286,7 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
           )}
           {active === "field" && (
             <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
-              <MapTab data={data} />
+              <MapTab data={data} initialLayer={mod === "livestock" ? "ndvi" : "field30"} />
               {mod !== "livestock" && (
                 <Fold icon={<FlaskConical size={18} />} title={t("f.soil")} hint={`${t("r.salt")}: ${t(`lvl.${data.soil.salinityLevel}` as Key)}`}>
                   <SoilTab data={data} onRecompute={recompute} />
