@@ -545,4 +545,5 @@ export const uz = {
   "s2.d2": "Sentinel-2: 2017-yildan beri dala tarixi",
   "s2.d3": "FAO-56: har rotatsiyaning suv talabi",
   "s2.d4": "ECMWF: 7 kunlik va 6 oylik prognoz",
+  "row.nearWater": "Eng yaqin suv",
 };

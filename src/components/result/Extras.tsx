@@ -303,7 +303,7 @@ export function ActualVsNeedCard({ data }: { data: AnalyzeResponse }) {
     setDraft(v ? String(v) : "");
   }, [key]);
   if (!a) return data.extrasUnknown?.actualWater ? <Card className="text-[14px]">💧 {t("aw.title", { y: "" })} <UnknownValue reason={data.extrasUnknown.actualWater} /></Card> : null;
-  const gap = Math.round((1 - a.consumedM3PerHa / Math.max(1, a.needM3PerHa)) * 100);
+  const gap = a.needM3PerHa ? Math.round((1 - a.consumedM3PerHa / Math.max(1, a.needM3PerHa)) * 100) : 0;
   const eff = applied ? Math.round((a.consumedM3PerHa / applied) * 100) : null;
   const excess = applied ? Math.round((applied - a.consumedM3PerHa * 1.1) / 100) * 100 : null; // 10 % allowance for leaching
   const save = () => {
@@ -319,7 +319,7 @@ export function ActualVsNeedCard({ data }: { data: AnalyzeResponse }) {
       <dl className="grid gap-2 sm:grid-cols-3">
         <div className="rounded-2xl bg-[var(--surface-2)] px-3 py-2">
           <dt className="text-[12px] text-[var(--fg-3)]">{t("aw.need")}</dt>
-          <dd className="text-[20px] font-semibold tnum">{num(a.needM3PerHa)}</dd>
+          <dd className="text-[20px] font-semibold tnum">{a.needM3PerHa != null ? num(a.needM3PerHa) : <UnknownValue reason={a.needReason ?? "-"} />}</dd>
         </div>
         <div className="rounded-2xl bg-[var(--surface-2)] px-3 py-2">
           <dt className="text-[12px] text-[var(--fg-3)]">{t("aw.consumed")}</dt>
@@ -344,7 +344,7 @@ export function ActualVsNeedCard({ data }: { data: AnalyzeResponse }) {
         labels={a.monthly.map((x) => monthShort(x.month, lang))}
         layers={[
           { type: "bars", id: "use", label: t("aw.consumed"), values: a.monthly.map((x) => x.consumedMm), color: "var(--water)" },
-          { type: "line", id: "need", label: t("aw.need"), values: a.monthly.map((x) => x.needMm), color: "var(--s2)", dots: true },
+          ...(a.monthly.some((x) => x.needMm != null) ? [{ type: "line" as const, id: "need", label: t("aw.need"), values: a.monthly.map((x) => x.needMm), color: "var(--s2)", dots: true }] : []),
         ]}
       />
       <div>

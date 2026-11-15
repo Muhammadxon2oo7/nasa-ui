@@ -18,13 +18,16 @@ const tol = (thr: number) => (thr >= 7 ? "tolerant" : thr >= 4 ? "moderate" : "s
 export function toBackendRequest(req: AnalyzeRequest): Any {
   return {
     polygon: req.polygon,
-    rotation: req.rotation.map((r) => ({ year: r.year, crop: r.crop, ...(r.secondCrop ? { secondCrop: r.secondCrop } : {}) })),
+    // all unknown → [] so the backend reads the rotation from Sentinel-2 (rotationSource: "satellite")
+    rotation: req.rotation.every((r) => !r.crop) ? [] : req.rotation.map((r) => ({ year: r.year, crop: r.crop, ...(r.secondCrop ? { secondCrop: r.secondCrop } : {}) })),
     priorities: req.priorities.filter((p) => p !== "forage").slice(0, 3),
-    water: { availability: req.water.availability, method: req.water.method, ...(req.water.limitM3PerHa ? { limitM3PerHa: req.water.limitM3PerHa } : {}) },
+    water: { availability: req.water.availability, method: req.water.method, ...(req.water.limitM3PerHa ? { limitM3PerHa: req.water.limitM3PerHa } : {}), ...(req.water.appliedM3PerHa ? { appliedM3PerHa: req.water.appliedM3PerHa } : {}) },
     soil: { eceDsM: req.soil?.eceDsM ?? null, humusPct: req.soil?.humusPct ?? null, ecwDsM: req.soil?.ecwDsM ?? null },
     salinityLevel: req.salinityLevel ?? "medium",
     profile: req.profile ?? "farmer",
     lang: req.lang,
+    ...(req.modules?.length ? { modules: req.modules } : {}),
+    ...(req.livestock ? { livestock: { herd: req.livestock.herd, grazingFrom: req.livestock.grazingFrom, grazingTo: req.livestock.grazingTo, pastureType: req.livestock.pastureType, hasWaterOnSite: req.livestock.hasWaterOnSite } } : {}),
   };
 }
 
@@ -89,9 +92,15 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
 
   const c = b.climate ?? {};
   const level: Level = (b.soil?.salinityLevel ?? b.summary?.salinity ?? "medium") as Level;
+  const tx = b.soil?.texture;
+  const si = b.soil?.salinityIndex;
   const soil: SoilData = {
     salinityLevel: level,
-    salinityTrend: [],
+    salinityTrend: (si?.series ?? []).filter((x: Any) => x.si1 != null).map((x: Any) => ({ year: x.year, ndsi: x.si1 })),
+    salinityTrendPct: si?.trendPctPerDecade ?? undefined,
+    texture: tx?.clay != null ? { clay: Math.round(tx.clay), sand: Math.round(tx.sand), silt: Math.round(tx.silt), className: tx.clay < 10 ? "sandy" : tx.clay < 20 ? "light_loam" : tx.clay < 30 ? "medium_loam" : tx.clay < 40 ? "heavy_loam" : "clay" } : undefined,
+    socGKg: b.soil?.socGKg ?? undefined,
+    ph: b.soil?.ph ?? undefined,
     isEstimated: b.soil?.isEstimated ?? true,
     cropTolerance: (["barley", "cotton", "sugar_beet", "winter_wheat", "sorghum", "safflower", "sunflower", "soybean", "rice", "alfalfa", "maize", "mung_bean", "chickpea"] as CropId[]).map((cr) => {
       const thr = CROPS[cr].eceThreshold;
@@ -141,11 +150,85 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
   };
   const lang = req?.lang === "en" ? "en" : "uz";
   const reasons: string[] = (b.degraded ?? []).map((d: Any) => FRIENDLY[d.part]?.[lang] ?? d.reason ?? d.part);
+  const unk = (v: number | null | undefined, why: string) => (v == null ? { value: null, reason: why } : v);
+  const LV = (l: string | null | undefined): Level => (l === "high" ? "high" : l === "low" ? "low" : "medium");
+
+  const ls = b.livestock;
+  const livestock = ls
+    ? {
+        pasture: {
+          statusLevel: LV(ls.pasture?.statusLevel),
+          anomalyPct: unk(ls.pasture?.anomalyPct, lang === "uz" ? "MODIS NDVI yetarli emas" : "Not enough MODIS NDVI"),
+          percentile: unk(ls.pasture?.percentile, "-"),
+          year: new Date().getUTCFullYear(),
+          ndviThisYear: ls.pasture?.ndviThisYear ?? [],
+          ndviNorm: ls.pasture?.ndviNorm ?? [],
+          yearlyPeak: ls.pasture?.yearlyPeak ?? [],
+          droughtYears: (ls.pasture?.yearlyPeak ?? []).filter((y: Any, _i: number, a: Any[]) => y.ndvi < [...a].sort((p: Any, q: Any) => p.ndvi - q.ndvi)[Math.floor(a.length * 0.2)]?.ndvi).map((y: Any) => y.year),
+          areaHa: b.field?.areaHa ?? 0,
+        },
+        capacity: {
+          lowAuPerHa: unk(ls.capacity?.lowAuPerHa, lang === "uz" ? "MODIS NPP ma'lumoti yo'q" : "No MODIS NPP"),
+          highAuPerHa: unk(ls.capacity?.highAuPerHa, lang === "uz" ? "MODIS NPP ma'lumoti yo'q" : "No MODIS NPP"),
+          herdAu: ls.capacity?.herdAu ?? 0,
+          grazingDays: ls.grazingDays ?? 0,
+          status: ls.capacity?.status ?? "unknown",
+          assumptions: (ls.capacity?.assumptions ?? []).map((a: Any) => ({ name: a.name, value: a.value, unit: a.unit ?? "", source: a.source ?? "" })),
+        },
+        heat: {
+          stressDaysPerYear: ls.heat?.stressDaysPerYear ?? 0,
+          severeDaysPerYear: ls.heat?.severeDaysPerYear ?? 0,
+          trendDaysPerDecade: ls.heat?.trendDaysPerDecade ?? 0,
+          yearly: ls.heat?.perYear ?? [],
+          monthly: (ls.heat?.monthly ?? []).map((m: Any) => ({ month: m.month, thiMean: m.thiMean, thiMax: m.thiPeakMean ?? m.thiMax })),
+          forecast7d: (ls.heat?.forecast7d ?? []).map((f: Any) => ({ date: f.date, thiMax: f.thiMax, level: f.level === "severe" ? "high" : f.level === "moderate" ? "medium" : "low" })),
+          thresholds: ls.heat?.thresholds ?? { mild: 72, moderate: 79, severe: 89 },
+        },
+        waterSources: ls.waterSources ? { nearestPermanentKm: unk(ls.waterSources.nearestPermanentKm, lang === "uz" ? "30 km ichida doimiy suv topilmadi" : "No permanent water within 30 km"), nearestSeasonalKm: unk(ls.waterSources.nearestSeasonalKm, lang === "uz" ? "30 km ichida mavsumiy suv topilmadi" : "No seasonal water within 30 km"), radiusKm: ls.waterSources.searchRadiusKm ?? 30 } : undefined,
+        recommendations: (ls.recommendations ?? []).map((r: Any, i: number) => ({ ...r, id: `r${i}`, title: String(r.title ?? r.why ?? "").split(/[.:]/)[0].slice(0, 90) })),
+      }
+    : undefined;
+
+  const wa = b.water?.actual;
+  const actualWater = wa
+    ? {
+        year: wa.year,
+        crops: (wa.cropsDetected ?? []).map(crop),
+        needM3PerHa: wa.needM3PerHa ?? null,
+        needReason: wa.needReason ?? undefined,
+        consumedM3PerHa: wa.consumedM3PerHa,
+        consumedLow: wa.consumedLowM3PerHa ?? wa.consumedM3PerHa,
+        consumedHigh: wa.consumedHighM3PerHa ?? wa.consumedM3PerHa,
+        checks: (wa.checks ?? []).map((c: Any) => ({ source: c.source, m3PerHa: c.m3PerHa ?? null, note: c.note })),
+        monthly: (wa.monthly ?? []).map((m: Any) => ({ month: m.month, needMm: m.needMm ?? null, consumedMm: m.consumedMm, ndvi: null })),
+        method: wa.method ?? "",
+        appliedM3PerHa: wa.appliedM3PerHa ?? undefined,
+        efficiencyPct: wa.efficiencyPct ?? undefined,
+        excessM3PerHa: wa.excessM3PerHa ?? undefined,
+      }
+    : null;
+
+  const ws = b.waterSupply;
+  const L2 = (l: string | null | undefined): Level => (l === "low" ? "low" : l === "high" ? "high" : "medium");
+  const waterSupply = ws
+    ? {
+        basin: ws.basin,
+        basinName: ws.basinName,
+        flowName: "",
+        lastSeason: { season: ws.lastSeason?.season ?? "", snowAnomalyPct: Math.round(ws.lastSeason?.anomalyPct ?? 0), percentile: ws.lastSeason?.percentile ?? 50, level: L2(ws.lastSeason?.level) },
+        currentSeason: { season: ws.currentSeason?.season ?? "", from: "11-01", lastDate: null, snowAnomalyPct: ws.currentSeason?.anomalyPct ?? null, level: ws.currentSeason?.level === "early" ? ("early" as const) : L2(ws.currentSeason?.level), confidence: ws.currentSeason?.confidence === "medium" ? ("medium" as Level) : ("low" as Level) },
+        history: (ws.history ?? []).map((h: Any) => ({ year: +String(h.season).slice(0, 4) + 1, snowIndex: h.snowIndexPct, marchSnow: h.snowIndexPct, summerFlow: null })),
+        correlation: null,
+        correlationYears: null,
+        sources: ws.sources ?? ["MODIS"],
+      }
+    : null;
   const field = b.field ?? {};
   return {
     fieldId: b.fieldId,
+    sourceId: b.fieldId,
     backend: "fastapi",
-    field: { areaHa: field.areaHa, centroid: field.centroid, periodStart: field.periodStart, periodEnd: field.periodEnd, polygon: field.polygon ?? req?.polygon, elevationM: field.elevationM ?? null, slopeDeg: null },
+    field: { areaHa: field.areaHa, centroid: field.centroid, periodStart: field.periodStart, periodEnd: field.periodEnd, polygon: field.polygon ?? req?.polygon, elevationM: field.elevationM ?? b.soil?.terrain?.elevationM ?? null, slopeDeg: b.soil?.terrain?.slopeDeg ?? null },
     summary: { text: b.summary?.text ?? "", salinity: level, waterNeedM3PerHa: b.summary?.waterNeedM3PerHa ?? 0, mainRisk: b.summary?.mainRisk ?? "-", bestStrategyId: L(b.summary?.bestStrategyId ?? strategies[1]?.id ?? "A") },
     history,
     climate: {
@@ -178,24 +261,35 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
     sources: (b.sources ?? []).map((s: Any) => ({ id: s.id, name: s.name, provider: s.provider ?? "", url: s.url ?? "" })),
     degraded: reasons.length ? reasons : undefined,
     degradedReasons: reasons,
-    extrasUnknown: { norms: "-", ...(h ? {} : { history: reasons.join("; ") }) },
+    extrasUnknown: { norms: lang === "uz" ? "Rasmiy gidromodul me'yorlari hali ulanmagan" : "Official hydromodule norms not connected yet", ...(h ? {} : { history: reasons.join("; ") }), ...(wa ? {} : { actualWater: lang === "uz" ? "Dala tarixi bo'lmagani uchun hisoblanmadi" : "Needs field history" }) },
+    livestock,
+    actualWater,
+    waterSupply,
     generatedAt: b.generatedAt,
     profile: req?.profile ?? "farmer",
-    modulesComputed: ["crop"],
+    modulesComputed: b.modulesComputed ?? (ls ? ["crop", "livestock"] : ["crop"]),
   } as AnalyzeResponse;
 }
 
 /** POST /py/api/analyze → frontend contract. Throws on failure (caller falls back to the built-in API). */
 export async function analyzeFastApi(req: AnalyzeRequest, signal?: AbortSignal): Promise<AnalyzeResponse> {
-  const res = await fetch("/py/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(toBackendRequest(req)), signal });
-  const j = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const d = (j as Any).detail;
-    const err = new Error(typeof d === "string" ? d : `http_${res.status}`) as Error & { status?: number };
-    err.status = res.status;
-    throw err;
+  const body = JSON.stringify(toBackendRequest(req));
+  // a first analysis can outlive the gateway (502/504) while the backend keeps computing and caches it: retry once
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch("/py/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body, signal });
+    if ((res.status === 502 || res.status === 504) && attempt === 0) {
+      await new Promise((r) => setTimeout(r, 4000));
+      continue;
+    }
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const d = (j as Any).detail;
+      const err = new Error(typeof d === "string" ? d : `http_${res.status}`) as Error & { status?: number };
+      err.status = res.status;
+      throw err;
+    }
+    return fromBackend(dashes(j), req);
   }
-  return fromBackend(dashes(j), req);
 }
 
 /** House style: plain hyphen instead of en/em dashes in any backend text. */
@@ -204,4 +298,45 @@ function dashes<T>(v: T): T {
   if (Array.isArray(v)) return v.map(dashes) as T;
   if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, dashes(x)])) as T;
   return v;
+}
+
+/** POST /py/api/compare (land selection) → the compare page's table rows. */
+export async function compareFastApi(req: import("@/types/api").CompareRequest, signal?: AbortSignal): Promise<import("@/types/api").CompareResponse> {
+  const res = await fetch("/py/api/compare", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ places: req.places, goal: req.goal, method: "furrow" }), signal });
+  const j = dashes(await res.json().catch(() => ({})));
+  if (!res.ok) throw new Error(typeof (j as Any).detail === "string" ? (j as Any).detail : `http_${res.status}`);
+  const uz = req.lang !== "en";
+  const ps: Any[] = (j as Any).places ?? [];
+  const best = (f: (p: Any) => number | null, dir: "min" | "max") => {
+    const v = ps.map(f).filter((x): x is number => x != null);
+    return v.length ? (dir === "min" ? Math.min(...v) : Math.max(...v)) : null;
+  };
+  const bWater = best((p) => p.waterM3PerHa ?? null, "min"), bFfd = best((p) => p.frostFreeDays ?? null, "max"), bSlope = best((p) => p.slopeDeg ?? null, "min");
+  const bHeat = best((p) => p.heatDays ?? null, "min"), bSalt = best((p) => p.salinityTrendPct ?? null, "min"), bNear = best((p) => p.nearestWaterKm ?? null, "min");
+  const n0 = (v: number) => Math.round(v).toLocaleString("ru-RU");
+  return {
+    goal: req.goal,
+    bestPlaceId: (j as Any).bestPlaceId,
+    explanation: (j as Any).explanation,
+    places: ps.map((p, i) => ({
+      placeId: p.placeId,
+      name: p.name ?? req.places[i]?.name,
+      areaHa: p.areaHa,
+      suitability: p.suitability ?? 0,
+      mainRisk: p.mainRisk ?? undefined,
+      polygon: req.places.find((q) => q.name === p.name)?.polygon ?? req.places[i].polygon,
+      rows: {
+        suitability: { value: String(p.suitability ?? "?"), better: p.rank === 1 },
+        region: { value: p.centroid ? `${(+p.centroid[0]).toFixed(3)}°N, ${(+p.centroid[1]).toFixed(3)}°E` : "-", better: false },
+        salinity: { value: p.salinityTrendPct == null ? "?" : `${uz ? "indeks" : "index"} ${p.salinityTrendPct > 0 ? "+" : ""}${Math.round(p.salinityTrendPct)}%/${uz ? "10 yil" : "10 yr"}`, better: p.salinityTrendPct != null && p.salinityTrendPct === bSalt },
+        ...(req.goal === "pasture" ? {} : { water: { value: p.waterM3PerHa == null ? "?" : `${n0(p.waterM3PerHa)} m³/${uz ? "ga" : "ha"}`, better: p.waterM3PerHa != null && p.waterM3PerHa === bWater } }),
+        frostFree: { value: p.frostFreeDays == null ? "?" : `${p.frostFreeDays} ${uz ? "kun" : "days"}`, better: p.frostFreeDays === bFfd },
+        slope: { value: p.slopeDeg == null ? "?" : `${p.slopeDeg}°`, better: p.slopeDeg != null && p.slopeDeg === bSlope },
+        heat: { value: p.heatDays == null ? "?" : `${Math.round(p.heatDays)} ${uz ? "kun/yil" : "days/yr"}`, better: p.heatDays != null && p.heatDays === bHeat },
+        nearWater: { value: p.nearestWaterKm == null ? "?" : `${p.nearestWaterKm} km`, better: p.nearestWaterKm != null && p.nearestWaterKm === bNear },
+        history: { value: (p.recentCrops ?? []).map((c: string) => CROPS[crop(c)]?.name[uz ? "uz" : "en"] ?? c).join(" → ") || "-", better: false },
+        risk: { value: p.mainRisk ?? "-", better: false },
+      },
+    })),
+  };
 }

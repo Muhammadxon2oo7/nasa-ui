@@ -93,11 +93,24 @@ function Passport() {
   const { t, lang } = useT();
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(location.origin), []); // eslint-disable-line react-hooks/set-state-in-effect -- origin is client-only
+  // backend-issued passport number and online URL (FastAPI fields)
+  const [official, setOfficial] = useState<{ passportNo: string; onlineUrl: string } | null>(null);
+  useEffect(() => {
+    if (data?.backend !== "fastapi" || !data.sourceId) return;
+    let dead = false;
+    fetch(`/py/api/passport/${data.sourceId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => !dead && j?.passportNo && setOfficial({ passportNo: j.passportNo, onlineUrl: j.onlineUrl }))
+      .catch(() => {});
+    return () => {
+      dead = true;
+    };
+  }, [data?.backend, data?.sourceId]);
   if (status === "loading") return <Skeleton className="mx-auto h-[80dvh] max-w-[210mm]" />;
   if (!data) return <EmptyState title="-" />;
   const f = data.field;
   const L = (uz: string, en: string) => (lang === "uz" ? uz : en);
-  const no = `FS-${new Date(data.generatedAt).getUTCFullYear()}-${hash6(data.fieldId)}`;
+  const no = official?.passportNo ?? `TV-${new Date(data.generatedAt).getUTCFullYear()}-${hash6(data.fieldId)}`;
   const issued = new Date(data.generatedAt);
   const best = data.strategies.find((s) => s.id === data.summary.bestStrategyId) ?? data.strategies[0];
   const cur = data.strategies.find((s) => s.isCurrent);
@@ -135,7 +148,7 @@ function Passport() {
               {f.slopeDeg != null && ` · ${L("qiyalik", "slope")} ${f.slopeDeg}°`}
             </div>
           </div>
-          {origin && <Qr text={`${origin}/result/${data.fieldId}`} />}
+          {origin && <Qr text={official?.onlineUrl ?? `${origin}/result/${data.fieldId}`} />}
         </header>
         <FieldImage data={data} />
 
@@ -166,7 +179,7 @@ function Passport() {
             {cur && ` · ${L("hozirgi", "current")} ${num(cur.waterM3PerHa)}`}
             {data.water.limitM3PerHa && ` · ${L("limit", "limit")} ${num(data.water.limitM3PerHa)}`}
           </p>
-          {aw && <p className="text-black/70">{L(`${aw.year}-yil: ekin ehtiyoji ${num(aw.needM3PerHa)}, haqiqiy iste'mol ${num(aw.consumedM3PerHa)} m³/ga (Sentinel-2)`, `${aw.year}: crop need ${num(aw.needM3PerHa)}, actual use ${num(aw.consumedM3PerHa)} m³/ha (Sentinel-2)`)}</p>}
+          {aw && <p className="text-black/70">{L(`${aw.year}-yil: ekin ehtiyoji ${(aw.needM3PerHa != null ? num(aw.needM3PerHa) : "?")}, haqiqiy iste'mol ${num(aw.consumedM3PerHa)} m³/ga (Sentinel-2)`, `${aw.year}: crop need ${(aw.needM3PerHa != null ? num(aw.needM3PerHa) : "?")}, actual use ${num(aw.consumedM3PerHa)} m³/ha (Sentinel-2)`)}</p>}
           {data.waterSupply && <p className="text-black/70">🏔️ {data.waterSupply.basinName}: {L("o'tgan qish qor", "last winter snow")} {data.waterSupply.lastSeason.snowAnomalyPct > 0 ? "+" : ""}{data.waterSupply.lastSeason.snowAnomalyPct}% (MODIS)</p>}
         </Section>
         <Section n={5} title={t("passport.s5")}>

@@ -19,7 +19,7 @@ const FieldMap = dynamic(() => import("@/components/map/FieldMap"), { ssr: false
 const COLORS = ["var(--s1)", "var(--s2)", "var(--s3)", "var(--s4)"];
 const HEX = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"]; // = --s1..--s4 (Leaflet needs real colors)
 const GOALS: CompareGoal[] = ["winter_wheat", "cotton", "alfalfa", "pasture", "general"];
-const ROWS = ["suitability", "region", "salinity", "water", "pasture", "gaez", "frostFree", "slope", "heat", "history", "risk"];
+const ROWS = ["suitability", "region", "salinity", "water", "pasture", "gaez", "frostFree", "slope", "heat", "nearWater", "history", "risk"];
 const DEMO = ["sirdaryo", "jizzax", "fargona"];
 const DEMO_NAME: Record<string, string> = { sirdaryo: "Sirdaryo", jizzax: "Jizzax", fargona: "Farg'ona" };
 const LETTER = "ABCD";
@@ -43,6 +43,9 @@ export default function ComparePage() {
   /** Detailed result: demo pilots open instantly; others run /api/analyze (core inputs are already cached by compare). */
   const open = async (i: number, placeId: string) => {
     const demo = Object.keys(DEMO_NAME).find((k) => DEMO_NAME[k] === places[i]?.name);
+    const { LIVE_DEMOS } = await import("@/api/fastapi");
+    const live = Object.keys(LIVE_DEMOS).find((k) => LIVE_DEMOS[k].uz === places[i]?.name || LIVE_DEMOS[k].en === places[i]?.name);
+    if (live) return router.push(`/result/live-${live}${goal === "pasture" ? "?module=livestock" : ""}`);
     const mod = goal === "pasture" ? "?module=livestock" : "";
     if (demo) return router.push(`/result/demo-${demo}${mod}`);
     setOpening(placeId);
@@ -86,9 +89,10 @@ export default function ComparePage() {
       api.current?.clear();
     }
   };
+  // demo places = the backend's pre-analysed real fields (fast); the offline JSON still covers the old pilots
   const loadDemo = async () => {
-    const reqs = await Promise.all(DEMO.map((n) => fetch(`/demo/${n}.req.json`).then((r) => r.json())));
-    const ps: Place[] = reqs.map((r, i) => ({ name: DEMO_NAME[DEMO[i]], polygon: r.polygon }));
+    const { LIVE_DEMOS, liveDemoRequest } = await import("@/api/fastapi");
+    const ps: Place[] = Object.keys(LIVE_DEMOS).map((k) => ({ name: lang === "en" ? LIVE_DEMOS[k].en : LIVE_DEMOS[k].uz, polygon: liveDemoRequest(k, lang)!.polygon }));
     setFit(true);
     setPlaces(ps);
     setRes(null);

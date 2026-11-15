@@ -15,7 +15,7 @@ export interface AnalyzeRequest {
   polygon: GeoJSON.Polygon;
   rotation: { year: number; crop: CropId | null; secondCrop?: CropId | null }[]; // null = let AI detect
   priorities: Priority[]; // order matters, at most 3
-  water: { availability: Level; limitM3PerHa?: number; method: IrrigationMethod };
+  water: { availability: Level; limitM3PerHa?: number; method: IrrigationMethod; appliedM3PerHa?: number };
   soil?: { eceDsM?: number; humusPct?: number; ecwDsM?: number };
   constraints?: { equipment?: string[]; hasLivestock?: boolean };
   lang: "uz" | "en";
@@ -70,6 +70,8 @@ export interface AnalyzeResponse {
   extrasUnknown?: Partial<Record<"calendar" | "actualWater" | "norms" | "waterSupply" | "gaez" | "leaching" | "history" | "soil" | "livestock", string>>;
   // ---- FastAPI backend (nasa_agro, FRONTEND_UCHUN_API.md) ----
   backend?: "fastapi" | "next";
+  /** the backend's own field id (passport, re-analysis) when the page uses an alias like live-<name> */
+  sourceId?: string;
   forecast?: ForecastData | null;
   degradedReasons?: string[]; // human-readable reasons from the backend
 }
@@ -363,13 +365,16 @@ export interface CalendarData {
 export interface ActualWaterData {
   year: number;
   crops: CropId[];
-  needM3PerHa: number; // FAO-56 ETc of the crops detected that year, that year's weather
+  needM3PerHa: number | null; // FAO-56 ETc of the crops detected that year (null: second crop / unknown crop)
+  needReason?: string;
   consumedM3PerHa: number; // Sentinel-2 NDVI → Kcb → Kcb·ET0
   consumedLow: number;
   consumedHigh: number;
   checks: { source: "wapor" | "modis" | "ecostress"; m3PerHa: number | null; images?: number; note?: string }[];
-  monthly: { month: number; needMm: number; consumedMm: number; ndvi: number | null }[];
+  monthly: { month: number; needMm: number | null; consumedMm: number; ndvi: number | null }[];
   method: string;
+  /** backend-computed when the farmer gave applied water */
+  appliedM3PerHa?: number; efficiencyPct?: number; excessM3PerHa?: number;
 }
 
 // A2

@@ -35,6 +35,29 @@ export default function ResultPage() {
   );
 }
 
+/** Livestock module on demand: say what is computed (MODIS pasture norm, NPP, THI, water) and for how long. */
+function ModuleProgress() {
+  const { lang } = useT();
+  const [sec, setSec] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setSec((x) => x + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const steps = lang === "uz" ? ["MODIS: yaylov 20 yillik me'yori", "MODIS NPP: yaylov sig'imi", "NASA POWER: issiqlik stressi (THI)", "JRC: eng yaqin suv manbalari"] : ["MODIS: 20-year pasture norm", "MODIS NPP: grazing capacity", "NASA POWER: heat stress (THI)", "JRC: nearest water sources"];
+  const cur = Math.min(steps.length - 1, Math.floor(sec / 8));
+  return (
+    <div role="status" aria-live="polite" className="grid gap-2 rounded-[22px] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+      <b className="text-[15px]">{lang === "uz" ? "Chorvachilik moduli hisoblanmoqda" : "Computing the livestock module"} <span className="font-normal text-[var(--fg-3)] tnum">· {sec} s</span></b>
+      {steps.map((st, i) => (
+        <span key={st} className={`flex items-center gap-2.5 text-[14px] ${i <= cur ? "text-[var(--fg)]" : "text-[var(--fg-3)]"}`}>
+          <span className={`h-2 w-2 rounded-full ${i < cur ? "bg-[var(--accent-fill)]" : i === cur ? "animate-pulse bg-[var(--accent-fill)] motion-reduce:animate-none" : "bg-[var(--surface-3)]"}`} /> {st}
+        </span>
+      ))}
+      {sec > 30 && <span className="text-[12.5px] text-[var(--fg-3)]">{lang === "uz" ? "Yaylov uchun birinchi hisob 1-2 daqiqa olishi mumkin." : "The first pasture analysis can take 1-2 minutes."}</span>}
+    </div>
+  );
+}
+
 const STAGES = [
   { s: 0, uz: "NASA POWER: 20 yillik kunlik iqlim", en: "NASA POWER: 20 years of daily climate" },
   { s: 3, uz: "Sentinel-2: dalaning yillar bo'yicha tarixi", en: "Sentinel-2: the field's history by year" },
@@ -168,24 +191,34 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
   const options = useMemo(() => tabs.map((k) => ({ value: k, label: <span className="flex items-center gap-1.5"><span aria-hidden className="text-[var(--fg-3)]">{ICON[k]}</span>{t(`q.${k}` as Key)}</span> })), [t, tabs]);
 
   // livestock not computed yet → ask the backend for it (core is cached, so this is fast)
-  const switchModule = async (m: ModuleTab) => {
-    setTab(MODULE_TABS[m][0], m);
-    if (m !== "livestock" || data.livestock) return;
+  const loadLivestock = async () => {
+    if (data.livestock || loadingLs) return;
     let req: AnalyzeRequest | null = null;
     try {
       req = JSON.parse(localStorage.getItem(`fs:req:${data.fieldId}`) ?? "null");
     } catch {}
     if (!req && data.fieldId.startsWith("demo-")) req = await fetch(`/demo/${data.fieldId.slice(5)}.req.json`).then((r) => r.json()).catch(() => null);
+    if (!req && data.fieldId.startsWith("live-")) req = (await import("@/api/fastapi")).liveDemoRequest(data.fieldId.slice(5), lang);
     if (!req) return;
     setLoadingLs(true);
     try {
       const d = await analyzeField({ ...req, modules: ["crop", "livestock"], lang });
-      setData({ ...data, livestock: d.livestock, modulesComputed: d.modulesComputed });
+      setData((cur) => ({ ...cur, livestock: d.livestock, modulesComputed: d.modulesComputed }));
     } catch {
     } finally {
       setLoadingLs(false);
     }
   };
+  const switchModule = async (m: ModuleTab) => {
+    setTab(MODULE_TABS[m][0], m);
+    if (m === "livestock") await loadLivestock();
+  };
+  // a shared link straight to the livestock module computes it on arrival
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetches over the network, state settles later
+    if (mod === "livestock" && !data.livestock) void loadLivestock();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mod]);
 
   return (
     <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] gap-3 px-3 sm:px-6">
@@ -218,7 +251,8 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
           <Segmented<Tab> value={active} onChange={(v) => setTab(v, mod)} options={options} className="bg-transparent" ariaLabel="tabs" />
         </div>
       </div>
-      {(busy || loadingLs) && <Skeleton className="h-24" />}
+      {busy && <Skeleton className="h-24" />}
+      {loadingLs && <ModuleProgress />}
       <AnimatePresence mode="wait" initial={false}>
         <m.div key={mod + active} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={spring}>
           {active === "plan" && <StrategiesTab data={data} />}

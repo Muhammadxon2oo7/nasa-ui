@@ -39,7 +39,7 @@ const USE_FASTAPI = process.env.NEXT_PUBLIC_USE_FASTAPI !== "false";
  * any other failure falls back to the built-in Next.js analysis so the demo never dies.
  */
 export const analyzeField = async (req: AnalyzeRequest, signal?: AbortSignal): Promise<AnalyzeResponse> => {
-  if (USE_FASTAPI && !DEMO_MODE && !req.modules?.includes("livestock")) {
+  if (USE_FASTAPI && !DEMO_MODE) {
     try {
       const { analyzeFastApi } = await import("./fastapi");
       return await analyzeFastApi(req, signal);
@@ -87,5 +87,15 @@ export type SavedField = { id: string; name: string; areaHa: number; region?: st
 export const listFields = () => safe(() => JSON.parse(localStorage.getItem("fs:fields") ?? "[]") as SavedField[], []);
 export const saveFields = (f: SavedField[]) => safe(() => localStorage.setItem("fs:fields", JSON.stringify(f)), undefined);
 
-export const compareFields = (req: import("@/types/api").CompareRequest, signal?: AbortSignal) =>
-  api<import("@/types/api").CompareResponse>("/api/compare", { method: "POST", body: JSON.stringify(req), timeoutMs: 240_000, signal });
+export const compareFields = async (req: import("@/types/api").CompareRequest, signal?: AbortSignal) => {
+  // pasture goal still needs the built-in livestock comparison; everything else goes to the FastAPI backend first
+  if (USE_FASTAPI && !DEMO_MODE && req.goal !== "pasture") {
+    try {
+      const { compareFastApi } = await import("./fastapi");
+      return await compareFastApi(req, signal);
+    } catch (e) {
+      if (signal?.aborted) throw e;
+    }
+  }
+  return api<import("@/types/api").CompareResponse>("/api/compare", { method: "POST", body: JSON.stringify(req), timeoutMs: 240_000, signal });
+};
