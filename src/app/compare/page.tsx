@@ -1,9 +1,10 @@
 "use client";
 
 import { AnimatePresence, m } from "motion/react";
-import { ArrowRight, Info, MapPinned, MousePointerClick, Sparkles, Target, Trash2, Trophy } from "lucide-react";
+import { ArrowRight, Check, Info, Loader2, MapPinned, MousePointerClick, Sparkles, Target, Trash2, Trophy } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
+import { atLeast, now, requestThink, thinkMs } from "@/lib/think";
 import type { CompareGoal, CompareResponse } from "@/types/api";
 import { analyzeField, ApiError, compareFields, saveAnalysis } from "@/api/client";
 import { useRouter } from "next/navigation";
@@ -61,15 +62,23 @@ export default function ComparePage() {
     const demo = Object.keys(DEMO_NAME).find((k) => DEMO_NAME[k] === places[i]?.name);
     const { LIVE_DEMOS } = await import("@/api/fastapi");
     const live = Object.keys(LIVE_DEMOS).find((k) => LIVE_DEMOS[k].uz === places[i]?.name || LIVE_DEMOS[k].en === places[i]?.name);
-    if (live) return router.push(`/result/live-${live}${goal === "pasture" ? "?module=livestock" : ""}`);
+    if (live) {
+      requestThink(`live-${live}`);
+      return router.push(`/result/live-${live}${goal === "pasture" ? "?module=livestock" : ""}`);
+    }
     const mod = goal === "pasture" ? "?module=livestock" : "";
-    if (demo) return router.push(`/result/demo-${demo}${mod}`);
+    if (demo) {
+      requestThink(`demo-${demo}`);
+      return router.push(`/result/demo-${demo}${mod}`);
+    }
+    const tOpen = now();
     setOpening(placeId);
     const y = new Date().getFullYear();
     const req: AnalyzeRequest = { polygon: places[i].polygon, rotation: [y - 3, y - 2, y - 1].map((year) => ({ year, crop: null })), priorities: ["income", "water"], water: { availability: "medium", method: "furrow" }, lang, profile, modules: goal === "pasture" ? ["crop", "livestock"] : ["crop"] };
     try {
       const d = await analyzeField(req);
       saveAnalysis(d);
+      requestThink(d.fieldId, tOpen + thinkMs());
       try {
         localStorage.setItem(`fs:req:${d.fieldId}`, JSON.stringify(req));
       } catch {}
@@ -122,7 +131,7 @@ export default function ComparePage() {
     try {
       const k = keyOf(g, ps);
       const warm = pre.current?.key === k ? pre.current.p : null;
-      setRes(await (warm ?? compareFields({ places: ps, goal: g, lang }, ctrl.current.signal)));
+      setRes(await atLeast(warm ?? compareFields({ places: ps, goal: g, lang }, ctrl.current.signal), now()));
       setStatus("idle");
     } catch (e) {
       // offline demo fallback (same 3 pilots, same goal)
@@ -252,13 +261,7 @@ export default function ComparePage() {
         </Card>
       </div>
 
-      {status === "busy" && (
-        <Card className="flex flex-col gap-2">
-          <p className="text-[14px] text-[var(--fg-2)]">{t("cmp.running")}</p>
-          <Skeleton className="h-10" />
-          <Skeleton className="h-40" />
-        </Card>
-      )}
+      {status === "busy" && <CompareProgress n={places.length} />}
       {status === "error" && <ErrorState message={err} onRetry={() => run()} />}
 
       <AnimatePresence>
@@ -370,6 +373,40 @@ export default function ComparePage() {
           </m.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+/** What a comparison actually computes, walked through while it runs (at least a few seconds). */
+function CompareProgress({ n }: { n: number }) {
+  const { lang } = useT();
+  const [sec, setSec] = useState(0);
+  useEffect(() => {
+    const t0 = Date.now();
+    const id = setInterval(() => setSec((Date.now() - t0) / 1000), 200);
+    return () => clearInterval(id);
+  }, []);
+  const steps = lang === "en"
+    ? [`NASA POWER: 20 years of climate for ${n} places`, "Sentinel-2 / Landsat: what each field grew", "SRTM and SoilGrids: slope and soil", "FAO-56: water need for the goal", "Scoring and ranking the places"]
+    : [`NASA POWER: ${n} ta joy uchun 20 yillik iqlim`, "Sentinel-2 / Landsat: har bir dalada nima ekilgan", "SRTM va SoilGrids: qiyalik va tuproq", "FAO-56: maqsad uchun suv talabi", "Joylarni baholash va saralash"];
+  const pace = thinkMs() / 1000 / steps.length;
+  const cur = Math.min(steps.length - 1, Math.floor(sec / pace));
+  return (
+    <div role="status" aria-live="polite" className="grid gap-2.5 rounded-[22px] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+      <b className="text-[15px]">{lang === "en" ? "Comparing the places…" : "Joylar solishtirilmoqda…"}</b>
+      <ul className="grid gap-2">
+        {steps.map((st, i) => (
+          <li key={st} className={`flex items-center gap-2.5 text-[14px] transition-colors ${i <= cur ? "text-[var(--fg)]" : "text-[var(--fg-3)]"}`}>
+            <span className="flex h-5 w-5 items-center justify-center">
+              {i < cur ? <Check size={16} className="text-[var(--accent)]" /> : i === cur ? <Loader2 size={16} className="animate-spin text-[var(--accent)] motion-reduce:animate-none" /> : <i className="h-2 w-2 rounded-full bg-[var(--surface-3)]" />}
+            </span>
+            {st}
+          </li>
+        ))}
+      </ul>
+      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[var(--surface-3)]">
+        <div className="h-full origin-left rounded-full bg-[var(--accent-fill)] transition-transform duration-300" style={{ transform: `scaleX(${Math.min(0.97, sec / (thinkMs() / 1000))})` }} />
+      </div>
     </div>
   );
 }

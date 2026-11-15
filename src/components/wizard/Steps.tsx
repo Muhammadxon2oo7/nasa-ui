@@ -6,6 +6,7 @@ import { Beef, Check, ChevronRight, CloudSun, Coins, Crosshair, Droplets, FileUp
 import { FieldSnapshot } from "../FieldSnapshot";
 import { canonicalRequest } from "@/api/fastapi";
 import { useJob } from "@/store/jobStore";
+import { thinkMs } from "@/lib/think";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -613,6 +614,7 @@ export function Step3({ onBack }: { onBack: () => void }) {
     if (!w.polygon) return;
     const ctrl = new AbortController();
     const t0 = Date.now();
+    const minMs = thinkMs();
     setError(null); // eslint-disable-line react-hooks/set-state-in-effect -- new attempt
     setElapsed(0);
     const tick = setInterval(() => setElapsed((Date.now() - t0) / 1000), 250);
@@ -643,7 +645,7 @@ export function Step3({ onBack }: { onBack: () => void }) {
       try {
         localStorage.setItem(`fs:req:${p.fieldId}`, JSON.stringify(req));
       } catch {}
-      router.push(`/result/${p.fieldId}`);
+      setTimeout(() => !ctrl.signal.aborted && router.push(`/result/${p.fieldId}`), Math.max(0, minMs - (Date.now() - t0)));
     })
       .then((d) => {
         if (handedOver) return;
@@ -651,7 +653,7 @@ export function Step3({ onBack }: { onBack: () => void }) {
         try {
           localStorage.setItem(`fs:req:${d.fieldId}`, JSON.stringify(req));
         } catch {}
-        router.push(`/result/${d.fieldId}`);
+        setTimeout(() => !ctrl.signal.aborted && router.push(`/result/${d.fieldId}`), Math.max(0, minMs - (Date.now() - t0)));
       })
       .catch((e: unknown) => {
         if (ctrl.signal.aborted) return;
@@ -665,9 +667,10 @@ export function Step3({ onBack }: { onBack: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once per attempt
   }, [run]);
 
-  const current = Math.min(STEPS.length - 1, Math.floor(elapsed / 4));
+  const pace = thinkMs() / 1000 / STEPS.length;
+  const current = Math.min(STEPS.length - 1, Math.floor(elapsed / pace));
   const jobProgress = useJob((s) => s.progress);
-  const pct = Math.min(97, Math.max(Math.round((1 - Math.exp(-elapsed / 14)) * 100), Math.round((jobProgress ?? 0) * 100)));
+  const pct = Math.min(97, Math.max(Math.round((elapsed / (thinkMs() / 1000)) * 90), Math.round((jobProgress ?? 0) * 100)));
   const dyk = (["dyk.1", "dyk.2", "dyk.3", "dyk.4"] as Key[])[Math.floor(elapsed / 7) % 4];
   const demo = w.demoId ?? "sirdaryo";
 

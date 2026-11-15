@@ -11,6 +11,7 @@ import { useAnalysis } from "@/lib/useAnalysis";
 import { useT, type Key } from "@/i18n";
 import { useResultUi } from "@/store/resultUiStore";
 import { useJob } from "@/store/jobStore";
+import { takeThink } from "@/lib/think";
 import { FieldHeader, LivestockCards } from "@/components/result/ResultHeader";
 import { AnswerCard, Fold } from "@/components/result/Sections";
 import { FieldTwin } from "@/components/twin/FieldTwin";
@@ -108,14 +109,16 @@ const STAGES = [
 ];
 
 /** Analysis in progress: show what is being computed and for how long, never a silent grey page. */
-function Loading() {
+function Loading({ span }: { span?: number }) {
   const { lang } = useT();
   const [sec, setSec] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setSec((x) => x + 1), 1000);
+    const t0 = Date.now();
+    const id = setInterval(() => setSec((Date.now() - t0) / 1000), span ? 200 : 1000);
     return () => clearInterval(id);
-  }, []);
-  const cur = STAGES.reduce((k, st, i) => (sec >= st.s ? i : k), 0);
+  }, [span]);
+  // a requested screen walks all stages within its span; an open-ended one keeps the original pace
+  const cur = span ? Math.min(STAGES.length - 1, Math.floor(sec / (span / STAGES.length))) : STAGES.reduce((k, st, i) => (sec >= st.s ? i : k), 0);
   return (
     <div className="mx-auto grid max-w-6xl gap-3 px-4 sm:px-6">
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
@@ -149,6 +152,13 @@ function Result() {
   const raw = sp.get("tab") ?? "";
   const tab: Tab = (TABS as readonly string[]).includes(raw) ? (raw as Tab) : (ALIAS[raw] ?? "plan");
   const { data, status } = useAnalysis(fieldId);
+  // Compare's "Full analysis" opens cached fields: show the analysis stages for a moment first
+  const [thinking, setThinking] = useState(() => (typeof window === "undefined" ? 0 : takeThink(fieldId)));
+  useEffect(() => {
+    if (!thinking) return;
+    const id = setTimeout(() => setThinking(0), thinking);
+    return () => clearTimeout(id);
+  }, [thinking]);
   const ui = useResultUi();
   const [busy, setBusy] = useState(false);
 
@@ -200,6 +210,7 @@ function Result() {
   };
 
   if (status === "loading") return <Loading />;
+  if (thinking) return <Loading span={thinking / 1000} />;
   if (!data)
     return (
       <div className="mx-auto max-w-xl px-4">
