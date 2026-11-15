@@ -2,6 +2,7 @@
 
 import { EconomicsCard } from "./Extras";
 import { IncomeDetail, incomeShort, NormsDetail } from "./Economics";
+import { SoilEffects } from "./Insights";
 import { Fold, reasonFromData } from "./Sections";
 import { ChartColumn, Coins, Droplet, FlaskConical, Minus, Scale, TrendingDown, TrendingUp } from "lucide-react";
 
@@ -353,6 +354,11 @@ function StrategyDetail({ data, st, color }: { data: AnalyzeResponse; st: Strate
         <Block icon={<Droplet size={15} />} title={`${t("st.monthlyWater")} (${t("mm")})`}>
           <MiniBars values={wm.map((m) => m.irrigationMm)} color="var(--water)" labels={wm.map((m) => monthShort(m.month, lang))} />
         </Block>
+        {st.soilEffects && (
+          <Block icon={<Sprout size={15} />} title={lang === "en" ? "What it does to the soil" : "Tuproqqa ta'siri"}>
+            <SoilEffects st={st} />
+          </Block>
+        )}
         {st.income && (
           <Block icon={<Coins size={15} />} title={lang === "en" ? "Expected revenue" : "Kutilayotgan tushum"}>
             <IncomeDetail income={st.income} />

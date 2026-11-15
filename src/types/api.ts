@@ -38,7 +38,29 @@ export interface LivestockInput {
 }
 
 // ---------- Response ----------
+/** Extra NASA evidence from the FastAPI backend; every part is optional. */
+export interface Insights {
+  /** GRACE/GRACE-FO total water storage around the field */
+  waterStorage?: { trendCmPerYear: number; series: { year: number; cm: number }[]; period?: string; source?: string; resolution?: string; note?: string };
+  /** GPM IMERG heavy-rain days and erosion */
+  extremeRain?: { daysPerYear: number; thresholdMm: number; trendPerDecade: number; maxDailyMm: number; byYear?: { year: number; heavyDays: number; maxMm: number }[]; period?: string; source?: string };
+  erosionRisk?: { level: Level; slopeDeg: number; heavyRainDaysPerYear: number; method?: string };
+  /** when a crop's sensitive stage meets heat or frost, and how often */
+  vulnerableWindows?: { crop: CropId; from: string; to: string; risk: "heat" | "frost" | "autumn_frost"; probPct: number; note?: string }[];
+  /** SMAP root-zone moisture this month vs the long-term normal */
+  moistureAnomaly?: { month: string; valueM3M3: number; normalM3M3: number; zScore: number; level: "dry" | "normal" | "wet"; yearsInNormal?: number; source?: string; resolution?: string };
+  /** salinity estimated from satellite when the farmer gave none */
+  salinityEstimate?: { level: Level; eceEstDsM: number | null; confidence: "high" | "medium" | "low"; method?: string; source?: string; note?: string };
+  salinitySource?: "lab" | "user" | "satellite";
+  autumnSowing?: { crop: CropId; windowFrom: string; windowTo: string; rule: string; source?: string }[];
+}
+
+export type ZoneKind = "low_vigor" | "water_stress" | "salinity" | "erosion";
+export interface ZoneProps { kind: ZoneKind; level: Level; areaHa: number; value: number; fieldMean: number; threshold: number; unit: string; note: string }
+export interface ZonesData { features: { type: "Feature"; geometry: GeoJSON.Polygon | GeoJSON.MultiPolygon; properties: ZoneProps }[]; method?: string; sources?: string[]; reason?: string; failedKinds?: string[] }
+
 export interface AnalyzeResponse {
+  insights?: Insights;
   fieldId: string;
   field: FieldInfo;
   summary: {
@@ -175,6 +197,15 @@ export interface Strategy {
   income?: StrategyIncome;
   /** A2 (backend): calculated net irrigation vs official regional norms */
   waterNorms?: WaterNorm[];
+  /** days the field stands bare in the growing season, with the windows */
+  bare?: { daysPerYear: number; windows: { year: number; from: string; to: string; days: number }[] };
+  /** what the rotation does to the soil, in physical units */
+  soilEffects?: { nFixKgHaPerYear: number; coverDaysPerYear: number; rootDepthMaxCm: number; residueTHa: number; pestBreakYears: number; source?: string };
+  laborDaysPerHa?: number;
+  metricConfidence?: Partial<Record<MetricName, "high" | "medium" | "low" | null>>;
+  /** spread of the yearly water need across 20 climate years */
+  waterP10?: number;
+  waterP90?: number;
   /** gross water need in the dry (−30 % rain) scenario - B2 dry-year profit */
   dryWaterM3PerHa?: number;
   score: number; // backend's initial score
@@ -397,7 +428,7 @@ export interface ActualWaterData {
   consumedM3PerHa: number; // Sentinel-2 NDVI → Kcb → Kcb·ET0
   consumedLow: number;
   consumedHigh: number;
-  checks: { source: "wapor" | "modis" | "ecostress"; m3PerHa: number | null; images?: number; note?: string }[];
+  checks: { source: "wapor" | "modis" | "ecostress"; m3PerHa: number | null; images?: number; note?: string; status?: "agree" | "disagree" | "insufficient"; label?: string }[];
   monthly: { month: number; needMm: number | null; consumedMm: number; ndvi: number | null }[];
   method: string;
   /** backend-computed when the farmer gave applied water */

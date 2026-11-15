@@ -189,23 +189,38 @@ function LeachingPlanCard({ data }: { data: AnalyzeResponse }) {
 
 function SowingCard({ data }: { data: AnalyzeResponse }) {
   const { t, lang } = useT();
-  const s = data.calendar?.soilTempSowing;
+  // only the crops this field will actually grow (today's rotation and the recommended one)
+  const planned = new Set(data.strategies.filter((x) => x.isCurrent || x.id === data.summary.bestStrategyId).flatMap((x) => x.seasons.map((y) => y.crop)));
+  const s = data.calendar?.soilTempSowing?.filter((x) => planned.has(x.crop));
+  const autumn = (data.insights?.autumnSowing ?? []).filter((x) => planned.has(x.crop));
   return (
     <Card className="flex flex-col gap-2">
-      <CardTitle source="ERA5-Land · Open-Meteo"><G e="🌱" /> {t("cal.sowing")}</CardTitle>
+      <CardTitle source={data.backend === "fastapi" ? "SMAP L4 · NASA POWER" : "ERA5-Land · Open-Meteo"}><G e="🌱" /> {t("cal.sowing")}</CardTitle>
+      {autumn.length > 0 && (
+        <ul className="grid gap-2">
+          {autumn.map((x) => (
+            <li key={`a-${x.crop}`} className="rounded-2xl bg-[var(--surface-2)] px-3 py-2">
+              <b className="text-[15px]">
+                <CropDot crop={x.crop} /> {cropName(x.crop, lang)}: {dayMonth(x.windowFrom, lang)} - {dayMonth(x.windowTo, lang)}
+              </b>
+              <span className="block text-[13px] text-[var(--fg-2)]">{x.rule}</span>
+            </li>
+          ))}
+        </ul>
+      )}
       {s?.length ? (
         <ul className="grid gap-2">
           {s.map((x) => (
             <li key={x.crop} className="rounded-2xl bg-[var(--surface-2)] px-3 py-2">
               <b className="text-[15px]">
-                <CropDot crop={x.crop} /> {t("cal.sowLine", { crop: cropName(x.crop, lang), from: dayMonth(x.windowFrom, lang), to: dayMonth(x.windowTo, lang) })}
+                <CropDot crop={x.crop} /> {x.windowTo ? t("cal.sowLine", { crop: cropName(x.crop, lang), from: dayMonth(x.windowFrom, lang), to: dayMonth(x.windowTo, lang) }) : `${cropName(x.crop, lang)}: ${dayMonth(x.windowFrom, lang)}${lang === "en" ? " onwards" : " dan boshlab"}`}
               </b>
               <span className="block text-[13px] text-[var(--fg-2)]">{t("cal.sowWhy", { t: x.thresholdC })} · {t("cal.typical", { d: dayMonth(x.typicalDate, lang) })}</span>
               {x.forecastReachInDays != null && <span className="mt-0.5 block text-[13px] font-semibold text-[var(--accent)]">{t("cal.reach", { n: x.forecastReachInDays, t: x.thresholdC })}</span>}
             </li>
           ))}
         </ul>
-      ) : (
+      ) : autumn.length ? null : (
         <p className="text-[14px] text-[var(--fg-2)]">{lang === "uz" ? "Tavsiya etilgan rejada bahorda ekiladigan ekin yo'q: kuzgi ekinlar sovuq tushishidan oldingi muddatga qarab ekiladi." : "The recommended plan has no spring-sown crop: autumn crops are timed by the first frost instead."}</p>
       )}
     </Card>
@@ -353,15 +368,24 @@ export function ActualVsNeedCard({ data }: { data: AnalyzeResponse }) {
       />
       <div>
         <div className="text-[12.5px] font-semibold text-[var(--fg-3)]">{t("aw.checks")}</div>
-        <ul className="mt-1 flex flex-wrap gap-1.5 text-[12.5px]">
-          {a.checks.map((c) => (
-            <li key={c.source} className="flex items-center gap-1 rounded-full bg-[var(--surface-2)] px-2.5 py-1">
-              <b>{c.source === "wapor" ? "WaPOR" : c.source === "modis" ? "MODIS ET" : "ECOSTRESS"}</b>
-              {c.m3PerHa != null ? <span className="tnum">{num(c.m3PerHa)} {t("m3ha")}</span> : <UnknownValue reason={c.note ?? "-"} />}
-            </li>
-          ))}
+        {/* independent satellites that agree (or not) with our Sentinel-2 estimate */}
+        <ul className="mt-1.5 grid gap-1.5 text-[13px]">
+          {a.checks.map((c) => {
+            const name = c.source === "wapor" ? "FAO WaPOR v3 (300 m)" : c.source === "modis" ? "MODIS ET (500 m)" : "NASA ECOSTRESS (70 m)";
+            const v = c.status === "agree" ? { tone: "bg-[var(--accent-soft)] text-[var(--accent)]", uz: "mos", en: "agrees" } : c.status === "disagree" ? { tone: "bg-[var(--warn-bg)] text-[var(--warn-fg)]", uz: "farq bor", en: "differs" } : c.status === "insufficient" ? { tone: "bg-[var(--surface-3)] text-[var(--fg-2)]", uz: "ma'lumot kam", en: "not enough data" } : null;
+            return (
+              <li key={c.source} className="rounded-2xl bg-[var(--surface-2)] px-3 py-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <b>{name}</b>
+                  {v && <span className={`rounded-full px-2 py-0.5 text-[11.5px] font-semibold ${v.tone}`}>{lang === "en" ? v.en : v.uz}</span>}
+                  {c.m3PerHa != null && <span className="ml-auto tnum text-[var(--fg-2)]">{num(c.m3PerHa)} {t("m3ha")}</span>}
+                  {c.m3PerHa == null && !v && <UnknownValue reason={c.note ?? "-"} />}
+                </div>
+                {c.note && (v || c.m3PerHa != null) && <p className="mt-0.5 text-[12.5px] text-[var(--fg-2)]">{c.note}</p>}
+              </li>
+            );
+          })}
         </ul>
-        {a.checks.find((c) => c.source === "modis" && c.m3PerHa != null)?.note && <p className="mt-1 text-[12px] text-[var(--fg-3)]">{a.checks.find((c) => c.source === "modis")!.note}</p>}
       </div>
       <p className="text-[12px] text-[var(--fg-3)]">{t("aw.note")} · {a.method}</p>
     </Card>

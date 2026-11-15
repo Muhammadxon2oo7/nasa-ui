@@ -19,6 +19,7 @@ import { StrategiesTab, useRanked } from "@/components/result/StrategiesTab";
 import { ClimateTab, HistoryTab, SoilTab } from "@/components/result/TabsA";
 import { MapTab, Season, WaterTab, Week, WhatIf } from "@/components/result/TabsB";
 import { CalendarTab, FeedbackPrompt, ThisWeekCard } from "@/components/result/Extras";
+import { RainErosionCard, SoilNowCard, VulnerableWindowsCard, ZonesCard } from "@/components/result/Insights";
 import { Button, DegradedNotice, EmptyState, Segmented, Skeleton, spring } from "@/components/ui";
 
 // Four farmer questions per module, in the order a decision is made:
@@ -269,6 +270,7 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
           {active === "calendar" && (
             <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
               {mod !== "general" && <CalendarTab data={data} />}
+              {mod === "crop" && <VulnerableWindowsCard data={data} />}
               <Week data={data} />
               <Fold icon={<CloudSun size={18} />} title={t("f.seasonFold" as Key)} hint={t("f.seasonHint" as Key)}>
                 <Season data={data} />
@@ -286,7 +288,10 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
           )}
           {active === "field" && (
             <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
+              {mod !== "livestock" && <ZonesCard data={data} />}
+              {mod !== "livestock" && <SoilNowCard data={data} />}
               <MapTab data={data} initialLayer={mod === "livestock" ? "ndvi" : "field30"} />
+              <RainErosionCard data={data} />
               {mod !== "livestock" && (
                 <Fold icon={<FlaskConical size={18} />} title={t("f.soil")} hint={`${t("r.salt")}: ${t(`lvl.${data.soil.salinityLevel}` as Key)}`}>
                   <SoilTab data={data} onRecompute={recompute} />

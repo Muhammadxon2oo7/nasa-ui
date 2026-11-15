@@ -30,6 +30,12 @@ export function useAnalysis(fieldId: string) {
           }
         }
       }
+      // f-<id>: analysed by the backend and stored there (QR passport opened on another phone)
+      if (!d && fieldId.startsWith("f-")) {
+        const { getAnalysisFastApi } = await import("@/api/fastapi");
+        d = await getAnalysisFastApi(fieldId, document.documentElement.lang === "en" ? "en" : "uz").catch(() => null);
+        if (d) saveAnalysis(d);
+      }
       if (dead) return;
       if (d) {
         mem.set(fieldId, d);

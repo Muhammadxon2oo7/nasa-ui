@@ -46,6 +46,8 @@ export default function FieldMap({
   nav,
   navClassName,
   fitMaxZoom = 17,
+  zones,
+  onZoneClick,
 }: {
   value: GeoJSON.Polygon | null;
   onChange?: (p: GeoJSON.Polygon | null) => void;
@@ -62,6 +64,9 @@ export default function FieldMap({
   navClassName?: string;
   /** cap for the automatic fit to the field (e.g. 11 for coarse NASA layers) */
   fitMaxZoom?: number;
+  /** field-level zones drawn under the field outline; `key` identifies one for clicks */
+  zones?: { key: string; geometry: GeoJSON.Polygon | GeoJSON.MultiPolygon; color: string; fillOpacity: number; tip: string }[];
+  onZoneClick?: (key: string) => void;
 }) {
   nav = nav ?? !readOnly;
   const el = useRef<HTMLDivElement>(null);
@@ -75,6 +80,9 @@ export default function FieldMap({
   const clickRef = useRef(onMapClick);
   clickRef.current = onMapClick;
   const extraLayer = useRef<Leaflet.LayerGroup | null>(null);
+  const zoneLayer = useRef<Leaflet.LayerGroup | null>(null);
+  const zoneClick = useRef(onZoneClick);
+  zoneClick.current = onZoneClick;
 
   useEffect(() => {
     let dead = false;
@@ -102,6 +110,7 @@ export default function FieldMap({
       }
       if (value) draw(value, true);
       applyOverlay();
+      drawZones();
       drawExtra(); // after the main polygon so fitExtra can include it
       if (apiRef)
         apiRef.current = {
@@ -135,7 +144,7 @@ export default function FieldMap({
     const Lm = L.current, m = map.current;
     if (!Lm || !m) return;
     shape.current?.remove();
-    const layer = Lm.polygon(p.coordinates[0].map(([lon, lat]) => [lat, lon] as [number, number]), { color: GREEN, weight: 3, fillOpacity: 0.15 }).addTo(m);
+    const layer = Lm.polygon(p.coordinates[0].map(([lon, lat]) => [lat, lon] as [number, number]), { color: GREEN, weight: 3, fillOpacity: zones?.length ? 0 : 0.15, interactive: !readOnly }).addTo(m);
     shape.current = layer;
     if (!readOnly) {
       layer.on("pm:edit", emit);
@@ -173,7 +182,27 @@ export default function FieldMap({
       m.flyToBounds(b, { padding: [56, 56], maxZoom: 15, duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1 });
     }
   }
-  useEffect(drawExtra, [JSON.stringify(extra)]); // eslint-disable-line react-hooks/exhaustive-deps  
+  useEffect(drawExtra, [JSON.stringify(extra)]); // eslint-disable-line react-hooks/exhaustive-deps
+  function drawZones() {
+    const Lm = L.current, m = map.current;
+    if (!Lm || !m) return;
+    zoneLayer.current?.remove();
+    zoneLayer.current = null;
+    if (!zones?.length) return;
+    const g = Lm.layerGroup();
+    for (const z of zones) {
+      const layer = Lm.geoJSON({ type: "Feature", geometry: z.geometry, properties: {} } as GeoJSON.Feature, {
+        style: { color: z.color, weight: 1.5, opacity: 0.95, fillColor: z.color, fillOpacity: z.fillOpacity },
+      });
+      layer.bindTooltip(z.tip, { sticky: true, className: "fs-tip", direction: "top" });
+      layer.on("click", () => zoneClick.current?.(z.key));
+      g.addLayer(layer);
+    }
+    g.addTo(m);
+    zoneLayer.current = g;
+    shape.current?.bringToFront();
+  }
+  useEffect(drawZones, [JSON.stringify(zones?.map((z) => [z.key, z.color, z.fillOpacity]))]); // eslint-disable-line react-hooks/exhaustive-deps  
   // external polygon (demo field picked / cleared)
   const lastKey = useRef("");
   useEffect(() => {

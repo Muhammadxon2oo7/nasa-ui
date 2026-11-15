@@ -7,10 +7,12 @@ const API = process.env.NEXT_PUBLIC_API_URL ?? "";
 export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
 export class ApiError extends Error {
-  constructor(public code: string, public status: number) {
-    super(code);
+  constructor(public code: string, public status: number, message?: string) {
+    super(message ?? code);
   }
 }
+/** backend validation codes -> the wizard's own messages */
+const CODE: Record<string, string> = { polygon_too_small: "tooSmall", polygon_too_large: "tooLarge" };
 
 export async function api<T>(path: string, init?: RequestInit & { timeoutMs?: number; signal?: AbortSignal }): Promise<T> {
   if (DEMO_MODE) throw new ApiError("demo-mode", 0);
@@ -45,7 +47,8 @@ export const analyzeField = async (req: AnalyzeRequest, signal?: AbortSignal): P
       const { analyzeFastApi } = await import("./fastapi");
       return await analyzeFastApi(req, signal);
     } catch (e) {
-      if ((e as { status?: number }).status === 422) throw new ApiError((e as Error).message, 422);
+      const x = e as Error & { status?: number; code?: string };
+      if (x.status === 422) throw new ApiError(CODE[x.code ?? ""] ?? x.code ?? "validation_error", 422, x.message);
       if (signal?.aborted) throw e;
     }
   }

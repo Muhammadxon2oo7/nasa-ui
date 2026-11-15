@@ -640,7 +640,7 @@ export function Step3({ onBack }: { onBack: () => void }) {
       })
       .catch((e: unknown) => {
         if (ctrl.signal.aborted) return;
-        setError(e instanceof ApiError && e.code.startsWith("too") ? t(`err.${e.code}` as Key) : t("s3.failed"));
+        setError(e instanceof ApiError && e.code.startsWith("too") ? t(`err.${e.code}` as Key) : e instanceof ApiError && e.status === 422 && e.message !== e.code ? e.message : t("s3.failed"));
       })
       .finally(() => clearInterval(tick));
     return () => {

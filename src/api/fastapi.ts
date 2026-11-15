@@ -24,7 +24,7 @@ export function toBackendRequest(req: AnalyzeRequest): Any {
     priorities: req.priorities.filter((p) => p !== "forage").slice(0, 3),
     water: { availability: req.water.availability, method: req.water.method, ...(req.water.limitM3PerHa ? { limitM3PerHa: req.water.limitM3PerHa } : {}), ...(req.water.appliedM3PerHa ? { appliedM3PerHa: req.water.appliedM3PerHa } : {}) },
     soil: { eceDsM: req.soil?.eceDsM ?? null, humusPct: req.soil?.humusPct ?? null, ecwDsM: req.soil?.ecwDsM ?? null },
-    salinityLevel: req.salinityLevel ?? "medium",
+    ...(req.salinityLevel ? { salinityLevel: req.salinityLevel } : {}),
     profile: req.profile ?? "farmer",
     lang: req.lang,
     ...(req.modules?.length ? { modules: req.modules } : {}),
@@ -47,7 +47,6 @@ export function liveDemoRequest(name: string, lang: "uz" | "en"): AnalyzeRequest
     rotation: [2023, 2024, 2025].map((year) => ({ year, crop: null })),
     priorities: ["water", "salinity"],
     water: { availability: "medium", method: "furrow" },
-    salinityLevel: "medium",
     profile: "farmer",
     lang,
   };
@@ -69,7 +68,9 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
       isCurrent: !!s.isCurrent,
       isNearest: s.isNearest || undefined,
       // backend: year 1..3 + "MM-DD" → real plan years (start > end means the season began the year before)
-      seasons: (s.seasons ?? []).map((x: Any) => ({ year: planStart + (x.year - 1), crop: crop(x.crop), start: x.start, end: x.end })),
+      seasons: (s.seasons ?? []).map((x: Any) =>
+        x.startDate && x.endDate ? { year: +String(x.endDate).slice(0, 4), crop: crop(x.crop), start: x.startDate, end: x.endDate } : { year: planStart + (x.year - 1), crop: crop(x.crop), start: x.start, end: x.end },
+      ),
       metrics: s.metrics,
       unknownReasons: s.unknownReasons,
       score: s.score ?? 0,
@@ -80,6 +81,12 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
       robustness: s.robustness ? { score: s.robustness.score, worstScore: scores.length ? Math.min(...scores) : s.robustness.score, scenarios: s.robustness.scenarios } : undefined,
       income: s.income ? { ...s.income, byCrop: (s.income.byCrop ?? []).map((c: Any) => ({ ...c, crop: crop(c.crop) })), missing: (s.income.missing ?? []).map(crop) } : undefined,
       waterNorms: Array.isArray(s.waterNorms) ? s.waterNorms.map((n: Any) => ({ ...n, crop: crop(n.crop) })) : undefined,
+      bare: s.bare ?? undefined,
+      soilEffects: s.soilEffects ?? undefined,
+      laborDaysPerHa: s.laborDaysPerHa ?? undefined,
+      metricConfidence: s.metricConfidence ?? undefined,
+      waterP10: s.water?.p10M3PerHa ?? undefined,
+      waterP90: s.water?.p90M3PerHa ?? undefined,
     } as Strategy;
   });
 
@@ -116,7 +123,9 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
     ? {
         ndvi: (h.ndvi ?? []).map((x: Any) => ({ date: x.date, value: x.value })),
         seasons: (h.seasons ?? []).map((s: Any) => ({ year: s.year, crops: (s.crops ?? []).map((x: Any) => ({ crop: crop(x.crop), start: x.start, end: x.end, confidence: x.confidence ?? 0.5, source: x.source === "user" ? "user" : "rules" })) })),
-        bareWindows: (h.bareSummers ?? []).filter((x: Any) => x.days > 0).map((x: Any) => ({ start: `${x.year}-06-15`, end: `${x.year}-10-15`, days: x.days })),
+        bareWindows: Array.isArray(h.bareWindows)
+          ? h.bareWindows.map((x: Any) => ({ start: `${x.year}-${x.from}`, end: `${x.year}-${x.to}`, days: Math.round((Date.parse(`${x.year}-${x.to}`) - Date.parse(`${x.year}-${x.from}`)) / 864e5) + 1 }))
+          : (h.bareSummers ?? []).filter((x: Any) => x.days > 0).map((x: Any) => ({ start: `${x.year}-06-15`, end: `${x.year}-10-15`, days: x.days })),
         model: h.model ? { name: h.model.name, accuracy: h.model.accuracy ?? undefined } : undefined,
       }
     : { ndvi: [], seasons: [], bareWindows: [] };
@@ -141,6 +150,16 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
               frozenRisk: (cal.leaching.frozenRisk ?? []).map((f: Any) => ({ dekad: `${f.month}-${f.dekad}`, pct: Math.round(f.pct) })),
             }
           : undefined,
+        soilTempSowing: (b.sowing?.crops ?? cal.soilTempSowing ?? []).map((x: Any) => ({
+          crop: crop(x.crop),
+          thresholdC: x.thresholdC,
+          typicalDate: x.typicalStart ?? x.typicalDate ?? "",
+          windowFrom: x.recommendedFrom ?? x.windowFrom ?? x.typicalStart ?? "",
+          // lateStart is "the date in a late year", not the end of a window: only use it when it is after the start
+          windowTo: x.windowTo ?? (x.lateStart && x.recommendedFrom && x.lateStart > x.recommendedFrom ? x.lateStart : ""),
+          forecastReachInDays: x.now?.ready ? 0 : (x.forecastReachInDays ?? null),
+          source: "SMAP L4",
+        })),
       }
     : null;
 
@@ -212,7 +231,7 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
         consumedM3PerHa: wa.consumedM3PerHa,
         consumedLow: wa.consumedLowM3PerHa ?? wa.consumedM3PerHa,
         consumedHigh: wa.consumedHighM3PerHa ?? wa.consumedM3PerHa,
-        checks: (wa.checks ?? []).map((c: Any) => ({ source: c.source, m3PerHa: c.m3PerHa ?? null, note: c.note })),
+        checks: (wa.checks ?? []).map((c: Any) => ({ source: c.id ?? c.source, m3PerHa: c.m3PerHa ?? (c.waporMm != null ? Math.round(c.waporMm * 10) : null), note: c.text ?? c.reason ?? c.note, status: c.status ?? undefined, label: c.label ?? undefined })),
         monthly: (wa.monthly ?? []).map((m: Any) => ({ month: m.month, needMm: m.needMm ?? null, consumedMm: m.consumedMm, ndvi: null })),
         method: wa.method ?? "",
         appliedM3PerHa: wa.appliedM3PerHa ?? undefined,
@@ -237,7 +256,19 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
       }
     : null;
   const field = b.field ?? {};
+  const sal = b.soil?.salinity;
+  const insights = {
+    waterStorage: b.water?.storage?.series?.length ? b.water.storage : undefined,
+    extremeRain: c.extremeRain ?? undefined,
+    erosionRisk: c.erosionRisk ? { ...c.erosionRisk, level: LV(c.erosionRisk.level) } : undefined,
+    vulnerableWindows: Array.isArray(c.vulnerableWindows) ? c.vulnerableWindows.map((v: Any) => ({ ...v, crop: crop(v.crop) })) : undefined,
+    moistureAnomaly: b.soil?.moistureAnomaly ?? undefined,
+    salinityEstimate: sal ? { level: LV(sal.level), eceEstDsM: sal.eceEstDsM ?? null, confidence: sal.confidence ?? "low", method: sal.method, source: sal.source, note: sal.note } : undefined,
+    salinitySource: b.soil?.salinitySource ?? undefined,
+    autumnSowing: Array.isArray(cal?.autumnSowing) ? cal.autumnSowing.map((a: Any) => ({ ...a, crop: crop(a.crop) })) : undefined,
+  };
   return {
+    insights,
     fieldId: b.fieldId,
     sourceId: b.fieldId,
     backend: "fastapi",
@@ -284,25 +315,67 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
   } as AnalyzeResponse;
 }
 
-/** POST /py/api/analyze → frontend contract. Throws on failure (caller falls back to the built-in API). */
+/** Backend errors are {code, message: {uz, en}}; older builds sent {detail}. */
+function apiError(j: Any, status: number, lang: "uz" | "en") {
+  const msg = j?.message?.[lang] ?? j?.message?.uz ?? (typeof j?.detail === "string" ? j.detail : null);
+  const err = new Error(msg ?? `http_${status}`) as Error & { status?: number; code?: string };
+  err.status = status;
+  err.code = j?.code ?? `http_${status}`;
+  return err;
+}
+
+const sleep = (ms: number, signal?: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    const t = setTimeout(resolve, ms);
+    signal?.addEventListener("abort", () => (clearTimeout(t), reject(new DOMException("aborted", "AbortError"))), { once: true });
+  });
+
+/**
+ * POST /py/api/analyze?async=true → 200 (cached, full result) or 202 {jobId}; then GET /api/jobs/{id}
+ * until done. No request outlives the gateway, so a new field never ends in a 502.
+ */
 export async function analyzeFastApi(req: AnalyzeRequest, signal?: AbortSignal): Promise<AnalyzeResponse> {
+  const lang = req.lang === "en" ? "en" : "uz";
+  const { useJob } = await import("@/store/jobStore");
+  const job = useJob.getState();
+  job.reset();
   const body = JSON.stringify(toBackendRequest(req));
-  // a first analysis can outlive the gateway (502/504) while the backend keeps computing and caches it: retry once
-  for (let attempt = 0; ; attempt++) {
-    const res = await fetch("/py/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body, signal });
-    if ((res.status === 502 || res.status === 504) && attempt === 0) {
-      await new Promise((r) => setTimeout(r, 4000));
-      continue;
+  try {
+    const res = await fetch("/py/api/analyze?async=true", { method: "POST", headers: { "Content-Type": "application/json" }, body, signal });
+    const j: Any = await res.json().catch(() => ({}));
+    if (!res.ok && res.status !== 202) throw apiError(j, res.status, lang);
+    if (res.status !== 202 && !j.jobId) return fromBackend(dashes(j), req);
+    job.set({ jobId: j.jobId, stage: "queued", progress: 0 });
+    const t0 = Date.now();
+    for (;;) {
+      await sleep(2500, signal);
+      const r = await fetch(`/py/api/jobs/${encodeURIComponent(j.jobId)}`, { signal });
+      const q: Any = await r.json().catch(() => ({}));
+      if (!r.ok) throw apiError(q, r.status, lang);
+      job.set({ stage: q.stage ?? null, progress: typeof q.progress === "number" ? q.progress : null });
+      if (q.status === "done" && q.result) return fromBackend(dashes(q.result), req);
+      if (q.status === "error") throw apiError(q.error ?? q, 500, lang);
+      if (Date.now() - t0 > 180_000) throw apiError({ code: "timeout" }, 504, lang);
     }
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      const d = (j as Any).detail;
-      const err = new Error(typeof d === "string" ? d : `http_${res.status}`) as Error & { status?: number };
-      err.status = res.status;
-      throw err;
-    }
-    return fromBackend(dashes(j), req);
+  } finally {
+    useJob.getState().reset();
   }
+}
+
+/** A saved analysis by id (QR passport opened on another phone). */
+export async function getAnalysisFastApi(fieldId: string, lang: "uz" | "en"): Promise<AnalyzeResponse | null> {
+  const res = await fetch(`/py/api/analysis/${encodeURIComponent(fieldId)}`);
+  if (!res.ok) return null;
+  const j = await res.json().catch(() => null);
+  return j ? fromBackend(dashes(j), { lang } as AnalyzeRequest) : null;
+}
+
+/** Field-level vulnerability zones (A3). Slow the first time (GEE), cached after. */
+export async function getZonesFastApi(fieldId: string, signal?: AbortSignal): Promise<import("@/types/api").ZonesData | null> {
+  const res = await fetch(`/py/api/zones/${encodeURIComponent(fieldId)}`, { signal });
+  if (!res.ok) return null;
+  const j = dashes(await res.json().catch(() => null));
+  return j && Array.isArray(j.features) ? j : null;
 }
 
 
@@ -310,7 +383,7 @@ export async function analyzeFastApi(req: AnalyzeRequest, signal?: AbortSignal):
 export async function compareFastApi(req: import("@/types/api").CompareRequest, signal?: AbortSignal): Promise<import("@/types/api").CompareResponse> {
   const res = await fetch("/py/api/compare", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ places: req.places, goal: req.goal, method: "furrow" }), signal });
   const j = dashes(await res.json().catch(() => ({})));
-  if (!res.ok) throw new Error(typeof (j as Any).detail === "string" ? (j as Any).detail : `http_${res.status}`);
+  if (!res.ok) throw apiError(j, res.status, req.lang === "en" ? "en" : "uz");
   const uz = req.lang !== "en";
   const ps: Any[] = (j as Any).places ?? [];
   const best = (f: (p: Any) => number | null, dir: "min" | "max") => {
