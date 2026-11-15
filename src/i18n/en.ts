@@ -278,7 +278,7 @@ export const en: Record<keyof typeof uz, string> = {
   "map.date": "Date",
 
   "demo.title": "Demo fields",
-  "demo.sub": "Open instantly, no server needed. Every number is computed from real NASA and Sentinel-2 data.",
+  "demo.sub": "Real fields, ready analyses. Every number is computed from NASA and Sentinel-2 data and names its source.",
   "demo.open": "Open",
   "demo.sirdaryo": "Salinity",
   "demo.xorazm": "Short of water",
@@ -537,6 +537,7 @@ export const en: Record<keyof typeof uz, string> = {
   "fit.bad": "does not fit",
   "soil.better": "improves",
   "soil.worse": "depletes soil",
+  "soil.same": "holds steady",
   "score.unit": "/100 pts",
   "score.help": "Score 0-100 by your priorities (water, salt, soil…). Higher fits better.",
   "tw.full": "Full screen",

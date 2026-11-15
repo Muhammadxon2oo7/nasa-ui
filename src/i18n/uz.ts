@@ -276,7 +276,7 @@ export const uz = {
   "map.date": "Sana",
 
   "demo.title": "Demo dalalar",
-  "demo.sub": "Backend'siz, darhol ochiladi. Barcha raqamlar real NASA va Sentinel-2 ma'lumotidan hisoblangan.",
+  "demo.sub": "Haqiqiy dalalar, tayyor tahlil. Har bir raqam NASA va Sentinel-2 ma'lumotidan hisoblangan va manbasi ko'rsatilgan.",
   "demo.open": "Ochish",
   "demo.sirdaryo": "Sho'rlanish",
   "demo.xorazm": "Suv kam",
@@ -535,6 +535,7 @@ export const uz = {
   "fit.bad": "mos emas",
   "soil.better": "yaxshilaydi",
   "soil.worse": "tuproqni charchatadi",
+  "soil.same": "barqaror",
   "score.unit": "/100 ball",
   "score.help": "Ball: sizning ustuvorliklaringiz (suv, sho'r, tuproq…) bo'yicha 0-100. Qanchalik yuqori, shuncha mos.",
   "tw.full": "To'liq ekran",

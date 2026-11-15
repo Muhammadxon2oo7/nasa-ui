@@ -44,7 +44,7 @@ const METHODS = [
   { k: "Water", f: "ETc = Kc(t)·ET0 (FAO-56 Kc curves) · Peff USDA-SCS · 80 mm initial soil water · LR = ECw/(5·ECe_t − ECw) (FAO-29) · gross = net / η" },
   { k: "Rules", f: "R1 season/GDD · R2 salinity · R3 water limit · R4 rotation break · R5 legume bonus · R6 sowing window · R7 bare period · R8 nearest option" },
   { k: "Score", f: "Σ wᵢ·metricᵢ / Σ wᵢ; priority 1 = 3, 2 = 2, 3 = 1.5, others 0.5, climate risk 1; unknown (null) metrics are skipped and weights renormalised" },
-  { k: "🛡 Robustness", f: "Re-score under normal / dry year (−30 % rain) / hot year (+1.5 °C): 0.5·min + 0.5·(100 − 2·σ)" },
+  { k: "Robustness", f: "Re-score under normal / dry year (−30 % rain) / hot year (+1.5 °C): 0.5·min + 0.5·(100 − 2·σ)" },
   { k: "Pasture", f: "MODIS NDVI peak this year vs 2005-2025 median for the same months → anomaly %, percentile; NDVI stats on ≥ 1 km² around the place" },
   { k: "Capacity", f: "NPP (median, last 5 yr) × 2.2 (C→DM) × 0.45 (above-ground) × 0.3-0.5 (use) ÷ (11.5 kg DM × grazing days) → AU/ha; 1 cow = 1, 1 sheep/goat = 0.2, 1 horse = 1.25" },
   { k: "THI", f: "NRC 1971: THI = (1.8T + 32) − (0.55 − 0.0055·RH)(1.8T − 26); stress day = daily-mean THI ≥ 72, severe = daily-max THI ≥ 79" },
@@ -57,7 +57,7 @@ const METHODS = [
   { k: "N9 GAEZ", f: "FAO GAEZ v4 theme 4 (1981-2010, high input) suitability index and attainable yield at the field cell (5′ ≈ 9 km); 20 % of the land-selection score" },
   { k: "B2 profit", f: "Yield (farmer) × Maas-Hoffman salt factor × (1 − Ky·(1 − limit/need)) × price − cost; dry year = −30 % rain scenario; grain yields capped at the GAEZ potential" },
   { k: "A6 backtest", f: "Data cut at 1 Oct (no leakage) → plans → re-scored with the real next-year weather (water need, limit rule) → Spearman ρ of predicted vs realized ranks" },
-  { k: "❓ Unknown", f: "Missing or masked data is shown as ❓ with its reason, never as 0 (ADR-10)" },
+  { k: "Unknown", f: "Missing or masked data is shown as with its reason, never as 0 (ADR-10)" },
 ];
 
 export default function About() {
@@ -214,7 +214,7 @@ export default function About() {
               L("Ekin narxlari ekspert bahosi. Bozor ma'lumotlari hali ulanmagan.", "Crop prices are expert estimates; no market feed yet."),
               L("Yaylov sig'imi o'rtacha koeffitsientlarga tayanadi. Yaylov turi va o't tarkibi hisobga olinmagan, shuning uchun oraliq (min-max) ko'rsatiladi.", "Grazing capacity uses average coefficients; pasture species are not modelled, so a min-max range is shown."),
               L("GPS bo'yinbog' ma'lumotini ulash (M4) hozircha qilinmagan.", "GPS collar data integration (M4) is not done yet."),
-              L("Rasmiy sug'orish me'yorlari (A2), tuman hosildorligi va narxlar (B2) hali yig'ilmagan: ❓ ko'rsatiladi yoki foydalanuvchi o'zi kiritadi.", "Official irrigation norms (A2), district yields and prices (B2) are not collected yet: shown as ❓ or entered by the user."),
+              L("Rasmiy sug'orish me'yorlari (A2), tuman hosildorligi va narxlar (B2) hali yig'ilmagan: ko'rsatiladi yoki foydalanuvchi o'zi kiritadi.", "Official irrigation norms (A2), district yields and prices (B2) are not collected yet: shown as or entered by the user."),
               L("WaPOR va OpenET (N4) Google Earth Engine, ECOSTRESS (N5) esa Earthdata login talab qiladi: ulanmagan.", "WaPOR and OpenET (N4) need Google Earth Engine, ECOSTRESS (N5) needs an Earthdata login: not connected."),
               L("Haqiqiy ET (A1) uchun Kcb = a·NDVI + b koeffitsientlari adabiyotdan, mahalliy kalibrlanmagan (T12).", "Kcb = a·NDVI + b coefficients for actual ET (A1) come from literature, not calibrated locally (T12)."),
               L("Kirill yozuvi avtomatik transliteratsiya: ba'zi so'zlar qo'lda tekshirilishi kerak.", "Cyrillic is automatic transliteration: some words still need a manual check."),

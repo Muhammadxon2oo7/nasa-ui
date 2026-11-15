@@ -97,7 +97,7 @@ export default function Landing() {
       <section className="border-t border-[var(--separator)] py-10">
         <p className="max-w-[80ch] text-[14px] leading-relaxed text-[var(--fg-3)]">
           <span className="font-medium text-[var(--fg-2)]">{t("landing.data")}:</span> {DATA.join(" · ")}.{" "}
-          <Link href="/about#sources" className="font-semibold text-[var(--secondary)] underline">
+          <Link href="/about#sources" className="font-semibold text-[var(--accent)] underline">
             {t("nav.about")}
           </Link>
         </p>

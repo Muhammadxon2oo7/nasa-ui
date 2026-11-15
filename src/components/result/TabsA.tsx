@@ -12,6 +12,7 @@ import { XYChart } from "../charts";
 import { ndviColor } from "../landing/FieldFromSpace";
 import { Button, Card, CardTitle, CropChip, EmptyState, LevelBadge, SourceBadge, spring } from "../ui";
 import { GaezSuitabilityRow } from "./Extras";
+import { CropDot, G } from "@/components/Glyph";
 
 /* ------------------------------------------------------------------ 📜 history */
 
@@ -43,7 +44,7 @@ export function HistoryTab({ data }: { data: AnalyzeResponse }) {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
       <Card>
-        <CardTitle source="Sentinel-2 · rules">🤖 {t("h.detected")}</CardTitle>
+        <CardTitle source="Sentinel-2 · rules"><G e="🤖" /> {t("h.detected")}</CardTitle>
         <p className="-mt-2 mb-3 text-[12.5px] text-[var(--fg-3)]">{t("h.model")}</p>
         <div className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
           {h.seasons.map((s) => {
@@ -53,7 +54,7 @@ export function HistoryTab({ data }: { data: AnalyzeResponse }) {
               <button key={s.year} type="button" onClick={() => setSel(sel === s.year ? null : s.year)} aria-pressed={sel === s.year} className={clsx("flex min-w-[96px] shrink-0 flex-col items-center gap-1 rounded-2xl px-2.5 py-2.5 transition-colors", sel === s.year ? "bg-[var(--accent-soft)] ring-1 ring-[var(--accent)]" : "bg-[var(--surface-2)] hover:bg-[var(--surface-3)]")}>
                 <span className="text-[12.5px] font-semibold tnum">{s.year}</span>
                 <span className={clsx("text-[20px] leading-none", conf < 0.6 && !f && "opacity-50")} aria-hidden>
-                  {f && f !== "ok" ? cropIcon(f) : s.crops.map((c) => cropIcon(c.crop)).join("→")}
+                  {f && f !== "ok" ? <CropDot crop={f} /> : s.crops.map((c) => <CropDot key={c.crop} crop={c.crop} />)}
                   {conf < 0.6 && !f && "?"}
                 </span>
                 <span className="text-[12px] text-[var(--fg-3)] tnum">{f ? "✓" : `${Math.round(conf * 100)}%`}</span>
@@ -82,7 +83,7 @@ export function HistoryTab({ data }: { data: AnalyzeResponse }) {
                     <select autoFocus aria-label={t("h.fix")} className="h-9 rounded-xl bg-[var(--surface)] px-2 text-[14px]" defaultValue="" onChange={(e) => { persist({ ...fixed, [sel]: e.target.value as CropId }); setEditing(false); }}>
                       <option value="" disabled>-</option>
                       {SELECTABLE.map((c) => (
-                        <option key={c} value={c}>{cropIcon(c)} {CROPS[c].name[lang]}</option>
+                        <option key={c} value={c}>{CROPS[c].name[lang]}</option>
                       ))}
                     </select>
                   ) : (
@@ -172,11 +173,11 @@ export function ClimateTab({ data }: { data: AnalyzeResponse }) {
   const annualP = c.monthly.reduce((a, m) => a + m.precipMm, 0);
   const first5 = hy.slice(0, 5).reduce((a, b) => a + b, 0) / 5, last5 = hy.slice(-5).reduce((a, b) => a + b, 0) / 5;
   const cards = [
-    { icon: "❄️", label: t("c.lastFrost"), value: dayMonth(c.lastSpringFrost.median, lang), sub: `${t("c.latest")}: ${dayMonth(c.lastSpringFrost.latest, lang)} (${c.lastSpringFrost.latestYear})` },
-    { icon: "❄️", label: t("c.firstFrost"), value: dayMonth(c.firstAutumnFrost.median, lang), sub: `${t("c.earliest")}: ${dayMonth(c.firstAutumnFrost.earliest, lang)} (${c.firstAutumnFrost.earliestYear})` },
-    { icon: "☀️", label: t("c.frostFree"), value: `${c.frostFreeDays} ${t("days")}`, sub: "" },
-    { icon: "🔥", label: t("c.heat"), value: `${Math.round(last5)} ${t("c.perYear")} ${last5 > first5 ? "↑" : "↓"}`, sub: `${heat[0]?.year}: ${Math.round(first5)} → ${heat.at(-1)?.year}: ${Math.round(last5)}` },
-    { icon: "🌧️", label: t("c.rain"), value: `${num(annualP)} ${t("mm")}`, sub: `${c.precipTrendPct > 0 ? "↑" : "↓"} ${c.precipTrendPct > 0 ? "+" : ""}${c.precipTrendPct}%` },
+    { icon: <G e="❄️" />, label: t("c.lastFrost"), value: dayMonth(c.lastSpringFrost.median, lang), sub: `${t("c.latest")}: ${dayMonth(c.lastSpringFrost.latest, lang)} (${c.lastSpringFrost.latestYear})` },
+    { icon: <G e="❄️" />, label: t("c.firstFrost"), value: dayMonth(c.firstAutumnFrost.median, lang), sub: `${t("c.earliest")}: ${dayMonth(c.firstAutumnFrost.earliest, lang)} (${c.firstAutumnFrost.earliestYear})` },
+    { icon: <G e="☀️" />, label: t("c.frostFree"), value: `${c.frostFreeDays} ${t("days")}`, sub: "" },
+    { icon: <G e="🔥" />, label: t("c.heat"), value: `${Math.round(last5)} ${t("c.perYear")} ${last5 > first5 ? "↑" : "↓"}`, sub: `${heat[0]?.year}: ${Math.round(first5)} → ${heat.at(-1)?.year}: ${Math.round(last5)}` },
+    { icon: <G e="🌧️" />, label: t("c.rain"), value: `${num(annualP)} ${t("mm")}`, sub: `${c.precipTrendPct > 0 ? "↑" : "↓"} ${c.precipTrendPct > 0 ? "+" : ""}${c.precipTrendPct}%` },
   ];
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
@@ -227,11 +228,11 @@ export function ClimateTab({ data }: { data: AnalyzeResponse }) {
         </Card>
       )}
       <Card>
-        <CardTitle info="gdd" source="NASA POWER">🌱 {t("c.gdd", { g: num(c.gddAfterWheat) })}</CardTitle>
+        <CardTitle info="gdd" source="NASA POWER"><G e="🌱" /> {t("c.gdd", { g: num(c.gddAfterWheat) })}</CardTitle>
         <div className="flex flex-wrap gap-2">
           {c.cropGddFit.map((g) => (
             <span key={g.crop} className={clsx("inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13.5px] font-medium", g.fits ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "bg-[var(--danger-bg)] text-[var(--danger-fg)]")}>
-              {cropIcon(g.crop)} {cropName(g.crop, lang)} {num(g.required)} {g.fits ? "✅" : "❌"}
+              <CropDot crop={g.crop} /> {cropName(g.crop, lang)} {num(g.required)} {g.fits ? <G e="✅" /> : <G e="❌" />}
             </span>
           ))}
         </div>
@@ -363,9 +364,9 @@ export function SoilTab({ data, onRecompute }: { data: AnalyzeResponse; onRecomp
             <tbody>
               {s.cropTolerance.map((c) => (
                 <tr key={c.crop} className="border-t border-[var(--hairline)]">
-                  <td className="py-2">{cropIcon(c.crop)} {cropName(c.crop, lang)}</td>
+                  <td className="py-2"><CropDot crop={c.crop} label /></td>
                   <td className="py-2 text-[var(--fg-2)]">{t(`tol.${c.tolerance}` as Key)}</td>
-                  <td className="py-2 text-center">{c.fit === "ok" ? "✅" : c.fit === "warn" ? "⚠️" : "❌"}</td>
+                  <td className="py-2 text-center">{c.fit === "ok" ? <G e="✅" /> : c.fit === "warn" ? <G e="⚠️" /> : <G e="❌" />}</td>
                 </tr>
               ))}
             </tbody>

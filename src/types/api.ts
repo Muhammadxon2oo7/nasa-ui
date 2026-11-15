@@ -171,6 +171,10 @@ export interface Strategy {
   metrics: Record<MetricName, number | null>; // 0-100 each, null = unknown (ADR-10)
   unknownReasons?: Partial<Record<MetricName, string>>;
   robustness?: { score: number; worstScore: number; scenarios: { id: string; score: number }[] };
+  /** B2 (backend): estimated GROSS revenue per year, before costs; null usd = no yield/price data */
+  income?: StrategyIncome;
+  /** A2 (backend): calculated net irrigation vs official regional norms */
+  waterNorms?: WaterNorm[];
   /** gross water need in the dry (−30 % rain) scenario - B2 dry-year profit */
   dryWaterM3PerHa?: number;
   score: number; // backend's initial score
@@ -185,6 +189,29 @@ export interface Strategy {
     risks: string[];
     generatedBy: "llm" | "template";
   };
+}
+
+export interface StrategyIncome {
+  usdPerHa: number | null;
+  uzsPerHa?: number;
+  lowUsdPerHa?: number;
+  highUsdPerHa?: number;
+  confidence?: "high" | "medium" | "low" | "proxy";
+  isGross?: boolean;
+  byCrop?: { crop: CropId; yieldTHa: number; priceUsdKg: number; yieldSource: string; priceSource: string }[];
+  missing?: CropId[];
+  reason?: string;
+}
+
+export interface WaterNorm {
+  crop: CropId;
+  basis: "net" | "gross";
+  calculatedM3PerHa: number;
+  normRangeM3PerHa: [number, number];
+  status: "below" | "within" | "above";
+  diffPct: number;
+  points: { value: number; label: string; source: string; url?: string }[];
+  note?: string;
 }
 
 export type MetricName = "water" | "income" | "soil" | "salinity" | "climateRisk" | "labor";

@@ -6,6 +6,7 @@ import type { AnalyzeResponse } from "@/types/api";
 import { DEMO_FIELDS } from "@/data/demoFields";
 import { useT } from "@/i18n";
 import { SourceBadge } from "../ui";
+import { G } from "@/components/Glyph";
 
 const Z = 16;
 const tileXY = (lat: number, lon: number) => {
@@ -60,7 +61,7 @@ export function FieldFromSpace() {
           </svg>
         </div>
         <div className="lg absolute top-3 left-3 rounded-full px-3 py-1.5 text-[12px] font-semibold">
-          📍 {f.region[lang]} · {data ? `${data.field.areaHa} ${lang === "uz" ? "ga" : "ha"}` : "…"}
+          <G e="📍" /> {f.region[lang]} · {data ? `${data.field.areaHa} ${lang === "uz" ? "ga" : "ha"}` : "…"}
         </div>
       </div>
       <div className="px-2 pt-3 pb-1.5">

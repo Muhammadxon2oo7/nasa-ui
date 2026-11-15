@@ -30,7 +30,7 @@ export const REGIONS: { id: string; uz: string; en: string; c: [number, number] 
   { id: "fa", uz: "Farg'ona", en: "Fergana", c: [40.4, 71.78] },
 ];
 
-export type MapApi = { flyTo: (lat: number, lon: number, z?: number) => void; startDraw: () => void; toggleEdit: () => void; clear: () => void };
+export type MapApi = { flyTo: (lat: number, lon: number, z?: number) => void; startDraw: () => void; toggleEdit: () => void; clear: () => void; fit: (maxZoom: number) => void };
 
 /** One polygon at a time; area updates live while editing (FRONTEND_REJASI §3.2.1). */
 export default function FieldMap({
@@ -52,7 +52,7 @@ export default function FieldMap({
   basemap: "sat" | "map";
   apiRef?: React.MutableRefObject<MapApi | null>;
   readOnly?: boolean;
-  overlay?: { url: string; opacity: number; maxNativeZoom?: number; attribution?: string } | null;
+  overlay?: { url: string; opacity: number; maxNativeZoom?: number; attribution?: string; className?: string } | null;
   onMapClick?: (lat: number, lon: number) => void;
   extra?: { polygons?: { coords: GeoJSON.Polygon; label: string; color: string }[]; markers?: { lat: number; lon: number; label: string; color: string }[]; lines?: [number, number][][] };
   /** fit the view to the extra layers (+ the main polygon) whenever they change */
@@ -101,6 +101,7 @@ export default function FieldMap({
         });
       }
       if (value) draw(value, true);
+      applyOverlay();
       drawExtra(); // after the main polygon so fitExtra can include it
       if (apiRef)
         apiRef.current = {
@@ -111,6 +112,9 @@ export default function FieldMap({
             shape.current?.remove();
             shape.current = null;
             cb.current?.(null);
+          },
+          fit: (maxZoom) => {
+            if (shape.current) m.flyToBounds(shape.current.getBounds(), { padding: [48, 48], maxZoom, duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1.1 });
           },
         };
     })();
@@ -147,7 +151,7 @@ export default function FieldMap({
     base.current.bringToBack();
   }
 
-  useEffect(() => setBase(basemap), [basemap]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => setBase(basemap), [basemap]);  
   function drawExtra() {
     const Lm = L.current, m = map.current;
     if (!Lm || !m) return;
@@ -180,13 +184,33 @@ export default function FieldMap({
     if (!value && shape.current && readOnly) shape.current.remove();
     lastKey.current = key;
   }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    const Lm = L.current, m = map.current;
+  // Overlay swaps cross-fade: the new date loads on top, the old layer leaves only once the new
+  // tiles are in, so scrubbing the timeline never flashes the bare basemap.
+  const overlayRef = useRef(overlay);
+  overlayRef.current = overlay;
+  function applyOverlay() {
+    const Lm = L.current, m = map.current, o = overlayRef.current;
     if (!Lm || !m) return;
-    over.current?.remove();
-    over.current = overlay ? Lm.tileLayer(overlay.url, { opacity: overlay.opacity, maxNativeZoom: overlay.maxNativeZoom ?? 9, maxZoom: 19, attribution: overlay.attribution }).addTo(m) : null;
+    const prev = over.current;
+    if (!o) {
+      prev?.remove();
+      over.current = null;
+      return;
+    }
+    const next = Lm.tileLayer(o.url, { opacity: o.opacity, maxNativeZoom: o.maxNativeZoom ?? 9, maxZoom: 19, attribution: o.attribution, crossOrigin: true, className: o.className });
+    over.current = next;
+    next.addTo(m);
+    if (prev) {
+      const drop = () => prev.remove();
+      next.once("load", drop);
+      setTimeout(drop, 2500); // never keep a stale layer if some tiles fail
+    }
     shape.current?.bringToFront();
-  }, [overlay?.url, overlay?.opacity]); // eslint-disable-line react-hooks/exhaustive-deps
+  }
+  useEffect(applyOverlay, [overlay?.url]);  
+  useEffect(() => {
+    if (overlay) over.current?.setOpacity(overlay.opacity);
+  }, [overlay?.opacity]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     // isolate: Leaflet's panes use z-index 400-1000; keep them inside the map so the page header stays on top

@@ -1,8 +1,9 @@
 "use client";
 
 import { EconomicsCard } from "./Extras";
+import { IncomeDetail, incomeShort, NormsDetail } from "./Economics";
 import { Fold } from "./Sections";
-import { ChartColumn, Coins, Droplet, FlaskConical, Scale, TrendingDown, TrendingUp } from "lucide-react";
+import { ChartColumn, Coins, Droplet, FlaskConical, Minus, Scale, TrendingDown, TrendingUp } from "lucide-react";
 
 import { clsx } from "clsx";
 import { AnimatePresence, m } from "motion/react";
@@ -16,9 +17,10 @@ import { useResultUi } from "@/store/resultUiStore";
 import { MiniBars, Radar } from "../charts";
 import { RobustnessBadge, UnknownValue } from "./Unknown";
 import { Card, ScoreBar, Segmented, Slider, SourceBadge, spring } from "../ui";
+import { CropDot, G } from "@/components/Glyph";
 
 export const SERIES = ["var(--s1)", "var(--s2)", "var(--s3)", "var(--s4)"];
-const METRIC_ICON: Record<MetricKey, string> = { water: "💧", income: "💰", soil: "🌱", salinity: "🧂", climateRisk: "🌡️", labor: "⚡" };
+const METRIC_ICON: Record<MetricKey, React.ReactNode> = { water: <G e="💧" />, income: <G e="💰" />, soil: <G e="🌱" />, salinity: <G e="🧂" />, climateRisk: <G e="🌡️" />, labor: <G e="⚡" /> };
 
 export function useRanked(data: AnalyzeResponse) {
   const ui = useResultUi();
@@ -146,9 +148,17 @@ function StrategyCard({ st, score, gross, color, isBest, open, onToggle }: { st:
         <div className="flex items-center justify-between gap-2">
           <dt className="flex items-center gap-1.5 text-[var(--fg-3)]"><Sprout size={13} /> {t("mt.soil")}</dt>
           <dd className="flex items-center gap-1 font-semibold">
-            {st.metrics.soil == null ? "-" : st.metrics.soil >= 50 ? <><TrendingUp size={14} className="text-[var(--level-low-fg)]" /> {t("soil.better" as Key)}</> : <><TrendingDown size={14} className="text-[var(--level-high-fg)]" /> {t("soil.worse" as Key)}</>}
+            {st.metrics.soil == null ? "-" : st.metrics.soil >= 60 ? <><TrendingUp size={14} className="text-[var(--level-low-fg)]" /> {t("soil.better" as Key)}</> : st.metrics.soil <= 40 ? <><TrendingDown size={14} className="text-[var(--level-high-fg)]" /> {t("soil.worse" as Key)}</> : <><Minus size={14} className="text-[var(--fg-3)]" /> {t("soil.same" as Key)}</>}
           </dd>
         </div>
+        {st.income && (
+          <div className="flex items-center justify-between gap-2">
+            <dt className="flex items-center gap-1.5 text-[var(--fg-3)]"><Coins size={13} /> {t("mt.income")}</dt>
+            <dd className="font-semibold tnum" title={st.income.usdPerHa == null ? st.income.reason : undefined}>
+              {incomeShort(st.income) ?? "-"} {st.income.usdPerHa != null && <span className="font-normal text-[var(--fg-3)]">/{t("ha" as Key)}</span>}
+            </dd>
+          </div>
+        )}
       </dl>
       <button type="button" onClick={onToggle} aria-expanded={open} className="mt-auto flex items-center gap-1 self-start pt-3 text-[13.5px] font-semibold text-[var(--accent)]">
         {open ? t("hide") : t("details")}
@@ -209,7 +219,7 @@ function ComparisonTable({ list }: { list: { s: Strategy; score: number; i: numb
           {list.some((x) => x.s.robustness) && (
             <tr>
               <td className="sticky left-0 border-t border-[var(--hairline)] bg-[var(--surface)] py-2 pr-3 whitespace-nowrap" title={t("rob.title")}>
-                🛡️ {t("rob.label")}
+                <G e="🛡️" /> {t("rob.label")}
               </td>
               {list.map((x) => (
                 <td key={x.s.id} className="border-t border-[var(--hairline)] px-2 py-2 text-center tnum">
@@ -236,8 +246,16 @@ function ComparisonTable({ list }: { list: { s: Strategy; score: number; i: numb
 
 function RotationTimeline({ st }: { st: Strategy }) {
   const { t, lang } = useT();
-  const years = [...new Set(st.seasons.map((s) => s.year))];
   const startOf = (y: number) => Date.UTC(y, 0, 1);
+  // Seasons arrive as ISO dates (internal engine) or "MM-DD" (FastAPI, where start > end means the
+  // season began the previous autumn). Resolve both to absolute ranges, then every year row shows
+  // whatever overlaps it, so winter wheat sown in October appears in both rows.
+  const abs = st.seasons.map((x) => {
+    if (/^\d{4}-/.test(x.start)) return { ...x, a: Date.parse(x.start), b: Date.parse(x.end) };
+    const wraps = x.start > x.end;
+    return { ...x, a: Date.parse(`${wraps ? x.year - 1 : x.year}-${x.start}`), b: Date.parse(`${x.year}-${x.end}`) };
+  });
+  const years = [...new Set(st.seasons.map((s) => s.year))].sort((a, b) => a - b);
   return (
     <div>
       <div className="mb-1 grid grid-cols-[44px_1fr] gap-2 text-[12px] text-[var(--fg-3)]">
@@ -252,18 +270,18 @@ function RotationTimeline({ st }: { st: Strategy }) {
       </div>
       <div className="grid gap-1.5">
         {years.map((y) => {
-          const segs = st.seasons.filter((s) => s.year === y);
+          const segs = abs.filter((s) => s.a < startOf(y + 1) && s.b > startOf(y));
           return (
             <div key={y} className="grid grid-cols-[44px_1fr] items-center gap-2">
               <span className="text-[12.5px] font-semibold tnum">{y}</span>
               <div className="hatch relative h-8 overflow-hidden rounded-xl bg-[var(--surface-2)]">
                 {segs.map((s) => {
-                  const a = Math.max(startOf(y), Date.parse(s.start)), b = Math.min(startOf(y + 1), Date.parse(s.end));
+                  const a = Math.max(startOf(y), s.a), b = Math.min(startOf(y + 1), s.b);
                   const left = ((a - startOf(y)) / (startOf(y + 1) - startOf(y))) * 100;
                   const width = ((b - a) / (startOf(y + 1) - startOf(y))) * 100;
                   return (
-                    <m.div key={s.crop + s.start} initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={spring} className="absolute inset-y-1 flex origin-left items-center gap-1 overflow-hidden rounded-lg px-1.5 text-[12px] font-semibold whitespace-nowrap text-[#1B2A1E]" style={{ left: `${left}%`, width: `calc(${width}% - 2px)`, background: cropColor(s.crop) }} title={`${cropName(s.crop, lang)}: ${dayMonth(s.start, lang)} - ${dayMonth(s.end, lang)}`}>
-                      <span aria-hidden>{cropIcon(s.crop)}</span>
+                    <m.div key={s.crop + s.start + s.year} initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={spring} className="absolute inset-y-1 flex origin-left items-center gap-1 overflow-hidden rounded-lg px-1.5 text-[12px] font-semibold whitespace-nowrap text-[#1B2A1E]" style={{ left: `${left}%`, width: `calc(${width}% - 2px)`, background: cropColor(s.crop) }} title={`${cropName(s.crop, lang)}: ${dayMonth(s.start, lang)} - ${dayMonth(s.end, lang)}`}>
+                      <CropDot crop={s.crop} />
                       <span className="truncate">{cropName(s.crop, lang)}</span>
                     </m.div>
                   );
@@ -275,7 +293,7 @@ function RotationTimeline({ st }: { st: Strategy }) {
       </div>
       {st.sowWindow && st.sowWindow.length > 0 && (
         <p className="mt-2 text-[13px] text-[var(--fg-2)]">
-          🌱 {t("st.sow")}: {st.sowWindow.map((w) => `${cropName(w.crop, lang)} ${dayMonth(w.from, lang)} - ${dayMonth(w.to, lang)}`).join(" · ")}
+          <G e="🌱" /> {t("st.sow")}: {st.sowWindow.map((w) => `${cropName(w.crop, lang)} ${dayMonth(w.from, lang)} - ${dayMonth(w.to, lang)}`).join(" · ")}
         </p>
       )}
     </div>
@@ -306,7 +324,7 @@ function StrategyDetail({ data, st, color }: { data: AnalyzeResponse; st: Strate
         </h3>
       </div>
       <div className="mb-4">
-        <div className="mb-2 text-[12px] font-semibold tracking-wide text-[var(--fg-3)] uppercase">🗓️ {t("st.plan")}</div>
+        <div className="mb-2 text-[12px] font-semibold tracking-wide text-[var(--fg-3)] uppercase">{t("st.plan")}</div>
         <RotationTimeline st={st} />
       </div>
       <div className="grid gap-2.5 md:grid-cols-2">
@@ -327,21 +345,31 @@ function StrategyDetail({ data, st, color }: { data: AnalyzeResponse; st: Strate
           <ul className="grid gap-1">{e.benefits.map((b) => <li key={b}>{b}</li>)}</ul>
         </Block>
         <Block icon={<FileQuestion size={15} />} title={t("st.gaps")}>
-          <ul className="grid gap-1">{e.gaps.map((b) => <li key={b}>❓ {b}</li>)}</ul>
+          <ul className="grid gap-1">{e.gaps.map((b) => <li key={b}>{b}</li>)}</ul>
         </Block>
         <Block icon={<ShieldAlert size={15} />} title={t("st.risks")} tone="warn">
           <ul className="grid gap-1">{e.risks.map((b) => <li key={b}>{b}</li>)}</ul>
         </Block>
-        <Block icon={<span aria-hidden>💧</span>} title={`${t("st.monthlyWater")} (${t("mm")})`}>
+        <Block icon={<Droplet size={15} />} title={`${t("st.monthlyWater")} (${t("mm")})`}>
           <MiniBars values={wm.map((m) => m.irrigationMm)} color="var(--water)" labels={wm.map((m) => monthShort(m.month, lang))} />
         </Block>
+        {st.income && (
+          <Block icon={<Coins size={15} />} title={lang === "en" ? "Expected revenue" : "Kutilayotgan tushum"}>
+            <IncomeDetail income={st.income} />
+          </Block>
+        )}
+        {!!st.waterNorms?.length && (
+          <Block icon={<Scale size={15} />} title={lang === "en" ? "Water vs official norms" : "Suv: rasmiy me'yorlar bilan"}>
+            <NormsDetail norms={st.waterNorms} />
+          </Block>
+        )}
       </div>
       <div className="mt-3">
-        <div className="mb-1.5 text-[12px] font-semibold tracking-wide text-[var(--fg-3)] uppercase">⚙️ {t("st.rules")}</div>
+        <div className="mb-1.5 text-[12px] font-semibold tracking-wide text-[var(--fg-3)] uppercase">{t("st.rules")}</div>
         <div className="flex flex-wrap gap-1.5">
           {st.rules.map((r) => (
-            <span key={r.id} title={r.detail} className={clsx("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12.5px] font-medium", r.status === "pass" && "bg-[var(--accent-soft)] text-[var(--accent)]", r.status === "warn" && "bg-[var(--warn-bg)] text-[var(--warn-fg)]", r.status === "fail" && "bg-[var(--danger-bg)] text-[var(--danger-fg)]")}>
-              {r.status === "pass" ? <CheckCircle2 size={13} /> : r.status === "warn" ? <AlertTriangle size={13} /> : <CircleX size={13} />}
+            <span key={r.id} title={r.detail} className={clsx("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12.5px] font-medium", r.status === "pass" && "bg-[var(--accent-soft)] text-[var(--accent)]", r.status === "warn" && "bg-[var(--warn-bg)] text-[var(--warn-fg)]", r.status === "fail" && "bg-[var(--danger-bg)] text-[var(--danger-fg)]", r.status === "unknown" && "bg-[var(--surface-2)] text-[var(--fg-2)]")}>
+              {r.status === "pass" ? <CheckCircle2 size={13} /> : r.status === "warn" ? <AlertTriangle size={13} /> : r.status === "unknown" ? <FileQuestion size={13} /> : <CircleX size={13} />}
               {r.label}
               {r.detail && <span className="font-normal opacity-80">: {r.detail}</span>}
             </span>

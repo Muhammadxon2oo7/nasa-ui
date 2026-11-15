@@ -9,6 +9,7 @@ import { cropName, monthLong, monthShort, num } from "@/lib/format";
 import { useT } from "@/i18n";
 import { spring } from "../ui";
 import { cropAt } from "./FieldTwin";
+import { CropDot, G } from "@/components/Glyph";
 
 type Item = { icon: string; title: string; detail?: string; strong?: boolean };
 const ICON: Record<CalendarEvent["type"], string> = { sow: "🌱", irrigate: "💧", leach: "🧂", harvest: "🌾", weather: "⚠️", livestock: "🐄", pest: "🐛", soil_sample: "🔍", feed: "🧪", prepare: "🧹" };
@@ -55,7 +56,7 @@ export function CalendarRibbon({ data }: { data: AnalyzeResponse }) {
   return (
     <section className="rounded-[22px] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] sm:p-5" aria-label={L("Yillik reja", "Year plan")}>
       <div className="mb-3 flex items-baseline justify-between gap-2">
-        <h3 className="text-[16px] font-semibold">🗓️ {L("Yil davomida dalangiz", "Your field through the year")}</h3>
+        <h3 className="text-[16px] font-semibold"><G e="🗓️" /> {L("Yil davomida dalangiz", "Your field through the year")}</h3>
         <span className="truncate text-[12.5px] text-[var(--fg-3)]">{best.id} · {best.name}</span>
       </div>
       <div className="no-scrollbar -mx-1 overflow-x-auto px-1 pb-1">
@@ -67,11 +68,10 @@ export function CalendarRibbon({ data }: { data: AnalyzeResponse }) {
               <button key={i} type="button" onClick={() => setSel(i)} aria-pressed={sel === i} className={clsx("press flex flex-col items-center gap-1 rounded-2xl px-0.5 pt-1.5 pb-2 transition-colors", sel === i ? "bg-[var(--surface-2)] ring-2 ring-[var(--accent)]" : "hover:bg-[var(--surface-2)]/70")}>
                 <span className="text-[12px] font-semibold text-[var(--fg-3)]">{monthShort(mm.m, lang)}</span>
                 <span className="relative h-14 w-full overflow-hidden rounded-xl" style={{ background: crop ? CROPS[crop].color : BARE, opacity: crop ? 1 : 0.55 }}>
-                  <span className="absolute inset-0 flex items-center justify-center text-[20px] drop-shadow">{crop ? CROPS[crop].icon : ""}</span>
-                </span>
+                                  </span>
                 <span className="flex h-5 flex-wrap items-center justify-center gap-px text-[13px] leading-none">
                   {[...new Set(its.map((x) => x.icon))].slice(0, 3).map((ic) => (
-                    <span key={ic}>{ic}</span>
+                    <G key={ic} e={ic} />
                   ))}
                 </span>
                 {i === 0 || mm.m === 1 ? <span className="text-[12px] text-[var(--fg-3)] tnum">{mm.y}</span> : <span className="h-[12px]" />}
@@ -85,14 +85,14 @@ export function CalendarRibbon({ data }: { data: AnalyzeResponse }) {
           <div className="mb-2 flex items-center gap-2 text-[14.5px] font-semibold">
             {monthLong(cur.m, lang)} {cur.y}
             <span className="rounded-full px-2 py-0.5 text-[12px] font-semibold" style={{ background: `color-mix(in oklab, ${c ? CROPS[c].color : BARE} 30%, transparent)` }}>
-              {c ? `${CROPS[c].icon} ${cropName(c, lang)}` : L("dala bo'sh", "field bare")}
+              {c ? <CropDot crop={c} label /> : L("dala bo'sh", "field bare")}
             </span>
           </div>
           {items.length ? (
             <ul className="grid gap-1.5 sm:grid-cols-2">
               {items.map((it, k) => (
                 <li key={k} className="flex items-start gap-2.5 rounded-xl bg-[var(--surface)] px-3 py-2">
-                  <span className="text-[20px] leading-none">{it.icon}</span>
+                  <span className="text-[18px] leading-none"><G e={it.icon} /></span>
                   <span className="min-w-0">
                     <b className={clsx("block text-[14px] leading-snug", it.strong ? "font-semibold" : "font-medium")}>{it.title}</b>
                     {it.detail && <span className="block text-[12.5px] text-[var(--fg-3)]">{it.detail}</span>}

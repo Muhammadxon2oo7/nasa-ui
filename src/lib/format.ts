@@ -29,5 +29,6 @@ export function dayMonth(md: string, lang: Lang) {
 export const yearMonth = (ym: string, lang: Lang) => `${monthShort(+ym.slice(5, 7), lang)} ${ym.slice(0, 4)}`;
 
 export const cropName = (c: CropId, lang: Lang) => CROPS[c]?.name[lang] ?? c;
-export const cropIcon = (c: CropId) => CROPS[c]?.icon ?? "🌱";
+/** @deprecated crops are shown by colour (CropDot); kept for plain-text contexts */
+export const cropIcon = (c: CropId) => CROPS[c]?.icon ?? "";
 export const cropColor = (c: CropId) => CROPS[c]?.color ?? "#90A4AE";

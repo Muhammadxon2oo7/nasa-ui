@@ -18,6 +18,7 @@ import { DEFAULT_LS, useWizard } from "@/store/wizardStore";
 import { useProfile } from "@/store/platformStore";
 import type { MapApi } from "../map/FieldMap";
 import { Button, Card, ErrorState, Segmented, spring, springPop } from "../ui";
+import { CropDot, G } from "@/components/Glyph";
 
 const FieldMap = dynamic(() => import("../map/FieldMap"), { ssr: false, loading: () => <div className="shimmer h-full w-full bg-[var(--surface-2)]" /> });
 
@@ -201,8 +202,8 @@ export function Step1({ onNext }: { onNext: () => void }) {
       <div className="flex flex-col gap-3">
         <Card>
           <div className="mb-2 text-[12px] font-semibold tracking-wide text-[var(--fg-3)] uppercase">{t("s1.field")}</div>
-          {inputMode === "point" && !polygon && <p className="mb-2 text-[13.5px] text-[var(--accent)]">📍 {t("place.pointHint")}</p>}
-          {inputMode === "geojson" && <p className="mb-2 text-[13px] text-[var(--fg-3)]">📂 {t("place.geojsonHint")} <button type="button" className="font-semibold text-[var(--accent)]" onClick={() => fileRef.current?.click()}>{t("place.pick")}</button></p>}
+          {inputMode === "point" && !polygon && <p className="mb-2 text-[13.5px] text-[var(--accent)]"><G e="📍" /> {t("place.pointHint")}</p>}
+          {inputMode === "geojson" && <p className="mb-2 text-[13px] text-[var(--fg-3)]"><G e="📂" /> {t("place.geojsonHint")} <button type="button" className="font-semibold text-[var(--accent)]" onClick={() => fileRef.current?.click()}>{t("place.pick")}</button></p>}
           {fileErr && <p role="alert" className="mb-2 text-[13px] font-medium text-[var(--danger-fg)]">{t("place.badFile")}</p>}
           {placeType === "point_buffer" && polygon && <p className="mb-2 rounded-xl bg-[var(--warn-bg)] px-2.5 py-1.5 text-[12.5px] text-[var(--warn-fg)]">{t("place.approx")}</p>}
           {info ? (
@@ -239,9 +240,7 @@ export function Step1({ onNext }: { onNext: () => void }) {
                 onClick={() => setPolygon(f.polygon, f.id)}
                 className={clsx("press flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors", demoId === f.id ? "bg-[var(--accent-soft)]" : "hover:bg-[var(--surface-2)]")}
               >
-                <span className="text-[20px]" aria-hidden>
-                  {f.icon}
-                </span>
+                <FieldSnapshot polygon={f.polygon} ratio={1} className="h-12 w-12 shrink-0 overflow-hidden rounded-xl" />
                 <span className="flex-1">
                   <b className="block text-[14.5px]">{f.region[lang]}</b>
                   <span className="text-[12.5px] text-[var(--fg-3)]">{t(`demo.${f.id}` as Key)}</span>
@@ -280,7 +279,7 @@ function CropSelect({ value, onChange, filter, id }: { value: CropId | null; onC
       </option>
       {SELECTABLE.filter((c) => !filter || filter(c)).map((c) => (
         <option key={c} value={c}>
-          {cropIcon(c)} {CROPS[c].name[lang]}
+          <CropDot crop={c} /> {CROPS[c].name[lang]}
         </option>
       ))}
     </select>

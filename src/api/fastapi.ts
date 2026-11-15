@@ -1,3 +1,4 @@
+import { dashes } from "@/lib/clean";
 /**
  * Adapter for the FastAPI backend (github.com/Muhammadalixon-Qodirov/nasa_agro, FRONTEND_UCHUN_API.md).
  * The browser calls /py/* (Next.js rewrite → BACKEND_URL). The backend response is mapped onto the
@@ -77,6 +78,8 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
       rules: s.rules ?? [],
       explanation: s.explanation,
       robustness: s.robustness ? { score: s.robustness.score, worstScore: scores.length ? Math.min(...scores) : s.robustness.score, scenarios: s.robustness.scenarios } : undefined,
+      income: s.income ? { ...s.income, byCrop: (s.income.byCrop ?? []).map((c: Any) => ({ ...c, crop: crop(c.crop) })), missing: (s.income.missing ?? []).map(crop) } : undefined,
+      waterNorms: Array.isArray(s.waterNorms) ? s.waterNorms.map((n: Any) => ({ ...n, crop: crop(n.crop) })) : undefined,
     } as Strategy;
   });
 
@@ -149,7 +152,17 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
     seasonal: { uz: "Mavsumiy prognoz vaqtincha olinmadi", en: "Seasonal forecast temporarily unavailable" },
   };
   const lang = req?.lang === "en" ? "en" : "uz";
-  const reasons: string[] = (b.degraded ?? []).map((d: Any) => FRIENDLY[d.part]?.[lang] ?? d.reason ?? d.part);
+  // Template explanations are a design choice, not missing data; and raw server reasons may name
+  // config (env vars, keys, URLs), which never belongs on a farmer's screen.
+  const SECRETISH = /[A-Z][A-Z0-9]*_[A-Z0-9_]{2,}|api[_ -]?key|token|secret|https?:\/\//i;
+  const generic = lang === "en" ? "Part of the data is temporarily limited" : "Ma'lumotning bir qismi vaqtincha cheklangan";
+  const reasons: string[] = [
+    ...new Set<string>(
+      (b.degraded ?? [])
+        .filter((d: Any) => d.part !== "explanation")
+        .map((d: Any) => FRIENDLY[d.part]?.[lang] ?? (typeof d.reason === "string" && !SECRETISH.test(d.reason) ? d.reason : generic)),
+    ),
+  ];
   const unk = (v: number | null | undefined, why: string) => (v == null ? { value: null, reason: why } : v);
   const LV = (l: string | null | undefined): Level => (l === "high" ? "high" : l === "low" ? "low" : "medium");
 
@@ -292,13 +305,6 @@ export async function analyzeFastApi(req: AnalyzeRequest, signal?: AbortSignal):
   }
 }
 
-/** House style: plain hyphen instead of en/em dashes in any backend text. */
-function dashes<T>(v: T): T {
-  if (typeof v === "string") return v.replace(/ — /g, " - ").replace(/[—–]/g, "-") as T;
-  if (Array.isArray(v)) return v.map(dashes) as T;
-  if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, dashes(x)])) as T;
-  return v;
-}
 
 /** POST /py/api/compare (land selection) → the compare page's table rows. */
 export async function compareFastApi(req: import("@/types/api").CompareRequest, signal?: AbortSignal): Promise<import("@/types/api").CompareResponse> {

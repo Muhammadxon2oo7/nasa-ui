@@ -54,3 +54,25 @@ export function saveEcon(v: EconomicsInput) {
     localStorage.setItem(KEY, JSON.stringify(v));
   } catch {}
 }
+
+/**
+ * Fill yield and price gaps with the backend's sourced reference values (B2), so the card is
+ * useful before the farmer types anything. Farmer-entered values always win.
+ */
+export function withBackendDefaults(inp: EconomicsInput, strategies: Strategy[]): EconomicsInput {
+  const out: EconomicsInput = { crops: { ...inp.crops } };
+  for (const s of strategies) {
+    const inc = s.income;
+    if (!inc?.byCrop?.length) continue;
+    const rate = inc.uzsPerHa && inc.usdPerHa ? inc.uzsPerHa / inc.usdPerHa : 12_500;
+    for (const b of inc.byCrop) {
+      const cur = out.crops[b.crop] ?? {};
+      out.crops[b.crop] = {
+        ...cur,
+        yieldTPerHa: cur.yieldTPerHa ?? b.yieldTHa,
+        priceUzsPerKg: cur.priceUzsPerKg ?? Math.round(b.priceUsdKg * rate),
+      };
+    }
+  }
+  return out;
+}

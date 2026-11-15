@@ -13,7 +13,7 @@ export function Footer() {
         <span className="flex items-center gap-1.5">
           <AlertTriangle size={13} /> {t("footer.warn")}
         </span>
-        <Link href="/about#sources" className="text-[var(--secondary)] hover:underline">
+        <Link href="/about#sources" className="text-[var(--accent)] hover:underline">
           {t("nav.about")}
         </Link>
       </div>

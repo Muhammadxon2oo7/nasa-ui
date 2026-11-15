@@ -245,7 +245,7 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
         </div>
       )}
       <p className="-mt-1 flex items-center gap-1.5 px-1 text-[12px] text-[var(--fg-3)]"><Info size={13} /> {t("disclaimer")}</p>
-      {mod !== "general" && active !== "calendar" && <ThisWeekCard data={data} onOpen={() => setTab("calendar", mod)} />}
+      {mod !== "general" && active !== "calendar" && <ThisWeekCard data={data} livestock={mod === "livestock"} onOpen={() => setTab("calendar", mod)} />}
       <div className="lg sticky top-[calc(76px+env(safe-area-inset-top))] z-30 -mx-1 rounded-full p-1">
         <div className="no-scrollbar overflow-x-auto">
           <Segmented<Tab> value={active} onChange={(v) => setTab(v, mod)} options={options} className="bg-transparent" ariaLabel="tabs" />

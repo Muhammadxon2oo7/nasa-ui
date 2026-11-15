@@ -138,6 +138,7 @@ body {
   color: var(--fg);
   font-family: var(--font-sans);
   font-feature-settings: "cv11", "ss01";
+  font-variant-numeric: proportional-nums;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
@@ -151,7 +152,10 @@ button { -webkit-user-select: none; user-select: none; touch-action: manipulatio
   textarea:focus-visible { outline: none; }
 }
 
-.tnum { font-variant-numeric: tabular-nums; }
+/* Onest's tabular "1" is as wide as an "8", so "11.8" reads as "1 1.8" in running text.
+   Proportional lining figures everywhere; true tabular figures only where columns must align. */
+.tnum { font-variant-numeric: lining-nums proportional-nums; }
+table .tnum, td.tnum, th.tnum, input.tnum, .tnum-col { font-variant-numeric: lining-nums tabular-nums; }
 
 /* Static ambient glow behind the hero (no looping motion - vestibular safe). */
 .ambient {
@@ -468,3 +472,6 @@ a { text-underline-offset: 3px; }
 @keyframes fs-dash { to { stroke-dashoffset: -24; } }
 .pipe-flow { animation: fs-dash 0.9s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .fs-scan, .fs-outline, .pipe-flow { animation: none; } .fs-scan { display: none; } }
+
+/* 30 m imagery: show true pixels instead of a smeared upscale */
+.tiles-pixelated img { image-rendering: pixelated; }

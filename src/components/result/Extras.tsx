@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { AnalyzeResponse, CalendarEvent, CropId, EconomicsInput, FeedbackEntry, Level } from "@/types/api";
 import { CROPS } from "@/data/crops";
 import { cropName, dayMonth, monthShort, num } from "@/lib/format";
-import { loadEcon, profitOf, saveEcon } from "@/lib/economics";
+import { loadEcon, profitOf, saveEcon, withBackendDefaults } from "@/lib/economics";
 import { toIcs } from "@/lib/ics";
 import { useT, type Key } from "@/i18n";
 import { useMode } from "@/store/platformStore";
@@ -15,6 +15,7 @@ import { XYChart } from "../charts";
 import { Button, Card, CardTitle, ScoreBar, SourceBadge, spring } from "../ui";
 import { UnknownValue } from "./Unknown";
 import { CalendarRibbon } from "../twin/CalendarRibbon";
+import { CropDot, G } from "@/components/Glyph";
 
 const LVL_COLOR: Record<Level | "early", string> = { low: "var(--level-high)", medium: "var(--level-low)", high: "var(--water)", early: "var(--fg-3)" };
 const LVL_FG: Record<Level | "early", string> = { low: "var(--level-high-fg)", medium: "var(--level-low-fg)", high: "var(--fg)", early: "var(--fg-3)" };
@@ -51,10 +52,13 @@ function EventRow({ e, lang }: { e: CalendarEvent; lang: "uz" | "en" }) {
   );
 }
 
-export function ThisWeekCard({ data, onOpen }: { data: AnalyzeResponse; onOpen?: () => void }) {
+export function ThisWeekCard({ data, onOpen, livestock }: { data: AnalyzeResponse; onOpen?: () => void; livestock?: boolean }) {
   const { t, lang } = useT();
-  const c = data.calendar;
-  if (!c) return null;
+  const raw = data.calendar;
+  if (!raw) return null;
+  // herd tasks belong to the livestock module only; a crop plan should not tell a farmer to check feed stock
+  const keep = (e: { type: string }) => livestock || e.type !== "livestock";
+  const c = { ...raw, thisWeek: raw.thisWeek.filter(keep), next90Days: raw.next90Days.filter(keep) };
   const end = new Date(new Date(c.today).getTime() + 6 * 864e5).toISOString().slice(0, 10);
   return (
     <Card className="flex flex-col gap-2">
@@ -117,7 +121,7 @@ function LeachingPlanCard({ data }: { data: AnalyzeResponse }) {
   const { t, lang } = useT();
   const l = data.calendar?.leaching;
   const [open, setOpen] = useState(false);
-  if (!l) return <Card><CardTitle>🧂 {t("cal.leach")}</CardTitle><UnknownValue reason={data.extrasUnknown?.leaching ?? "-"} /></Card>;
+  if (!l) return <Card><CardTitle><G e="🧂" /> {t("cal.leach")}</CardTitle><UnknownValue reason={data.extrasUnknown?.leaching ?? "-"} /></Card>;
   const DEK = (k: string) => {
     const [mo, d] = k.split("-").map(Number);
     return `${monthShort(mo, lang)} ${d}`;
@@ -125,7 +129,7 @@ function LeachingPlanCard({ data }: { data: AnalyzeResponse }) {
   const maxPct = Math.max(30, ...l.frozenRisk.map((f) => f.pct));
   return (
     <Card className="flex flex-col gap-2">
-      <CardTitle source="FAO-29 · ERA5-Land">🧂 {t("cal.leach")}</CardTitle>
+      <CardTitle source="FAO-29 · ERA5-Land"><G e="🧂" /> {t("cal.leach")}</CardTitle>
       <p className={clsx("text-[14.5px]", l.recommended ? "font-semibold" : "text-[var(--fg-2)]")}>{l.recommended ? l.reason : `${t("cal.notNeeded")}. ${l.reason}`}</p>
       {l.recommended && (
         <>
@@ -148,7 +152,7 @@ function LeachingPlanCard({ data }: { data: AnalyzeResponse }) {
       )}
       {l.frozenRisk.length > 0 && (
         <div>
-          <div className="mt-1 mb-1 text-[12.5px] text-[var(--fg-3)]">🧊 {t("cal.frozen")}</div>
+          <div className="mt-1 mb-1 text-[12.5px] text-[var(--fg-3)]"><G e="🧊" /> {t("cal.frozen")}</div>
           <div className="flex h-16 items-end gap-[2px]" role="img" aria-label={t("cal.frozen")}>
             {l.frozenRisk.map((f) => (
               <div key={f.dekad} className="group relative flex-1" title={`${DEK(f.dekad)}: ${f.pct}%`}>
@@ -188,13 +192,13 @@ function SowingCard({ data }: { data: AnalyzeResponse }) {
   const s = data.calendar?.soilTempSowing;
   return (
     <Card className="flex flex-col gap-2">
-      <CardTitle source="ERA5-Land · Open-Meteo">🌱 {t("cal.sowing")}</CardTitle>
+      <CardTitle source="ERA5-Land · Open-Meteo"><G e="🌱" /> {t("cal.sowing")}</CardTitle>
       {s?.length ? (
         <ul className="grid gap-2">
           {s.map((x) => (
             <li key={x.crop} className="rounded-2xl bg-[var(--surface-2)] px-3 py-2">
               <b className="text-[15px]">
-                {CROPS[x.crop]?.icon} {t("cal.sowLine", { crop: cropName(x.crop, lang), from: dayMonth(x.windowFrom, lang), to: dayMonth(x.windowTo, lang) })}
+                <CropDot crop={x.crop} /> {t("cal.sowLine", { crop: cropName(x.crop, lang), from: dayMonth(x.windowFrom, lang), to: dayMonth(x.windowTo, lang) })}
               </b>
               <span className="block text-[13px] text-[var(--fg-2)]">{t("cal.sowWhy", { t: x.thresholdC })} · {t("cal.typical", { d: dayMonth(x.typicalDate, lang) })}</span>
               {x.forecastReachInDays != null && <span className="mt-0.5 block text-[13px] font-semibold text-[var(--accent)]">{t("cal.reach", { n: x.forecastReachInDays, t: x.thresholdC })}</span>}
@@ -223,27 +227,27 @@ export function WaterSupplyCard({ data, onTryDry }: { data: AnalyzeResponse; onT
   const { t } = useT();
   const mode = useMode((s) => s.mode);
   const w = data.waterSupply;
-  if (!w) return data.extrasUnknown?.waterSupply ? <Card className="flex items-center gap-2 text-[14px]">🏔️ <UnknownValue reason={data.extrasUnknown.waterSupply} /></Card> : null;
+  if (!w) return data.extrasUnknown?.waterSupply ? <Card className="flex items-center gap-2 text-[14px]"><G e="🏔️" /> <UnknownValue reason={data.extrasUnknown.waterSupply} /></Card> : null;
   const pct = (p: number) => `${p > 0 ? "+" : ""}${p}`;
   const flows = w.history.filter((h) => h.summerFlow != null).map((h) => h.summerFlow as number);
   const fMed = flows.length ? [...flows].sort((a, b) => a - b)[Math.floor(flows.length / 2)] : 1;
   const weak = w.correlation == null || Math.abs(w.correlation) < 0.4;
   return (
     <Card className="flex flex-col gap-2">
-      <CardTitle source="MODIS MOD10A2 · GloFAS">🏔️ {t("ws.title", { b: w.basinName })}</CardTitle>
+      <CardTitle source="MODIS MOD10A2 · GloFAS"><G e="🏔️" /> {t("ws.title", { b: w.basinName })}</CardTitle>
       <div className="grid gap-2 sm:grid-cols-2">
         <div className="rounded-2xl bg-[var(--surface-2)] px-3 py-2">
           <div className="flex items-center gap-2 text-[12.5px] text-[var(--fg-3)]">
             {t("ws.last", { s: w.lastSeason.season })} <Pill l={w.lastSeason.level} />
           </div>
-          <div className="text-[14.5px]">❄️ {t("ws.snow", { p: pct(w.lastSeason.snowAnomalyPct) })}</div>
-          {w.lastSeason.summerFlowPct != null && <div className="text-[13.5px] text-[var(--fg-2)]">🌊 {t("ws.flow", { f: w.flowName, p: pct(w.lastSeason.summerFlowPct) })}</div>}
+          <div className="text-[14.5px]"><G e="❄️" /> {t("ws.snow", { p: pct(w.lastSeason.snowAnomalyPct) })}</div>
+          {w.lastSeason.summerFlowPct != null && <div className="text-[13.5px] text-[var(--fg-2)]"><G e="🌊" /> {t("ws.flow", { f: w.flowName, p: pct(w.lastSeason.summerFlowPct) })}</div>}
         </div>
         <div className="rounded-2xl bg-[var(--surface-2)] px-3 py-2">
           <div className="flex items-center gap-2 text-[12.5px] text-[var(--fg-3)]">
             {t("ws.cur", { s: w.currentSeason.season })} <Pill l={w.currentSeason.level} />
           </div>
-          <div className="text-[14.5px]">{w.currentSeason.level === "early" ? `⚪ ${t("ws.early")}` : `❄️ ${t("ws.snow", { p: pct(w.currentSeason.snowAnomalyPct ?? 0) })}`}</div>
+          <div className="text-[14.5px]">{w.currentSeason.level === "early" ? `${t("ws.early")}` : `${t("ws.snow", { p: pct(w.currentSeason.snowAnomalyPct ?? 0) })}`}</div>
         </div>
       </div>
       {mode === "expert" || !weak ? (
@@ -302,7 +306,7 @@ export function ActualVsNeedCard({ data }: { data: AnalyzeResponse }) {
     setApplied(v); // eslint-disable-line react-hooks/set-state-in-effect -- read once from localStorage after mount
     setDraft(v ? String(v) : "");
   }, [key]);
-  if (!a) return data.extrasUnknown?.actualWater ? <Card className="text-[14px]">💧 {t("aw.title", { y: "" })} <UnknownValue reason={data.extrasUnknown.actualWater} /></Card> : null;
+  if (!a) return data.extrasUnknown?.actualWater ? <Card className="text-[14px]"><G e="💧" /> {t("aw.title", { y: "" })} <UnknownValue reason={data.extrasUnknown.actualWater} /></Card> : null;
   const gap = a.needM3PerHa ? Math.round((1 - a.consumedM3PerHa / Math.max(1, a.needM3PerHa)) * 100) : 0;
   const eff = applied ? Math.round((a.consumedM3PerHa / applied) * 100) : null;
   const excess = applied ? Math.round((applied - a.consumedM3PerHa * 1.1) / 100) * 100 : null; // 10 % allowance for leaching
@@ -314,7 +318,7 @@ export function ActualVsNeedCard({ data }: { data: AnalyzeResponse }) {
   };
   return (
     <Card className="flex flex-col gap-2">
-      <CardTitle source="Sentinel-2 · NASA POWER · ERA5">💧 {t("aw.title", { y: a.year })}</CardTitle>
+      <CardTitle source="Sentinel-2 · NASA POWER · ERA5"><G e="💧" /> {t("aw.title", { y: a.year })}</CardTitle>
       <p className="text-[13px] text-[var(--fg-3)]">{a.crops.map((c) => cropName(c, lang)).join(" + ")}</p>
       <dl className="grid gap-2 sm:grid-cols-3">
         <div className="rounded-2xl bg-[var(--surface-2)] px-3 py-2">
@@ -369,11 +373,11 @@ export function NormComparisonRow({ data }: { data: AnalyzeResponse }) {
   const n = data.norms;
   return (
     <Card className="flex flex-wrap items-center gap-2 py-3 text-[14px]">
-      <span className="text-[var(--fg-2)]">📏 {t("norms.title")}:</span>
+      <span className="text-[var(--fg-2)]"><G e="📏" /> {t("norms.title")}:</span>
       {n ? (
         <b className="tnum">
           {num(n.normM3PerHa)} {t("m3ha")} · FAO-56 {num(n.fao56M3PerHa)} · {n.diffPct > 0 ? "+" : ""}
-          {n.diffPct}% {Math.abs(n.diffPct) <= 25 ? "✅" : "⚠️"}
+          {n.diffPct}% {Math.abs(n.diffPct) <= 25 ? <G e="✅" /> : <G e="⚠️" />}
         </b>
       ) : (
         <UnknownValue reason={data.extrasUnknown?.norms ?? "-"} />
@@ -387,16 +391,16 @@ export function NormComparisonRow({ data }: { data: AnalyzeResponse }) {
 export function GaezSuitabilityRow({ data }: { data: AnalyzeResponse }) {
   const { t, lang } = useT();
   const g = data.gaez;
-  if (!g) return data.extrasUnknown?.gaez ? <Card className="text-[14px]">🌍 {t("gaez.title")} <UnknownValue reason={data.extrasUnknown.gaez} /></Card> : null;
+  if (!g) return data.extrasUnknown?.gaez ? <Card className="text-[14px]"><G e="🌍" /> {t("gaez.title")} <UnknownValue reason={data.extrasUnknown.gaez} /></Card> : null;
   const rows = [...g.crops].sort((a, b) => (b.suitability ?? 0) - (a.suitability ?? 0));
   return (
     <Card>
-      <CardTitle source="FAO GAEZ v4 · 9 km">🌍 {t("gaez.title")}</CardTitle>
+      <CardTitle source="FAO GAEZ v4 · 9 km"><G e="🌍" /> {t("gaez.title")}</CardTitle>
       <ul className="grid gap-1.5">
         {rows.map((c) => (
           <li key={c.crop} className="grid grid-cols-[minmax(0,1fr)_88px_auto] items-center gap-2 text-[14px]">
             <span className="truncate">
-              {CROPS[c.crop]?.icon} {cropName(c.crop, lang)} <span className="text-[12px] text-[var(--fg-3)]">· {t(`gaez.${c.regime}` as Key)}</span>
+              <CropDot crop={c.crop} /> {cropName(c.crop, lang)} <span className="text-[12px] text-[var(--fg-3)]">· {t(`gaez.${c.regime}` as Key)}</span>
             </span>
             <ScoreBar value={c.suitability ?? 0} color={(c.suitability ?? 0) >= 70 ? "var(--accent-fill)" : (c.suitability ?? 0) >= 40 ? "var(--level-medium)" : "var(--level-high)"} />
             <span className="w-[120px] text-right text-[13px] text-[var(--fg-2)] tnum">
@@ -418,13 +422,15 @@ export function EconomicsCard({ data, strategies }: { data: AnalyzeResponse; str
   const [open, setOpen] = useState(false);
   useEffect(() => setInp(loadEcon()), []); // eslint-disable-line react-hooks/set-state-in-effect -- localStorage after mount
   const crops = useMemo(() => [...new Set(strategies.flatMap((s) => s.seasons.map((x) => x.crop)))].filter((c) => c !== "fallow") as CropId[], [strategies]);
-  const res = strategies.map((s) => ({ s, p: profitOf(s, data, inp) }));
+  const eff = useMemo(() => withBackendDefaults(inp, strategies), [inp, strategies]);
+  const noCosts = crops.every((c) => !inp.crops[c]?.costUzsPerHa);
+  const res = strategies.map((s) => ({ s, p: profitOf(s, data, eff) }));
   const mln = (v: number | null) => (v == null ? "-" : `${v >= 0 ? "" : "−"}${num(Math.abs(v) / 1e6, 1)}`);
   const anyMissing = res.some((r) => r.p.missing.length);
   return (
     <Card className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-2">
-        <CardTitle className="mb-0 flex-1">💰 {t("econ.title")}</CardTitle>
+        <CardTitle className="mb-0 flex-1">{t("econ.title")}</CardTitle>
         <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
           <Pencil size={14} /> {t("econ.edit")}
         </Button>
@@ -439,6 +445,7 @@ export function EconomicsCard({ data, strategies }: { data: AnalyzeResponse; str
             ) : (
               <span className="tnum">
                 <b className="text-[16px]">~{mln(p.profit)}</b> {t("econ.mln")}
+                {noCosts && <span className="ml-1 text-[12px] text-[var(--fg-3)]">{lang === "en" ? "gross" : "yalpi"}</span>}
                 {p.profitDry != null && <span className="ml-1.5 text-[12.5px] text-[var(--fg-3)]">({t("econ.dry", { v: mln(p.profitDry) })})</span>}
               </span>
             )}
@@ -450,7 +457,7 @@ export function EconomicsCard({ data, strategies }: { data: AnalyzeResponse; str
         <p key={c.crop} className="text-[12.5px] text-[var(--fg-3)]">{t("econ.capped", { c: cropName(c.crop, lang), n: c.t })}</p>
       ))}
       <p className="text-[12px] text-[var(--fg-3)]">{t("econ.warn")} {t("econ.method")}</p>
-      <AnimatePresence>{open && <CostsDialog crops={crops} value={inp} onClose={() => setOpen(false)} onSave={(v) => (setInp(v), saveEcon(v), setOpen(false))} />}</AnimatePresence>
+      <AnimatePresence>{open && <CostsDialog crops={crops} value={eff} onClose={() => setOpen(false)} onSave={(v) => (setInp(v), saveEcon(v), setOpen(false))} />}</AnimatePresence>
     </Card>
   );
 }
@@ -485,7 +492,7 @@ function CostsDialog({ crops, value, onClose, onSave }: { crops: CropId[]; value
           {crops.map((c) => (
             <div key={c} className="contents">
               <span className="self-center truncate text-[14px] font-medium">
-                {CROPS[c]?.icon} {cropName(c, lang)}
+                <CropDot crop={c} /> {cropName(c, lang)}
               </span>
               {(["yieldTPerHa", "priceUzsPerKg", "costUzsPerHa"] as const).map((k) => (
                 <input key={k} inputMode="decimal" defaultValue={v.crops[c]?.[k] ?? ""} onChange={(e) => set(c, k, e.target.value)} aria-label={`${cropName(c, lang)} ${k}`} className="h-10 min-w-0 rounded-xl bg-[var(--surface-2)] px-2 text-[16px] tnum" />
@@ -522,7 +529,7 @@ export function FeedbackPrompt({ data }: { data: AnalyzeResponse }) {
   if (fb)
     return (
       <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-[var(--surface)] px-4 py-3 text-[13.5px] text-[var(--fg-2)] shadow-[var(--shadow-card)]">
-        <span className="flex-1">💚 {t("fb.saved")}</span>
+        <span className="flex-1"><G e="💚" /> {t("fb.saved")}</span>
         <button type="button" className="press font-semibold text-[var(--fg-3)] underline" onClick={() => (safeSet(key, null), setFb(null), setRating(0))}>
           {t("fb.delete")}
         </button>
@@ -535,7 +542,7 @@ export function FeedbackPrompt({ data }: { data: AnalyzeResponse }) {
         <div className="flex gap-0.5" role="radiogroup" aria-label={t("fb.title")}>
           {[1, 2, 3, 4, 5].map((n) => (
             <button key={n} type="button" role="radio" aria-checked={rating === n} aria-label={`${n}`} onClick={() => setRating(n)} className={clsx("press flex h-10 w-9 items-center justify-center text-[22px] leading-none transition-[transform,opacity]", n <= rating ? "scale-105" : "opacity-35 grayscale")}>
-              ⭐
+              <G e="⭐" />
             </button>
           ))}
         </div>

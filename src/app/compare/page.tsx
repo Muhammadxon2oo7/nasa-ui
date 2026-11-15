@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, m } from "motion/react";
-import { ArrowRight, Info, MapPinned, MousePointerClick, Sparkles, Trash2, Trophy } from "lucide-react";
+import { ArrowRight, Info, MapPinned, MousePointerClick, Sparkles, Target, Trash2, Trophy } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import type { CompareGoal, CompareResponse } from "@/types/api";
@@ -183,7 +183,25 @@ export default function ComparePage() {
 
         <Card className="flex flex-col gap-3">
           <CardTitle>{t("cmp.places", { n: places.length })}</CardTitle>
-          {places.length === 0 && <p className="text-[14px] text-[var(--fg-3)]">{t("cmp.addHint")}</p>}
+          {places.length === 0 && (
+            <ol className="grid gap-3 py-1">
+              {[
+                { I: MousePointerClick, uz: ["Joy qo'shing", "Xaritani bosing (200 m maydon) yoki chegarani chizing"], en: ["Add places", "Tap the map (200 m plot) or draw the boundary"] },
+                { I: Target, uz: ["Maqsadni tanlang", "Bug'doy, paxta, beda, yaylov yoki umumiy"], en: ["Pick a goal", "Wheat, cotton, alfalfa, pasture or general"] },
+                { I: Trophy, uz: ["Natijani oling", "Har bir joy NASA ma'lumotlari bilan baholanadi va eng mosi ajratiladi"], en: ["Get the ranking", "Each place is scored on NASA data and the best fit is highlighted"] },
+              ].map((x, i) => (
+                <li key={i} className="flex gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--surface-2)] text-[var(--accent)]">
+                    <x.I size={17} strokeWidth={1.8} />
+                  </span>
+                  <span>
+                    <b className="block text-[14.5px]">{(lang === "en" ? x.en : x.uz)[0]}</b>
+                    <span className="text-[13.5px] text-[var(--fg-2)]">{(lang === "en" ? x.en : x.uz)[1]}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
           <ul className="flex flex-col gap-1.5">
             <AnimatePresence initial={false}>
               {places.map((p, i) => (

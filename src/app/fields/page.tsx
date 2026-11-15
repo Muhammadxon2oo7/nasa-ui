@@ -9,6 +9,7 @@ import { num } from "@/lib/format";
 import { useT } from "@/i18n";
 import { useWizard } from "@/store/wizardStore";
 import { Button, EmptyState, spring } from "@/components/ui";
+import { G } from "@/components/Glyph";
 
 export default function Fields() {
   const { t, lang } = useT();
@@ -25,7 +26,7 @@ export default function Fields() {
     <div className="mx-auto max-w-4xl px-4 sm:px-6">
       <h1 className="mb-5 text-[clamp(28px,4.5vw,40px)] font-semibold tracking-[-0.03em]">{t("fields.title")}</h1>
       {items.length === 0 ? (
-        <EmptyState icon="🌾" title={t("fields.empty")} text={t("fields.emptyd")} action={<Button className="mt-2" onClick={() => router.push("/analyze")}>{t("nav.analyze")}</Button>} />
+        <EmptyState icon={<G e="🌾" />} title={t("fields.empty")} text={t("fields.emptyd")} action={<Button className="mt-2" onClick={() => router.push("/analyze")}>{t("nav.analyze")}</Button>} />
       ) : (
         <div className="grid gap-2.5">
           {items.map((f, i) => (

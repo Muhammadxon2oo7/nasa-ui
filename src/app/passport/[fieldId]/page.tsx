@@ -9,6 +9,7 @@ import { useAnalysis } from "@/lib/useAnalysis";
 import { cropName, dayMonth, monthShort, num } from "@/lib/format";
 import { useT } from "@/i18n";
 import { Button, EmptyState, Skeleton } from "@/components/ui";
+import { G } from "@/components/Glyph";
 
 export default function PassportPage() {
   return (
@@ -180,7 +181,7 @@ function Passport() {
             {data.water.limitM3PerHa && ` · ${L("limit", "limit")} ${num(data.water.limitM3PerHa)}`}
           </p>
           {aw && <p className="text-black/70">{L(`${aw.year}-yil: ekin ehtiyoji ${(aw.needM3PerHa != null ? num(aw.needM3PerHa) : "?")}, haqiqiy iste'mol ${num(aw.consumedM3PerHa)} m³/ga (Sentinel-2)`, `${aw.year}: crop need ${(aw.needM3PerHa != null ? num(aw.needM3PerHa) : "?")}, actual use ${num(aw.consumedM3PerHa)} m³/ha (Sentinel-2)`)}</p>}
-          {data.waterSupply && <p className="text-black/70">🏔️ {data.waterSupply.basinName}: {L("o'tgan qish qor", "last winter snow")} {data.waterSupply.lastSeason.snowAnomalyPct > 0 ? "+" : ""}{data.waterSupply.lastSeason.snowAnomalyPct}% (MODIS)</p>}
+          {data.waterSupply && <p className="text-black/70"><G e="🏔️" /> {data.waterSupply.basinName}: {L("o'tgan qish qor", "last winter snow")} {data.waterSupply.lastSeason.snowAnomalyPct > 0 ? "+" : ""}{data.waterSupply.lastSeason.snowAnomalyPct}% (MODIS)</p>}
         </Section>
         <Section n={5} title={t("passport.s5")}>
           <p>
@@ -189,11 +190,11 @@ function Passport() {
           </p>
         </Section>
         <Section n={6} title={t("passport.s6")}>
-          {leach && <p>🧂 {leach.recommended ? `${leach.reason}: ${leach.stages.map((s, i) => `${i + 1}) ${dayMonth(s.date.slice(5, 10), lang)} ~${num(s.m3PerHa)} m³/ga`).join(", ")}` : leach.reason}</p>}
+          {leach && <p><G e="🧂" /> {leach.recommended ? `${leach.reason}: ${leach.stages.map((s, i) => `${i + 1}) ${dayMonth(s.date.slice(5, 10), lang)} ~${num(s.m3PerHa)} m³/ga`).join(", ")}` : leach.reason}</p>}
           {data.calendar?.soilTempSowing?.map((s) => (
-            <p key={s.crop}>🌱 {cropName(s.crop, lang)}: {dayMonth(s.windowFrom, lang)} - {dayMonth(s.windowTo, lang)} ({L("tuproq", "soil")} ≥ {s.thresholdC}°C)</p>
+            <p key={s.crop}><G e="🌱" /> {cropName(s.crop, lang)}: {dayMonth(s.windowFrom, lang)} - {dayMonth(s.windowTo, lang)} ({L("tuproq", "soil")} ≥ {s.thresholdC}°C)</p>
           ))}
-          {data.calendar && <p className="text-black/70">{data.calendar.next90Days.slice(0, 5).map((e) => `${dayMonth(e.date.slice(5, 10), lang)}: ${e.title}`).join(" · ")}</p>}
+          {data.calendar && <p className="text-black/70">{data.calendar.next90Days.filter((e) => e.type !== "livestock").slice(0, 5).map((e) => `${dayMonth(e.date.slice(5, 10), lang)}: ${e.title}`).join(" · ")}</p>}
         </Section>
         <Section n={7} title={t("passport.s7")}>
           <table className="w-full border-collapse text-[9pt]">

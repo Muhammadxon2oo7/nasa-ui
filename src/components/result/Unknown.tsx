@@ -5,6 +5,7 @@ import { Shield } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useT } from "@/i18n";
 import { spring } from "../ui";
+import { G } from "@/components/Glyph";
 
 /** "❓" + reason on tap (ADR-10): an unknown value is never shown as 0. */
 export function UnknownValue({ reason }: { reason: string }) {
@@ -20,7 +21,7 @@ export function UnknownValue({ reason }: { reason: string }) {
   return (
     <span ref={ref} className="relative inline-flex">
       <button type="button" onClick={() => setOpen((o) => !o)} aria-label={`${t("unk.title")}: ${reason}`} className="rounded-full px-1 font-semibold text-[var(--fg-3)] hover:bg-[var(--surface-2)]">
-        ❓
+        <G e="❓" />
       </button>
       <AnimatePresence>
         {open && (

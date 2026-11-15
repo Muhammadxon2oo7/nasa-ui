@@ -1,6 +1,7 @@
 "use client";
 
 import type { AnalyzeRequest, AnalyzeResponse, ModelInfo, Strategy } from "@/types/api";
+import { dashes } from "@/lib/clean";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "";
 export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
@@ -18,7 +19,7 @@ export async function api<T>(path: string, init?: RequestInit & { timeoutMs?: nu
   init?.signal?.addEventListener("abort", () => ctrl.abort());
   try {
     const res = await fetch(`${API}${path}`, { ...init, signal: ctrl.signal, headers: { "Content-Type": "application/json", ...init?.headers } });
-    const j = await res.json().catch(() => ({}));
+    const j = dashes(await res.json().catch(() => ({})));
     if (!res.ok) throw new ApiError((j as { error?: string }).error ?? `http_${res.status}`, res.status);
     return j as T;
   } finally {
@@ -29,7 +30,7 @@ export async function api<T>(path: string, init?: RequestInit & { timeoutMs?: nu
 export const loadDemo = async (name: string) => {
   const res = await fetch(`/demo/${name}.json`);
   if (!res.ok) throw new ApiError("demo_missing", res.status);
-  return (await res.json()) as AnalyzeResponse;
+  return dashes(await res.json()) as AnalyzeResponse;
 };
 
 const USE_FASTAPI = process.env.NEXT_PUBLIC_USE_FASTAPI !== "false";

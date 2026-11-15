@@ -12,6 +12,7 @@ import { useMode } from "@/store/platformStore";
 import { XYChart } from "../charts";
 import { Button, Card, CardTitle, EmptyState, SourceBadge, spring } from "../ui";
 import { UnknownValue } from "./Unknown";
+import { G } from "@/components/Glyph";
 
 const FieldMap = dynamic(() => import("../map/FieldMap"), { ssr: false, loading: () => <div className="shimmer h-full w-full bg-[var(--surface-2)]" /> });
 
@@ -30,7 +31,7 @@ export function MaybeNum({ v, unit, digits = 0 }: { v: MaybeNumber | undefined; 
 
 function NoModule() {
   const { lang } = useT();
-  return <EmptyState icon="🐄" title={lang === "uz" ? "Chorvachilik moduli hisoblanmagan" : "Livestock module not computed"} />;
+  return <EmptyState icon={<G e="🐄" />} title={lang === "uz" ? "Chorvachilik moduli hisoblanmagan" : "Livestock module not computed"} />;
 }
 
 /* ------------------------------------------------------------------ pasture */
@@ -51,7 +52,7 @@ export function PastureTab({ data }: { data: AnalyzeResponse }) {
     <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
       <Card>
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-[34px]" aria-hidden>🌿</span>
+          <span className="text-[34px]" aria-hidden><G e="🌿" /></span>
           <div className="min-w-0 flex-1">
             <div className="text-[13px] text-[var(--fg-3)]">{t("ls.status")}</div>
             <div className="text-[24px] font-semibold tracking-[-0.02em] uppercase" style={{ color: LVL_COLOR[p.statusLevel] }}>
@@ -115,7 +116,7 @@ export function CapacityTab({ data, onCrop }: { data: AnalyzeResponse; onCrop: (
           </div>
           <div className="rounded-2xl bg-[var(--surface-2)] p-3">
             <div className="text-[12px] text-[var(--fg-3)]">{t("ls.yourPasture", { a: num(area, 1) })}</div>
-            <div className="text-[24px] font-semibold tracking-[-0.02em] tnum">{lo != null && hi != null ? `~${Math.round(lo * area)} - ${Math.round(hi * area)}` : "❓"}</div>
+            <div className="text-[24px] font-semibold tracking-[-0.02em] tnum">{lo != null && hi != null ? `~${Math.round(lo * area)} - ${Math.round(hi * area)}` : <G e="❓" />}</div>
             <div className="text-[12px] text-[var(--fg-3)]">{t("ls.capUnit").split("/")[0]}</div>
           </div>
           <div className="rounded-2xl bg-[var(--surface-2)] p-3">
@@ -170,11 +171,11 @@ function RecCard({ r, i, onCrop }: { r: Recommendation; i: number; onCrop?: () =
           <ul className="grid gap-1">{r.evidence.map((e) => <li key={e.text} className="flex flex-wrap items-center justify-between gap-1">• {e.text} <SourceBadge source={e.source} /></li>)}</ul>
         </Part>
         <Part icon={<Sprout size={14} />} title={t("st.benefits")}><ul>{r.benefits.map((b) => <li key={b}>{b}</li>)}</ul></Part>
-        <Part icon={<FileQuestion size={14} />} title={t("st.gaps")}><ul>{r.gaps.map((b) => <li key={b}>❓ {b}</li>)}</ul></Part>
+        <Part icon={<FileQuestion size={14} />} title={t("st.gaps")}><ul>{r.gaps.map((b) => <li key={b}><G e="❓" /> {b}</li>)}</ul></Part>
         <Part icon={<ShieldAlert size={14} />} title={t("st.risks")} warn><ul>{r.risks.map((b) => <li key={b}>{b}</li>)}</ul></Part>
         {onCrop && (
           <div className="flex items-center">
-            <Button size="sm" variant="secondary" onClick={onCrop}>🌾 {t("ls.toCrop")} →</Button>
+            <Button size="sm" variant="secondary" onClick={onCrop}><G e="🌾" /> {t("ls.toCrop")} →</Button>
           </div>
         )}
       </div>
@@ -201,9 +202,9 @@ export function HeatTab({ data }: { data: AnalyzeResponse }) {
   const h = ls.heat;
   const months = h.monthly.map((x) => monthShort(x.month, lang));
   const cards = [
-    { icon: "🌡️", label: t("ls.stressDays"), value: `${h.stressDaysPerYear} ${t("days")}`, sub: "THI ≥ 72" },
-    { icon: "🔥", label: t("ls.severeDays"), value: `${h.severeDaysPerYear} ${t("days")}`, sub: "THI max ≥ 79" },
-    { icon: "📈", label: t("ls.trend"), value: `${h.trendDaysPerDecade > 0 ? "+" : ""}${h.trendDaysPerDecade}`, sub: t("ls.perDecade") },
+    { icon: <G e="🌡️" />, label: t("ls.stressDays"), value: `${h.stressDaysPerYear} ${t("days")}`, sub: "THI ≥ 72" },
+    { icon: <G e="🔥" />, label: t("ls.severeDays"), value: `${h.severeDaysPerYear} ${t("days")}`, sub: "THI max ≥ 79" },
+    { icon: <G e="📈" />, label: t("ls.trend"), value: `${h.trendDaysPerDecade > 0 ? "+" : ""}${h.trendDaysPerDecade}`, sub: t("ls.perDecade") },
   ];
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
@@ -285,11 +286,11 @@ export function WaterSourcesTab({ data }: { data: AnalyzeResponse }) {
       </div>
       <div className="grid content-start gap-2.5">
         <Card>
-          <div className="text-[12.5px] text-[var(--fg-3)]">💧 {t("ls.waterPerm")}</div>
+          <div className="text-[12.5px] text-[var(--fg-3)]"><G e="💧" /> {t("ls.waterPerm")}</div>
           <div className="mt-1 text-[26px] font-semibold tracking-[-0.02em]"><MaybeNum v={w.nearestPermanentKm} unit="km" digits={1} /> <span className="text-[14px] text-[var(--fg-3)]">{dir(w.nearestPermanentLatLon)}</span></div>
         </Card>
         <Card>
-          <div className="text-[12.5px] text-[var(--fg-3)]">🌊 {t("ls.waterSeas")}</div>
+          <div className="text-[12.5px] text-[var(--fg-3)]"><G e="🌊" /> {t("ls.waterSeas")}</div>
           <div className="mt-1 text-[26px] font-semibold tracking-[-0.02em]"><MaybeNum v={w.nearestSeasonalKm} unit="km" digits={1} /> <span className="text-[14px] text-[var(--fg-3)]">{dir(w.nearestSeasonalLatLon)}</span></div>
         </Card>
         <SourceBadge source="JRC Global Surface Water 1984-2020" />

@@ -5,6 +5,7 @@ import type { BacktestResult } from "@/types/api";
 import { num } from "@/lib/format";
 import { useT } from "@/i18n";
 import { Card } from "./ui";
+import { G } from "@/components/Glyph";
 
 /** A6: backtest results (live API, offline fallback to the archived JSON). */
 export function BacktestSection() {
@@ -65,15 +66,15 @@ export function BacktestSection() {
                     <b>{r.name}</b> · {r.evalYear}
                   </td>
                   <td className="p-3 text-[var(--fg-2)] tnum">
-                    🌧️ {r.weather.precipPct > 0 ? "+" : ""}
+                    <G e="🌧️" /> {r.weather.precipPct > 0 ? "+" : ""}
                     {r.weather.precipPct}% · ET0 {r.weather.et0Pct > 0 ? "+" : ""}
-                    {r.weather.et0Pct}% · 🔥 {r.weather.heatDays}/{r.weather.normalHeatDays}
+                    {r.weather.et0Pct}% · <G e="🔥" /> {r.weather.heatDays}/{r.weather.normalHeatDays}
                   </td>
-                  <td className="p-3 tnum">{cur ? `${num(cur.realizedWater)} ${cur.overLimit ? "❌" : "✅"}` : "-"}</td>
+                  <td className="p-3 tnum">{cur ? `${num(cur.realizedWater)} ${cur.overLimit ? "" : ""}` : "-"}</td>
                   <td className="p-3 tnum">
                     {rec ? (
                       <>
-                        {rec.strategyId}: {num(rec.realizedWater)} {rec.overLimit ? "❌" : "✅"} · {L(`${rec.realizedRank}-o'rin`, `rank ${rec.realizedRank}`)}
+                        {rec.strategyId}: {num(rec.realizedWater)} {rec.overLimit ? <G e="❌" /> : <G e="✅" />} · {L(`${rec.realizedRank}-o'rin`, `rank ${rec.realizedRank}`)}
                       </>
                     ) : (
                       "-"
@@ -103,7 +104,7 @@ export function ValidationNotes({ snow }: { snow: { basin: string; r: number | n
   return (
     <div className="grid gap-3 lg:grid-cols-2">
       <Card>
-        <h3 className="text-[16px] font-semibold">🏔️ {L("Qor va daryo oqimi (N1)", "Snow vs river flow (N1)")}</h3>
+        <h3 className="text-[16px] font-semibold"><G e="🏔️" /> {L("Qor va daryo oqimi (N1)", "Snow vs river flow (N1)")}</h3>
         <ul className="mt-2 grid gap-1 text-[14px] tnum">
           {snow.map((s) => (
             <li key={s.basin} className="flex justify-between">

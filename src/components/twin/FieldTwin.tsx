@@ -118,7 +118,7 @@ export function FieldTwin({ data, list, bestId, autoPlay = false, className }: {
   const state: SceneState = useMemo(() => {
     if (mode === "water") {
       const over = limit != null && st.waterM3PerHa > limit;
-      return { color: over ? "#E53935" : "#1E88E5", heightM: st.waterM3PerHa / 100, ghostHeightM: limit ? limit / 100 : null, label: `${num(st.waterM3PerHa)} m³/${L("ga", "ha")}`, sub: limit ? `${L("limit", "limit")} ${num(limit)} ${over ? "⚠️" : "✅"}` : st.id };
+      return { color: over ? "#E53935" : "#1E88E5", heightM: st.waterM3PerHa / 100, ghostHeightM: limit ? limit / 100 : null, label: `${num(st.waterM3PerHa)} m³/${L("ga", "ha")}`, sub: limit ? `${L("limit", "limit")} ${num(limit)} ${over ? "" : ""}` : st.id };
     }
     if (mode === "salt") {
       const lv = data.soil.salinityLevel;

@@ -14,6 +14,7 @@ import { toCsv, toGeoJson } from "@/lib/export";
 import { isUnknown } from "@/types/api";
 import { Button, LevelBadge, SourceBadge, spring, springPop } from "../ui";
 import { WaterSupplyBadge } from "./Extras";
+import { G } from "@/components/Glyph";
 
 /** One quiet "⋯" instead of a row of buttons. */
 function MoreMenu({ items }: { items: { icon: React.ReactNode; label: string; on: () => void }[] }) {
@@ -113,10 +114,10 @@ export function FieldHeader({ data }: { data: AnalyzeResponse }) {
 export function SummaryCards({ data, best, bestScore, water }: { data: AnalyzeResponse; best: Strategy; bestScore: number; water: number }) {
   const { t } = useT();
   const cards = [
-    { k: "salt", label: t("r.salt"), body: <LevelBadge level={data.summary.salinity} big />, source: data.soil.isEstimated ? "Sentinel-2" : "Lab", icon: "🧂" },
-    { k: "water", label: t("r.water"), body: <span className="text-[28px] font-semibold tracking-[-0.02em] tnum">{num(water)}<span className="ml-1 text-[13px] font-medium text-[var(--fg-3)]">{t("r.perYear")}</span></span>, extra: <WaterSupplyBadge data={data} />, source: "FAO-56", icon: "💧" },
-    { k: "risk", label: t("r.risk"), body: <span className="text-[22px] font-semibold tracking-[-0.02em]">{data.summary.mainRisk}</span>, source: "NASA POWER", icon: "🌡️" },
-    { k: "best", label: t("r.best"), body: <span className="block text-[15.5px] leading-snug font-semibold">{best.name} · <span className="tnum text-[var(--accent)]">{bestScore}</span></span>, source: t("st.recommended"), icon: "🏆" },
+    { k: "salt", label: t("r.salt"), body: <LevelBadge level={data.summary.salinity} big />, source: data.soil.isEstimated ? "Sentinel-2" : "Lab", icon: <G e="🧂" /> },
+    { k: "water", label: t("r.water"), body: <span className="text-[28px] font-semibold tracking-[-0.02em] tnum">{num(water)}<span className="ml-1 text-[13px] font-medium text-[var(--fg-3)]">{t("r.perYear")}</span></span>, extra: <WaterSupplyBadge data={data} />, source: "FAO-56", icon: <G e="💧" /> },
+    { k: "risk", label: t("r.risk"), body: <span className="text-[22px] font-semibold tracking-[-0.02em]">{data.summary.mainRisk}</span>, source: "NASA POWER", icon: <G e="🌡️" /> },
+    { k: "best", label: t("r.best"), body: <span className="block text-[15.5px] leading-snug font-semibold">{best.name} · <span className="tnum text-[var(--accent)]">{bestScore}</span></span>, source: t("st.recommended"), icon: <G e="🏆" /> },
   ];
   return (
     <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
@@ -197,12 +198,12 @@ export function LivestockCards({ data }: { data: AnalyzeResponse }) {
   const a = ls.pasture.anomalyPct;
   const lo = ls.capacity.lowAuPerHa, hi = ls.capacity.highAuPerHa;
   const wp = ls.waterSources?.nearestPermanentKm, ws = ls.waterSources?.nearestSeasonalKm;
-  const water = wp != null && !isUnknown(wp) ? `${wp} km` : ws != null && !isUnknown(ws) ? `${ws} km*` : "❓";
+  const water = wp != null && !isUnknown(wp) ? `${wp} km` : ws != null && !isUnknown(ws) ? `${ws} km*` : <G e="❓" />;
   const cards = [
-    { k: "p", icon: "🌿", label: t("ls.cardPasture"), body: <span className="text-[20px] font-semibold">{t(`ls.lvl.${ls.pasture.statusLevel}` as Key)}{!isUnknown(a) && <span className="ml-1.5 text-[14px] text-[var(--fg-3)] tnum">{(a as number) > 0 ? "+" : ""}{a as number}%</span>}</span>, source: "MODIS NDVI" },
-    { k: "c", icon: "🐄", label: t("ls.cardCap"), body: <span className="text-[20px] font-semibold tnum">{!isUnknown(lo) && !isUnknown(hi) ? `${lo}-${hi}` : "❓"}<span className="ml-1 text-[12px] font-medium text-[var(--fg-3)]">{t("ls.capUnit")}</span></span>, source: "MODIS NPP" },
-    { k: "h", icon: "🌡️", label: t("ls.cardHeat"), body: <span className="text-[24px] font-semibold tnum">{ls.heat.stressDaysPerYear}<span className="ml-1 text-[12px] font-medium text-[var(--fg-3)]">{t("c.perYear")}</span></span>, source: "NASA POWER · THI" },
-    { k: "w", icon: "💧", label: t("ls.cardWater"), body: <span className="text-[24px] font-semibold tnum">{water}</span>, source: "JRC GSW" },
+    { k: "p", icon: <G e="🌿" />, label: t("ls.cardPasture"), body: <span className="text-[20px] font-semibold">{t(`ls.lvl.${ls.pasture.statusLevel}` as Key)}{!isUnknown(a) && <span className="ml-1.5 text-[14px] text-[var(--fg-3)] tnum">{(a as number) > 0 ? "+" : ""}{a as number}%</span>}</span>, source: "MODIS NDVI" },
+    { k: "c", icon: <G e="🐄" />, label: t("ls.cardCap"), body: <span className="text-[20px] font-semibold tnum">{!isUnknown(lo) && !isUnknown(hi) ? `${lo}-${hi}` : <G e="❓" />}<span className="ml-1 text-[12px] font-medium text-[var(--fg-3)]">{t("ls.capUnit")}</span></span>, source: "MODIS NPP" },
+    { k: "h", icon: <G e="🌡️" />, label: t("ls.cardHeat"), body: <span className="text-[24px] font-semibold tnum">{ls.heat.stressDaysPerYear}<span className="ml-1 text-[12px] font-medium text-[var(--fg-3)]">{t("c.perYear")}</span></span>, source: "NASA POWER · THI" },
+    { k: "w", icon: <G e="💧" />, label: t("ls.cardWater"), body: <span className="text-[24px] font-semibold tnum">{water}</span>, source: "JRC GSW" },
   ];
   return (
     <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">

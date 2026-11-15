@@ -8,6 +8,7 @@ import type { CropId, Level } from "@/types/api";
 import { GLOSSARY, type GlossaryKey } from "@/data/glossary";
 import { cropColor, cropIcon, cropName } from "@/lib/format";
 import { useT } from "@/i18n";
+import { CropDot, G } from "@/components/Glyph";
 
 export const spring = { type: "spring", bounce: 0, duration: 0.45 } as const;
 export const springPop = { type: "spring", bounce: 0.3, duration: 0.5 } as const;
@@ -175,7 +176,7 @@ export function CropChip({ crop, faded, size = "md" }: { crop: CropId; faded?: b
   const { lang } = useT();
   return (
     <span className={clsx("inline-flex items-center gap-1 rounded-full font-medium", size === "sm" ? "px-1.5 py-0.5 text-[12px]" : "px-2 py-0.5 text-[12.5px]", faded && "opacity-55")} style={{ background: `color-mix(in oklab, ${cropColor(crop)} 22%, transparent)` }}>
-      <span aria-hidden>{cropIcon(crop)}</span>
+      <CropDot crop={crop} />
       {cropName(crop, lang)}
     </span>
   );
@@ -228,7 +229,7 @@ export function EmptyState({ icon, title, text, action }: { icon?: ReactNode; ti
   return (
     <div className="flex flex-col items-center gap-2 rounded-[20px] border border-dashed border-[var(--hairline-strong)] px-5 py-8 text-center">
       <div className="text-[28px]" aria-hidden>
-        {icon ?? "🛰️"}
+        {icon ?? <G e="🛰️" />}
       </div>
       <div className="text-[15px] font-semibold">{title}</div>
       {text && <p className="max-w-sm text-[13.5px] text-[var(--fg-3)]">{text}</p>}

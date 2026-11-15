@@ -10,6 +10,7 @@ import { DEMO_FIELDS } from "@/data/demoFields";
 import { num } from "@/lib/format";
 import { useT, type Key } from "@/i18n";
 import { LevelBadge, spring } from "@/components/ui";
+import { G } from "@/components/Glyph";
 
 export default function Demo() {
   const { t, lang } = useT();
@@ -32,7 +33,7 @@ export default function Demo() {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--accent-fill)] opacity-60 motion-reduce:hidden" />
           <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[var(--accent-fill)]" />
         </span>
-        {lang === "uz" ? "Jonli tahlil: TerraVision backend" : "Live analysis: TerraVision backend"}
+        {lang === "uz" ? "Jonli tahlil" : "Live analysis"}
       </h2>
       <p className="mt-1 max-w-[65ch] text-[14.5px] text-[var(--fg-2)]">
         {lang === "uz" ? "NASA POWER, Sentinel-2 va ECMWF ma'lumotlari serverda hozir hisoblanadi (bir necha soniya)." : "NASA POWER, Sentinel-2 and ECMWF data are computed on the server right now (a few seconds)."}
@@ -94,7 +95,7 @@ export default function Demo() {
                       <span className="flex items-center gap-1.5">
                         {d.field.district} · {num(d.field.areaHa, 1)} {t("ha")} · <LevelBadge level={d.summary.salinity} />
                       </span>
-                      {best && <span className="line-clamp-2">🏆 {best.name}</span>}
+                      {best && <span className="line-clamp-2"><G e="🏆" /> {best.name}</span>}
                     </div>
                   )}
                   <span className="mt-auto flex items-center gap-1 pt-2 text-[14px] font-semibold text-[var(--accent)]">
