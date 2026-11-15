@@ -144,7 +144,7 @@ export function AiSummary({ text, generatedBy }: { text: string; generatedBy: "l
         <Sparkles size={15} /> {t("r.summary")}
       </div>
       <p className="max-w-[75ch] text-[15.5px] leading-relaxed text-[var(--fg)]">{text}</p>
-      <p className="mt-2 text-[11.5px] text-[var(--fg-3)]">{generatedBy === "llm" ? t("aiText") : t("templateText")}</p>
+      <p className="mt-2 text-[12px] text-[var(--fg-3)]">{generatedBy === "llm" ? t("aiText") : t("templateText")}</p>
     </div>
   );
 }

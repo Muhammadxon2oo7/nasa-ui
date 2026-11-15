@@ -56,7 +56,7 @@ export function HistoryTab({ data }: { data: AnalyzeResponse }) {
                   {f && f !== "ok" ? cropIcon(f) : s.crops.map((c) => cropIcon(c.crop)).join("→")}
                   {conf < 0.6 && !f && "?"}
                 </span>
-                <span className="text-[11px] text-[var(--fg-3)] tnum">{f ? "✓" : `${Math.round(conf * 100)}%`}</span>
+                <span className="text-[12px] text-[var(--fg-3)] tnum">{f ? "✓" : `${Math.round(conf * 100)}%`}</span>
               </button>
             );
           })}
@@ -128,7 +128,7 @@ export function HistoryTab({ data }: { data: AnalyzeResponse }) {
         <CardTitle source="Sentinel-2 L2A">{t("h.calendar")}</CardTitle>
         <div className="scroll-thin overflow-x-auto">
           <div className="min-w-[440px]">
-            <div className="mb-1 grid grid-cols-[44px_repeat(12,1fr)] gap-[3px] text-center text-[10.5px] text-[var(--fg-3)]">
+            <div className="mb-1 grid grid-cols-[44px_repeat(12,1fr)] gap-[3px] text-center text-[12px] text-[var(--fg-3)]">
               <span />
               {Array.from({ length: 12 }, (_, i) => (
                 <span key={i}>{monthShort(i + 1, lang)}</span>
@@ -143,7 +143,7 @@ export function HistoryTab({ data }: { data: AnalyzeResponse }) {
                 })}
               </div>
             ))}
-            <div className="mt-2 flex items-center gap-2 text-[11px] text-[var(--fg-3)]">
+            <div className="mt-2 flex items-center gap-2 text-[12px] text-[var(--fg-3)]">
               0.0
               <span className="h-2 w-28 rounded-full" style={{ background: `linear-gradient(90deg, ${[0, 0.2, 0.4, 0.6, 0.8].map(ndviColor).join(",")})` }} />
               0.8
@@ -187,7 +187,7 @@ export function ClimateTab({ data }: { data: AnalyzeResponse }) {
               {k.icon} {k.label}
             </div>
             <div className="mt-1 text-[19px] font-semibold tracking-[-0.01em] tnum">{k.value}</div>
-            {k.sub && <div className="mt-0.5 text-[11.5px] text-[var(--fg-3)] tnum">{k.sub}</div>}
+            {k.sub && <div className="mt-0.5 text-[12px] text-[var(--fg-3)] tnum">{k.sub}</div>}
           </div>
         ))}
       </div>
@@ -312,7 +312,7 @@ export function SoilTab({ data, onRecompute }: { data: AnalyzeResponse; onRecomp
           <CardTitle source="SoilGrids 250 m">{t("so.texture")}</CardTitle>
           {s.texture ? (
             <>
-              <div className="flex h-8 overflow-hidden rounded-xl text-[11.5px] font-semibold text-white">
+              <div className="flex h-8 overflow-hidden rounded-xl text-[12px] font-semibold text-white">
                 <span className="flex items-center justify-center" style={{ width: `${s.texture.clay}%`, background: "#8D6E63" }}>{s.texture.clay}%</span>
                 <span className="flex items-center justify-center" style={{ width: `${s.texture.silt}%`, background: "#A1887F" }}>{s.texture.silt}%</span>
                 <span className="flex items-center justify-center" style={{ width: `${s.texture.sand}%`, background: "#D7B98E", color: "#3E2723" }}>{s.texture.sand}%</span>

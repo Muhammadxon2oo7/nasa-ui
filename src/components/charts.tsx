@@ -135,7 +135,7 @@ export function XYChart({
         {ticks.map((tv) => (
           <g key={tv}>
             <line x1={padL} x2={w - padR} y1={y(tv)} y2={y(tv)} stroke="var(--hairline)" />
-            <text x={padL - 6} y={y(tv) + 3.5} textAnchor="end" className="fill-[var(--fg-3)] text-[10.5px] tnum">
+            <text x={padL - 6} y={y(tv) + 3.5} textAnchor="end" className="fill-[var(--fg-3)] text-[12px] tnum">
               {Math.abs(tv) >= 1000 ? `${(tv / 1000).toFixed(tv % 1000 ? 1 : 0)}k` : tv.toFixed(Math.abs(hi - lo) < 3 ? 1 : 0)}
             </text>
           </g>
@@ -143,7 +143,7 @@ export function XYChart({
         {zeroLine && lo < 0 && <line x1={padL} x2={w - padR} y1={y(0)} y2={y(0)} stroke="var(--hairline-strong)" />}
         {labels.map((l, i) =>
           i % every === 0 && x(i) < w - 18 ? (
-            <text key={i} x={x(i)} y={height - 7} textAnchor={hasBars ? "middle" : i === 0 ? "start" : "middle"} className="fill-[var(--fg-3)] text-[10.5px]">
+            <text key={i} x={x(i)} y={height - 7} textAnchor={hasBars ? "middle" : i === 0 ? "start" : "middle"} className="fill-[var(--fg-3)] text-[12px]">
               {l}
             </text>
           ) : null,
@@ -187,7 +187,7 @@ export function XYChart({
         )}
       </svg>
       {hover != null && (
-        <div className="pointer-events-none absolute top-1 z-10 min-w-[140px] rounded-xl border border-[var(--hairline)] bg-[var(--surface)] px-2.5 py-1.5 text-[11.5px] shadow-[var(--shadow-float)]" style={{ left: Math.min(w - 170, Math.max(0, x(hover) + 10)) }}>
+        <div className="pointer-events-none absolute top-1 z-10 min-w-[140px] rounded-xl border border-[var(--hairline)] bg-[var(--surface)] px-2.5 py-1.5 text-[12px] shadow-[var(--shadow-float)]" style={{ left: Math.min(w - 170, Math.max(0, x(hover) + 10)) }}>
           <div className="mb-0.5 font-semibold text-[var(--fg)]">{labels[hover]}</div>
           {layers.map((l) => {
             const v = l.type === "line" || l.type === "bars" ? l.values[hover] : l.type === "band" ? null : l.value;
@@ -200,7 +200,7 @@ export function XYChart({
         </div>
       )}
       {legend && layers.length > 1 && (
-        <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11.5px] text-[var(--fg-2)]">
+        <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-[var(--fg-2)]">
           {layers.map((l) => (
             <span key={l.id} className="flex items-center gap-1.5">
               <i className="inline-block rounded-full" style={{ background: l.color, width: l.type === "bars" || l.type === "band" ? 10 : 14, height: l.type === "bars" || l.type === "band" ? 10 : 3, opacity: l.type === "band" ? 0.5 : 1 }} />
@@ -246,7 +246,7 @@ export function Radar({ axes, series, size = 300 }: { axes: string[]; series: { 
           return (
             <g key={a}>
               <line x1={c} y1={c} x2={x2} y2={y2} stroke="var(--hairline)" />
-              <text x={lx} y={ly + 3} textAnchor="middle" className="fill-[var(--fg-2)] text-[11px]">
+              <text x={lx} y={ly + 3} textAnchor="middle" className="fill-[var(--fg-2)] text-[12px]">
                 {a}
               </text>
             </g>

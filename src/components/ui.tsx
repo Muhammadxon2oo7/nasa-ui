@@ -152,7 +152,7 @@ export function Slider({ id, label, value, min, max, step = 1, onChange, format,
 
 export function SourceBadge({ source, className }: { source: string; className?: string }) {
   return (
-    <span data-no-translit className={clsx("inline-flex max-w-full items-center gap-1 truncate rounded-full bg-[var(--secondary-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--secondary)]", className)} title={source}>
+    <span data-no-translit className={clsx("inline-flex max-w-full items-center gap-1 truncate rounded-full bg-[var(--secondary-soft)] px-2 py-0.5 text-[12px] font-medium text-[var(--secondary)]", className)} title={source}>
       <Satellite size={11} className="shrink-0" />
       <span className="truncate">{source}</span>
     </span>
@@ -162,8 +162,9 @@ export function SourceBadge({ source, className }: { source: string; className?:
 export function LevelBadge({ level, big }: { level: Level; big?: boolean }) {
   const { t } = useT();
   const color = { low: "var(--level-low)", medium: "var(--level-medium)", high: "var(--level-high)" }[level];
+  const fg = { low: "var(--level-low-fg)", medium: "var(--level-medium-fg)", high: "var(--level-high-fg)" }[level];
   return (
-    <span className={clsx("inline-flex items-center gap-1.5 rounded-full font-semibold uppercase", big ? "px-2.5 py-1 text-[13px]" : "px-2 py-0.5 text-[11px]")} style={{ color, background: `color-mix(in oklab, ${color} 14%, transparent)` }}>
+    <span className={clsx("inline-flex items-center gap-1.5 rounded-full font-semibold", big ? "px-2.5 py-1 text-[13px]" : "px-2 py-0.5 text-[12px]")} style={{ color: fg, background: `color-mix(in oklab, ${color} 14%, transparent)` }}>
       <i className="h-2 w-2 rounded-full" style={{ background: color }} />
       {t(`lvl.${level}`)}
     </span>
@@ -173,7 +174,7 @@ export function LevelBadge({ level, big }: { level: Level; big?: boolean }) {
 export function CropChip({ crop, faded, size = "md" }: { crop: CropId; faded?: boolean; size?: "sm" | "md" }) {
   const { lang } = useT();
   return (
-    <span className={clsx("inline-flex items-center gap-1 rounded-full font-medium", size === "sm" ? "px-1.5 py-0.5 text-[11.5px]" : "px-2 py-0.5 text-[12.5px]", faded && "opacity-55")} style={{ background: `color-mix(in oklab, ${cropColor(crop)} 22%, transparent)` }}>
+    <span className={clsx("inline-flex items-center gap-1 rounded-full font-medium", size === "sm" ? "px-1.5 py-0.5 text-[12px]" : "px-2 py-0.5 text-[12.5px]", faded && "opacity-55")} style={{ background: `color-mix(in oklab, ${cropColor(crop)} 22%, transparent)` }}>
       <span aria-hidden>{cropIcon(crop)}</span>
       {cropName(crop, lang)}
     </span>

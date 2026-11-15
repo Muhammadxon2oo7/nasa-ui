@@ -100,7 +100,7 @@ export function CapacityTab({ data, onCrop }: { data: AnalyzeResponse; onCrop: (
   const c = ls.capacity;
   const area = data.field.areaHa;
   const lo = typeof c.lowAuPerHa === "number" ? c.lowAuPerHa : null, hi = typeof c.highAuPerHa === "number" ? c.highAuPerHa : null;
-  const tone = { ok: "text-[var(--accent)]", warn: "text-[var(--level-medium)]", over: "text-[var(--danger-fg)]", unknown: "text-[var(--fg-3)]" }[c.status];
+  const tone = { ok: "text-[var(--accent)]", warn: "text-[var(--level-medium-fg)]", over: "text-[var(--danger-fg)]", unknown: "text-[var(--fg-3)]" }[c.status];
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
       <Card>
@@ -212,7 +212,7 @@ export function HeatTab({ data }: { data: AnalyzeResponse }) {
           <div key={c.label} className="rounded-[20px] bg-[var(--surface)] p-3.5 shadow-[var(--shadow-card)]">
             <div className="text-[12px] font-medium text-[var(--fg-3)]">{c.icon} {c.label}</div>
             <div className="mt-1 text-[22px] font-semibold tracking-[-0.02em] tnum">{c.value}</div>
-            <div className="text-[11.5px] text-[var(--fg-3)]">{c.sub}</div>
+            <div className="text-[12px] text-[var(--fg-3)]">{c.sub}</div>
           </div>
         ))}
       </div>
@@ -242,7 +242,7 @@ export function HeatTab({ data }: { data: AnalyzeResponse }) {
                 <div key={f.date} className="flex min-w-[70px] flex-1 flex-col items-center gap-1 rounded-2xl bg-[var(--surface-2)] px-2 py-3">
                   <span className="text-[12px] font-semibold">{new Date(f.date + "T00:00:00").toLocaleDateString(lang === "uz" ? "uz-UZ" : "en-US", { weekday: "short" })}</span>
                   <span className="text-[20px] font-semibold tnum" style={{ color: { low: "var(--level-low)", medium: "var(--level-medium)", high: "var(--level-high)" }[f.level] }}>{Math.round(f.thiMax)}</span>
-                  <span className="text-[11px] text-[var(--fg-3)]">{t(`lvl.${f.level}` as Key)}</span>
+                  <span className="text-[12px] text-[var(--fg-3)]">{t(`lvl.${f.level}` as Key)}</span>
                 </div>
               ))}
             </div>

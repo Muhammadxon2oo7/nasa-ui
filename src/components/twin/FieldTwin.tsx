@@ -137,7 +137,7 @@ export function FieldTwin({ data, list, bestId, autoPlay = false, className }: {
                   );
                 })}
               </div>
-              <div className="mt-1 flex justify-between text-[11px] font-semibold text-[var(--fg-2)]">
+              <div className="mt-1 flex justify-between text-[12px] font-semibold text-[var(--fg-2)]">
                 {years.map((y) => (
                   <span key={y}>{y}</span>
                 ))}
@@ -155,7 +155,7 @@ export function FieldTwin({ data, list, bestId, autoPlay = false, className }: {
                     <m.div initial={{ height: 0 }} animate={{ height: `${(x.s.waterM3PerHa / maxW) * 100}%` }} transition={spring} className="absolute inset-x-0 bottom-0 rounded-t-[4px]" style={{ background: over ? "#E53935" : "#1E88E5" }} />
                     {limit && <div className="absolute inset-x-0 border-t-2 border-dashed border-white/90" style={{ bottom: `${(limit / maxW) * 100}%` }} />}
                   </div>
-                  <span className="text-[11.5px] font-bold tnum">
+                  <span className="text-[12px] font-bold tnum">
                     {x.s.id} · {num(Math.round(x.s.waterM3PerHa / 100) / 10, 1)}k
                   </span>
                 </button>
@@ -173,7 +173,7 @@ export function FieldTwin({ data, list, bestId, autoPlay = false, className }: {
             <span className="ml-auto text-[12px] text-[var(--fg-3)]">{data.soil.isEstimated ? "Sentinel-2" : L("Laboratoriya", "Lab")}</span>
           </div>
         )}
-        <div className="mt-1 text-right text-[10px] text-[var(--fg-3)]">Imagery © Esri, Maxar · Terrain © Mapterhorn</div>
+        <div className="mt-1 text-right text-[12px] text-[var(--fg-2)]">Imagery © Esri, Maxar · Terrain © Mapterhorn</div>
       </div>
     </div>
   );

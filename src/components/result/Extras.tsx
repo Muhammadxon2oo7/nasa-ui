@@ -17,6 +17,7 @@ import { UnknownValue } from "./Unknown";
 import { CalendarRibbon } from "../twin/CalendarRibbon";
 
 const LVL_COLOR: Record<Level | "early", string> = { low: "var(--level-high)", medium: "var(--level-low)", high: "var(--water)", early: "var(--fg-3)" };
+const LVL_FG: Record<Level | "early", string> = { low: "var(--level-high-fg)", medium: "var(--level-low-fg)", high: "var(--fg)", early: "var(--fg-3)" };
 const isoDM = (iso: string, lang: "uz" | "en") => dayMonth(iso.slice(5, 10), lang);
 const safeGet = <T,>(k: string, fb: T): T => {
   try {
@@ -44,7 +45,7 @@ function EventRow({ e, lang }: { e: CalendarEvent; lang: "uz" | "en" }) {
       <span className="min-w-0 flex-1">
         <b className={clsx("block text-[14.5px] leading-snug font-semibold", e.severity === "high" && "text-[var(--danger-fg)]")}>{e.title}</b>
         {e.detail && <span className="block text-[13px] text-[var(--fg-2)]">{e.detail}</span>}
-        <span className="text-[11.5px] text-[var(--fg-3)]">{e.source}</span>
+        <span className="text-[12px] text-[var(--fg-3)]">{e.source}</span>
       </span>
     </li>
   );
@@ -155,7 +156,7 @@ function LeachingPlanCard({ data }: { data: AnalyzeResponse }) {
               </div>
             ))}
           </div>
-          <div className="mt-0.5 flex justify-between text-[11px] text-[var(--fg-3)]">
+          <div className="mt-0.5 flex justify-between text-[12px] text-[var(--fg-3)]">
             <span>{DEK(l.frozenRisk[0].dekad)}</span>
             <span>{DEK(l.frozenRisk[l.frozenRisk.length - 1].dekad)}</span>
           </div>
@@ -212,7 +213,7 @@ function SowingCard({ data }: { data: AnalyzeResponse }) {
 function Pill({ l }: { l: Level | "early" }) {
   const { t } = useT();
   return (
-    <span className="rounded-full px-2 py-0.5 text-[12px] font-bold" style={{ color: LVL_COLOR[l], background: `color-mix(in oklab, ${LVL_COLOR[l]} 14%, transparent)` }}>
+    <span className="rounded-full px-2 py-0.5 text-[12px] font-bold" style={{ color: LVL_FG[l], background: `color-mix(in oklab, ${LVL_COLOR[l]} 14%, transparent)` }}>
       {t(`ws.lvl.${l}` as Key)}
     </span>
   );
@@ -282,7 +283,7 @@ export function WaterSupplyBadge({ data }: { data: AnalyzeResponse }) {
   if (!w) return null;
   const l = w.currentSeason.level !== "early" ? w.currentSeason.level : w.lastSeason.level;
   return (
-    <span className="mt-1 block text-[12px] font-semibold" style={{ color: LVL_COLOR[l] }}>
+    <span className="mt-1 block text-[12px] font-semibold" style={{ color: LVL_FG[l] }}>
       {t("ws.badge", { l: t(`ws.lvl.${l}` as Key).toLowerCase() })}
     </span>
   );

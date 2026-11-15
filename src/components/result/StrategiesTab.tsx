@@ -120,7 +120,7 @@ function StrategyCard({ st, score, gross, color, isBest, open, onToggle }: { st:
         )}
       </div>
       <div className="mt-2 min-h-[44px] text-[15px] leading-snug font-semibold">{st.name}</div>
-      {st.isNearest && !st.isCurrent && <div className="mt-1 text-[11.5px] font-medium text-[var(--warn-fg)]">{t("st.nearest").split(".")[0]}</div>}
+      {st.isNearest && !st.isCurrent && <div className="mt-1 text-[12px] font-medium text-[var(--warn-fg)]">{t("st.nearest").split(".")[0]}</div>}
       <div className="mt-3 flex items-baseline gap-2">
         <AnimatedNumber value={score} className="text-[30px] leading-none font-semibold tracking-[-0.03em]" />
         <span className="text-[12px] text-[var(--fg-3)]">/ 100</span>
@@ -226,7 +226,7 @@ function RotationTimeline({ st }: { st: Strategy }) {
   const startOf = (y: number) => Date.UTC(y, 0, 1);
   return (
     <div>
-      <div className="mb-1 grid grid-cols-[44px_1fr] gap-2 text-[10.5px] text-[var(--fg-3)]">
+      <div className="mb-1 grid grid-cols-[44px_1fr] gap-2 text-[12px] text-[var(--fg-3)]">
         <span />
         <div className="grid grid-cols-12">
           {Array.from({ length: 12 }, (_, i) => (
@@ -248,7 +248,7 @@ function RotationTimeline({ st }: { st: Strategy }) {
                   const left = ((a - startOf(y)) / (startOf(y + 1) - startOf(y))) * 100;
                   const width = ((b - a) / (startOf(y + 1) - startOf(y))) * 100;
                   return (
-                    <m.div key={s.crop + s.start} initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={spring} className="absolute inset-y-1 flex origin-left items-center gap-1 overflow-hidden rounded-lg px-1.5 text-[11.5px] font-semibold whitespace-nowrap text-[#1B2A1E]" style={{ left: `${left}%`, width: `calc(${width}% - 2px)`, background: cropColor(s.crop) }} title={`${cropName(s.crop, lang)}: ${dayMonth(s.start, lang)} - ${dayMonth(s.end, lang)}`}>
+                    <m.div key={s.crop + s.start} initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={spring} className="absolute inset-y-1 flex origin-left items-center gap-1 overflow-hidden rounded-lg px-1.5 text-[12px] font-semibold whitespace-nowrap text-[#1B2A1E]" style={{ left: `${left}%`, width: `calc(${width}% - 2px)`, background: cropColor(s.crop) }} title={`${cropName(s.crop, lang)}: ${dayMonth(s.start, lang)} - ${dayMonth(s.end, lang)}`}>
                       <span aria-hidden>{cropIcon(s.crop)}</span>
                       <span className="truncate">{cropName(s.crop, lang)}</span>
                     </m.div>
@@ -334,7 +334,7 @@ function StrategyDetail({ data, st, color }: { data: AnalyzeResponse; st: Strate
           ))}
         </div>
       </div>
-      <p className="mt-3 text-[11.5px] text-[var(--fg-3)]">{e.generatedBy === "llm" ? t("aiText") : t("templateText")}</p>
+      <p className="mt-3 text-[12px] text-[var(--fg-3)]">{e.generatedBy === "llm" ? t("aiText") : t("templateText")}</p>
     </Card>
   );
 }

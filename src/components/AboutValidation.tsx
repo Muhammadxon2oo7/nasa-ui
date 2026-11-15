@@ -86,7 +86,7 @@ export function BacktestSection() {
           </tbody>
         </table>
       </Card>
-      <p className="max-w-[75ch] text-[13.5px] text-[var(--fg-2)]">
+      <p className="max-w-[32rem] text-[13.5px] text-[var(--fg-2)]">
         {L(
           "Usul: tizimga faqat kesish sanasigacha (oldingi yilning 1-oktabri) bo'lgan NASA POWER, ERA5 va Sentinel-2 ma'lumotlari beriladi. Tavsiyalar shu holatda tuziladi, keyin har bir strategiya keyingi yilning HAQIQIY ob-havosi bilan qayta hisoblanadi (suv talabi va limit qoidasi). Cheklov: bu sinov faqat suv va limitni tekshiradi, hosil ma'lumoti (stat.uz) hali ulanmagan. Natijalar qanday chiqqan bo'lsa, shunday ko'rsatilgan.",
           "Method: the system only gets NASA POWER, ERA5 and Sentinel-2 data up to the cutoff (1 October of the previous year). It recommends plans from that, then each plan is re-scored with the REAL weather of the next year (water need and the limit rule). Limitation: this only tests water and the limit; yield statistics (stat.uz) are not connected yet. Results are shown as they came out.",
@@ -112,7 +112,7 @@ export function ValidationNotes({ snow }: { snow: { basin: string; r: number | n
             </li>
           ))}
         </ul>
-        <p className="mt-2 text-[13px] text-[var(--fg-2)]">
+        <p className="mt-2 max-w-[34rem] text-[13px] text-[var(--fg-2)]">
           {L(
             "MODIS MOD10A2 bo'yicha bahorgi (mart-aprel) qor qoplami tog'li havzada va GloFAS yozgi (iyun-avgust) oqimi. Bog'liqlik kuchsiz: To'xtag'ul, Norak kabi suv omborlari va suv olish oqimni tartibga soladi. Shuning uchun signal tavsiyaga avtomatik ta'sir qilmaydi, faqat ko'rsatiladi.",
             "Spring (Mar-Apr) snow cover over the mountain basin from MODIS MOD10A2 vs GloFAS summer (Jun-Aug) flow. The link is weak: reservoirs (Toktogul, Nurek) and withdrawals regulate the flow, so the signal is shown but does not change the advice automatically.",
@@ -121,13 +121,13 @@ export function ValidationNotes({ snow }: { snow: { basin: string; r: number | n
       </Card>
       <Card>
         <h3 className="text-[16px] font-semibold">🇺🇸 {L("AQSh ma'lumotlarida tekshiruv (N4)", "Check on US data (N4)")}</h3>
-        <p className="mt-2 text-[13.5px] text-[var(--fg-2)]">
+        <p className="mt-2 max-w-[34rem] text-[13.5px] text-[var(--fg-2)]">
           {L(
             "Reja: Kaliforniya va Arizonadagi paxta, bug'doy va beda dalalarida bizning Sentinel-2 → Kcb → ET usulini OpenET ansambli bilan solishtirish (RMSE, bias, R²). Holat: hali qilinmagan. OpenET va CropScape Google Earth Engine orqali olinadi, GEE ulanmagan. Natija bo'lmaguncha raqam ko'rsatilmaydi.",
             "Plan: compare our Sentinel-2 → Kcb → ET method with the OpenET ensemble on cotton, wheat and alfalfa fields in California and Arizona (RMSE, bias, R²). Status: not done yet. OpenET and CropScape come through Google Earth Engine, which is not connected. No numbers are shown until there is a result.",
           )}
         </p>
-        <p className="mt-2 text-[13.5px] text-[var(--fg-2)]">
+        <p className="mt-2 max-w-[34rem] text-[13.5px] text-[var(--fg-2)]">
           {L(
             "Hozircha mavjud mustaqil tekshiruv: MODIS MOD16 yillik ET bilan solishtirish (Suv tabida). ECOSTRESS (N5) uchun NASA Earthdata login kerak, WaPOR uchun GEE: ikkalasi ham ulanmagan.",
             "Available independent check for now: MODIS MOD16 annual ET (in the Water tab). ECOSTRESS (N5) needs a NASA Earthdata login and WaPOR needs GEE: neither is connected.",

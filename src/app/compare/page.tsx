@@ -155,7 +155,7 @@ export default function ComparePage() {
         <Card className="flex flex-col gap-3">
           <CardTitle>{t("cmp.places", { n: places.length })}</CardTitle>
           {places.length === 0 && <p className="text-[14px] text-[var(--fg-3)]">{t("cmp.addHint")}</p>}
-          {draftCheck?.errors[0] && <p className="text-[13px] text-[var(--level-high)]">{t(`err.${draftCheck.errors[0]}` as Key)}</p>}
+          {draftCheck?.errors[0] && <p className="text-[13px] text-[var(--level-high-fg)]">{t(`err.${draftCheck.errors[0]}` as Key)}</p>}
           <ul className="flex flex-col gap-1.5">
             <AnimatePresence initial={false}>
               {places.map((p, i) => (
@@ -170,7 +170,7 @@ export default function ComparePage() {
                     aria-label="name"
                   />
                   <span className="shrink-0 text-[12.5px] text-[var(--fg-3)] tabular-nums">{analyzePolygon(p.polygon).areaHa.toFixed(1)} ga</span>
-                  <button type="button" onClick={() => (setPlaces((ps) => ps.filter((_, j) => j !== i)), setRes(null))} className="press rounded-full p-1.5 text-[var(--fg-3)] hover:text-[var(--level-high)]" aria-label="remove">
+                  <button type="button" onClick={() => (setPlaces((ps) => ps.filter((_, j) => j !== i)), setRes(null))} className="press rounded-full p-1.5 text-[var(--fg-3)] hover:text-[var(--level-high-fg)]" aria-label="remove">
                     <Trash2 size={15} />
                   </button>
                 </m.li>

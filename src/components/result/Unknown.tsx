@@ -38,8 +38,9 @@ export function UnknownValue({ reason }: { reason: string }) {
 export function RobustnessBadge({ score, worst }: { score: number; worst: number }) {
   const { t } = useT();
   const color = score >= 70 ? "var(--level-low)" : score >= 50 ? "var(--level-medium)" : "var(--level-high)";
+  const fg = score >= 70 ? "var(--level-low-fg)" : score >= 50 ? "var(--level-medium-fg)" : "var(--level-high-fg)";
   return (
-    <span title={t("rob.title")} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-semibold" style={{ color, background: `color-mix(in oklab, ${color} 13%, transparent)` }}>
+    <span title={t("rob.title")} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-semibold" style={{ color: fg, background: `color-mix(in oklab, ${color} 13%, transparent)` }}>
       <Shield size={12} /> {score} · {t("rob.worst", { w: worst })}
     </span>
   );

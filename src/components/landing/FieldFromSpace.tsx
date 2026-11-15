@@ -64,14 +64,14 @@ export function FieldFromSpace() {
         </div>
       </div>
       <div className="px-2 pt-3 pb-1.5">
-        <div className="mb-1.5 flex items-center justify-between text-[11.5px] text-[var(--fg-3)]">
+        <div className="mb-1.5 flex items-center justify-between text-[12px] text-[var(--fg-3)]">
           <span>{lang === "uz" ? "NDVI, har oy" : "NDVI, monthly"}</span>
           <SourceBadge source="Sentinel-2 L2A" />
         </div>
         <div className="space-y-1">
           {years.map((y) => (
             <div key={y} className="flex items-center gap-1.5">
-              <span className="w-8 text-[10.5px] text-[var(--fg-3)] tnum">{y}</span>
+              <span className="w-8 text-[12px] text-[var(--fg-3)] tnum">{y}</span>
               <div className="grid flex-1 grid-cols-12 gap-[2px]">
                 {Array.from({ length: 12 }, (_, i) => {
                   const v = data!.history.ndvi.find((n) => n.date === `${y}-${String(i + 1).padStart(2, "0")}`)?.value ?? null;

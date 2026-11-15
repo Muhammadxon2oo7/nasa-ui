@@ -65,7 +65,7 @@ export function CalendarRibbon({ data }: { data: AnalyzeResponse }) {
             const its = itemsOf(mm.y, mm.m);
             return (
               <button key={i} type="button" onClick={() => setSel(i)} aria-pressed={sel === i} className={clsx("press flex flex-col items-center gap-1 rounded-2xl px-0.5 pt-1.5 pb-2 transition-colors", sel === i ? "bg-[var(--surface-2)] ring-2 ring-[var(--accent)]" : "hover:bg-[var(--surface-2)]/70")}>
-                <span className="text-[11.5px] font-semibold text-[var(--fg-3)]">{monthShort(mm.m, lang)}</span>
+                <span className="text-[12px] font-semibold text-[var(--fg-3)]">{monthShort(mm.m, lang)}</span>
                 <span className="relative h-14 w-full overflow-hidden rounded-xl" style={{ background: crop ? CROPS[crop].color : BARE, opacity: crop ? 1 : 0.55 }}>
                   <span className="absolute inset-0 flex items-center justify-center text-[20px] drop-shadow">{crop ? CROPS[crop].icon : ""}</span>
                 </span>
@@ -74,7 +74,7 @@ export function CalendarRibbon({ data }: { data: AnalyzeResponse }) {
                     <span key={ic}>{ic}</span>
                   ))}
                 </span>
-                {i === 0 || mm.m === 1 ? <span className="text-[10px] text-[var(--fg-3)] tnum">{mm.y}</span> : <span className="h-[12px]" />}
+                {i === 0 || mm.m === 1 ? <span className="text-[12px] text-[var(--fg-3)] tnum">{mm.y}</span> : <span className="h-[12px]" />}
               </button>
             );
           })}

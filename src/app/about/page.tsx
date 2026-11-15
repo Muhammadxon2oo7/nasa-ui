@@ -94,7 +94,7 @@ export default function About() {
       <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5">
         <section id="about">
           <h1 className="text-[clamp(28px,4.5vw,40px)] font-semibold tracking-[-0.03em]">{L("Metodologiya", "Methodology")}</h1>
-          <p className="mt-3 max-w-[70ch] text-[16px] leading-relaxed text-[var(--fg-2)]">
+          <p className="mt-3 max-w-[32rem] text-[16px] leading-relaxed text-[var(--fg-2)]">
             {L(
               "TerraVision dehqon, chorvador, yer tanlovchi va mutaxassis uchun NASA va hamkor agentliklar ma'lumotlarini oladi. Dala uchun tarix, iqlim xavfi, sho'rlanish va suv talabini hisoblaydi va kamida 3 ta rotatsiya strategiyasini hozirgi rotatsiya bilan solishtiradi. Yaylov uchun holatni 20 yillik me'yor bilan, sig'imni, issiqlik stressini va eng yaqin suvni ko'rsatadi. Yer tanlashda 2-4 joyni maqsad bo'yicha solishtiradi. Tavsiyalarni qoidalar va ballash tizimi beradi, LLM esa faqat tushuntirish yozadi. Har bir raqamning manbasi ko'rsatiladi.",
               "TerraVision pulls NASA and partner-agency data for farmers, herders, land seekers and experts. For a field it computes history, climate risk, salinity and water need, then compares at least 3 rotation strategies with the current one. For a pasture it shows condition vs the 20-year norm, grazing capacity, heat stress and the nearest water. For land selection it compares 2-4 places by goal. Recommendations come from rules and scoring; an LLM only writes explanations. Every number shows its source.",
@@ -105,7 +105,7 @@ export default function About() {
           <h2 className="mb-3 text-[22px] font-semibold tracking-[-0.02em]">{L("Ma'lumotlar manbalari", "Data sources")}</h2>
           <div className="scroll-thin overflow-x-auto rounded-[22px] bg-[var(--surface)] shadow-[var(--shadow-card)]">
             <table className="w-full min-w-[640px] text-left text-[13.5px]">
-              <thead className="text-[11.5px] tracking-wide text-[var(--fg-3)] uppercase">
+              <thead className="text-[12px] tracking-wide text-[var(--fg-3)] uppercase">
                 <tr>
                   <th className="px-4 py-3">Dataset</th>
                   <th className="px-4 py-3">{L("Nima uchun", "Used for")}</th>
@@ -190,7 +190,7 @@ export default function About() {
         <section id="llm">
           <h2 className="mb-3 text-[22px] font-semibold tracking-[-0.02em]">{L("AI tushuntirishlar", "AI explanations")}</h2>
           <Card>
-            <p className="max-w-[70ch] text-[15px] leading-relaxed text-[var(--fg-2)]">
+            <p className="max-w-[34rem] text-[15px] leading-relaxed text-[var(--fg-2)]">
               {L(
                 "Tavsiyani LLM emas, qoidalar (R1-R8) va ballash beradi. Hozir barcha tushuntirishlar hisoblangan raqamlardan avtomatik shablon bilan yoziladi. Keyingi bosqichda LLM (Claude) ulanadi: u faqat shu JSON'ni oddiy tilga o'giradi, matndagi har bir raqam esa kirish ma'lumotlari bilan avtomatik solishtiriladi. Mos kelmasa, shablon matn ko'rsatiladi.",
                 "Recommendations come from rules (R1-R8) and scoring, not from an LLM. Right now every explanation is written from the computed numbers by a template. Next, an LLM (Claude) will only rewrite that JSON in plain language, with every number in its text checked against the input automatically and a template shown if any number doesn't match.",
@@ -217,7 +217,7 @@ export default function About() {
               L("JRC suv qatlami 2020 yilgacha. Yangi kanal yoki quduqlar ko'rinmasligi mumkin.", "The JRC water layer ends in 2020; new canals or wells may be missing."),
               L("Kc va ECe qiymatlari FAO-56 va FAO-29 asl jadvallari bilan qayta solishtirilishi kerak (T6).", "Kc and ECe values must be re-checked against the FAO-56 and FAO-29 originals (T6)."),
             ].map((x) => (
-              <li key={x} className="rounded-2xl border-l-[3px] border-[var(--level-medium)] bg-[var(--surface)] px-4 py-3 text-[14px] text-[var(--fg-2)] shadow-[var(--shadow-card)]">
+              <li key={x} className="max-w-[80ch] rounded-2xl border-l-[3px] border-[var(--level-medium)] bg-[var(--surface)] px-4 py-3 text-[14px] text-[var(--fg-2)] shadow-[var(--shadow-card)]">
                 {x}
               </li>
             ))}

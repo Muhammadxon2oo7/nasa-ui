@@ -191,7 +191,7 @@ function Week({ data }: { data: AnalyzeResponse }) {
             <span className="text-[12.5px] font-semibold">{wd(day)}</span>
             <span className="text-[24px]" aria-hidden>{wIcon(d.weather_code[i])}</span>
             <span className="text-[13.5px] font-semibold tnum">{Math.round(d.temperature_2m_max[i])}° / {Math.round(d.temperature_2m_min[i])}°</span>
-            <span className="text-[11.5px] text-[var(--fg-3)] tnum">{d.precipitation_sum[i].toFixed(1)} mm</span>
+            <span className="text-[12px] text-[var(--fg-3)] tnum">{d.precipitation_sum[i].toFixed(1)} mm</span>
           </m.div>
         ))}
       </div>
@@ -224,7 +224,7 @@ function Season({ data }: { data: AnalyzeResponse }) {
               <tr className="border-t border-[var(--hairline)]">
                 <td className="py-2 text-left text-[12.5px] text-[var(--fg-3)]">🌡️ {t("f.warmer")}</td>
                 {s.months.map((m) => (
-                  <td key={m.month} className={clsx("py-2 font-semibold tnum", m.probWarmer >= 0.6 && "text-[var(--level-high)]", m.probWarmer <= 0.4 && "text-[var(--s1)]")}>
+                  <td key={m.month} className={clsx("py-2 font-semibold tnum", m.probWarmer >= 0.6 && "text-[var(--level-high-fg)]", m.probWarmer <= 0.4 && "text-[var(--s1)]")}>
                     {m.probWarmer >= 0.6 ? "🔥" : m.probWarmer <= 0.4 ? "❄️" : "≈"} {Math.round(m.probWarmer * 100)}%
                   </td>
                 ))}

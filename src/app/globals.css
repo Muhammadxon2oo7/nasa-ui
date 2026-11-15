@@ -24,7 +24,7 @@
   --fg-3: #5B6B5E;
   --hairline: rgb(27 42 30 / 0.09);
   --hairline-strong: rgb(27 42 30 / 0.16);
-  --accent: #2E7D32;
+  --accent: #276C2B; /* text-safe on tinted surfaces (≥ 4.5:1) */
   --accent-fill: #2E7D32;
   --accent-soft: rgb(46 125 50 / 0.10);
   --secondary: #0B3D91;
@@ -38,6 +38,10 @@
   --level-low: #43A047;
   --level-medium: #FB8C00;
   --level-high: #E53935;
+  /* text versions of the level colours (dots/fills keep the bright ones) */
+  --level-low-fg: #23692A;
+  --level-medium-fg: #8F4708;
+  --level-high-fg: #B3261E;
   --on-accent: #ffffff;
   --warn-bg: #fff6dc;
   --warn-border: #f1d58a;
@@ -78,6 +82,9 @@
   --level-low: #66BB6A;
   --level-medium: #FFA726;
   --level-high: #EF5350;
+  --level-low-fg: #7FD083;
+  --level-medium-fg: #FFB74D;
+  --level-high-fg: #FF8A80;
   --warn-bg: #2b2310;
   --warn-border: #5c4a1a;
   --warn-fg: #f5d58a;
