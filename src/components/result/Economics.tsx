@@ -87,7 +87,8 @@ const STATUS = {
 function NormScale({ n }: { n: WaterNorm }) {
   const { lang } = useT();
   const [a, b] = n.normRangeM3PerHa;
-  const max = Math.max(n.calculatedM3PerHa, b, ...n.points.map((p) => p.value)) * 1.12;
+  const pts = n.points ?? [];
+  const max = Math.max(n.calculatedM3PerHa, b, ...pts.map((p) => p.value)) * 1.12;
   const x = (v: number) => `${(v / max) * 100}%`;
   const st = STATUS[n.status];
   const Icon = st.icon;
@@ -102,7 +103,7 @@ function NormScale({ n }: { n: WaterNorm }) {
       </div>
       <div className="relative mt-5 mb-1 h-2.5 rounded-full bg-[var(--surface-2)]" role="img" aria-label={`${num(n.calculatedM3PerHa)} m³/ha vs ${num(a)}-${num(b)}`}>
         <div className="absolute inset-y-0 rounded-full bg-[var(--accent-fill)]/25" style={{ left: x(a), width: `calc(${x(b)} - ${x(a)})` }} />
-        {n.points.map((p, i) => (
+        {pts.map((p, i) => (
           <i key={i} title={`${num(p.value)} m³/ga · ${p.label} · ${p.source}`} className="absolute top-1/2 h-3.5 w-[2px] -translate-y-1/2 rounded-full bg-[var(--fg-3)]" style={{ left: x(p.value) }} />
         ))}
         <div className="absolute -top-6 -translate-x-1/2 text-[12px] font-semibold whitespace-nowrap tnum" style={{ left: x(n.calculatedM3PerHa) }}>
@@ -116,7 +117,7 @@ function NormScale({ n }: { n: WaterNorm }) {
       </div>
       {n.note && <p className="mt-1.5 text-[12.5px] text-[var(--fg-2)]">{n.note}</p>}
       <ul className="mt-1.5 grid gap-0.5 text-[12px] text-[var(--fg-3)]">
-        {n.points.map((p, i) => (
+        {pts.map((p, i) => (
           <li key={i} className="flex flex-wrap items-center gap-x-1.5">
             <span className="tnum font-medium text-[var(--fg-2)]">{num(p.value)}</span>
             <span>· {p.label} ·</span>

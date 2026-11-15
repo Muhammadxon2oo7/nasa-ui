@@ -80,7 +80,12 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
       explanation: s.explanation,
       robustness: s.robustness ? { score: s.robustness.score, worstScore: scores.length ? Math.min(...scores) : s.robustness.score, scenarios: s.robustness.scenarios } : undefined,
       income: s.income ? { ...s.income, byCrop: (s.income.byCrop ?? []).map((c: Any) => ({ ...c, crop: crop(c.crop) })), missing: (s.income.missing ?? []).map(crop) } : undefined,
-      waterNorms: Array.isArray(s.waterNorms) ? s.waterNorms.map((n: Any) => ({ ...n, crop: crop(n.crop) })) : undefined,
+      // a norm without a published range cannot be drawn; points may be absent in newer builds
+      waterNorms: Array.isArray(s.waterNorms)
+        ? s.waterNorms
+            .filter((n: Any) => Array.isArray(n.normRangeM3PerHa) && n.normRangeM3PerHa.length === 2 && typeof n.calculatedM3PerHa === "number")
+            .map((n: Any) => ({ ...n, crop: crop(n.crop), points: Array.isArray(n.points) ? n.points : [] }))
+        : undefined,
       bare: s.bare ?? undefined,
       soilEffects: s.soilEffects ?? undefined,
       laborDaysPerHa: s.laborDaysPerHa ?? undefined,
