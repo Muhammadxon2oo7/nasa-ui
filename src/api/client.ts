@@ -93,7 +93,8 @@ export const saveFields = (f: SavedField[]) => safe(() => localStorage.setItem("
 
 export const compareFields = async (req: import("@/types/api").CompareRequest, signal?: AbortSignal) => {
   // pasture goal still needs the built-in livestock comparison; everything else goes to the FastAPI backend first
-  if (USE_FASTAPI && !DEMO_MODE && req.goal !== "pasture") {
+  // the backend handles every goal, pasture included; the built-in engine is only the offline fallback
+  if (USE_FASTAPI && !DEMO_MODE) {
     try {
       const { compareFastApi } = await import("./fastapi");
       return await compareFastApi(req, signal);

@@ -428,7 +428,7 @@ export async function getZonesFastApi(fieldId: string, signal?: AbortSignal): Pr
 
 /** POST /py/api/compare (land selection) → the compare page's table rows. */
 export async function compareFastApi(req: import("@/types/api").CompareRequest, signal?: AbortSignal): Promise<import("@/types/api").CompareResponse> {
-  const res = await fetch("/py/api/compare", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ places: req.places, goal: req.goal, method: "furrow" }), signal });
+  const res = await fetch("/py/api/compare", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ places: req.places, goal: req.goal, method: "furrow", lang: req.lang }), signal });
   const j = dashes(await res.json().catch(() => ({})));
   if (!res.ok) throw apiError(j, res.status, req.lang === "en" ? "en" : "uz");
   const uz = req.lang !== "en";

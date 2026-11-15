@@ -36,6 +36,22 @@ export default function ComparePage() {
   const [err, setErr] = useState("");
   const api = useRef<MapApi | null>(null);
   const ctrl = useRef<AbortController | null>(null);
+  // Speculative compare: as soon as there are 2+ places (or the goal changes) the request starts in
+  // the background, so pressing "Compare" usually finds the answer already there.
+  const pre = useRef<{ key: string; p: Promise<Awaited<ReturnType<typeof compareFields>>> } | null>(null);
+  const keyOf = (g: string, ps: Place[]) => `${g}|${lang}|${ps.map((x) => `${x.name}:${JSON.stringify(x.polygon.coordinates[0][0])}:${x.polygon.coordinates[0].length}`).join(";")}`;
+  useEffect(() => {
+    if (places.length < 2) return;
+    const k = keyOf(goal, places);
+    if (pre.current?.key === k) return;
+    const id = setTimeout(() => {
+      const p = compareFields({ places, goal, lang });
+      p.catch(() => {});
+      pre.current = { key: k, p };
+    }, 600);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyOf reads the same inputs
+  }, [places, goal, lang]);
   const router = useRouter();
   const profile = useProfile((s) => s.profile);
   const [opening, setOpening] = useState<string | null>(null);
@@ -104,7 +120,9 @@ export default function ComparePage() {
     setStatus("busy");
     setRes(null);
     try {
-      setRes(await compareFields({ places: ps, goal: g, lang }, ctrl.current.signal));
+      const k = keyOf(g, ps);
+      const warm = pre.current?.key === k ? pre.current.p : null;
+      setRes(await (warm ?? compareFields({ places: ps, goal: g, lang }, ctrl.current.signal)));
       setStatus("idle");
     } catch (e) {
       // offline demo fallback (same 3 pilots, same goal)
