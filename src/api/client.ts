@@ -32,8 +32,24 @@ export const loadDemo = async (name: string) => {
   return (await res.json()) as AnalyzeResponse;
 };
 
-export const analyzeField = (req: AnalyzeRequest, signal?: AbortSignal) =>
-  api<AnalyzeResponse>("/api/analyze", { method: "POST", body: JSON.stringify(req), timeoutMs: 150_000, signal });
+const USE_FASTAPI = process.env.NEXT_PUBLIC_USE_FASTAPI !== "false";
+
+/**
+ * Primary: the team's FastAPI backend (via /py rewrite). A 422 (bad input) is shown to the user as is;
+ * any other failure falls back to the built-in Next.js analysis so the demo never dies.
+ */
+export const analyzeField = async (req: AnalyzeRequest, signal?: AbortSignal): Promise<AnalyzeResponse> => {
+  if (USE_FASTAPI && !DEMO_MODE && !req.modules?.includes("livestock")) {
+    try {
+      const { analyzeFastApi } = await import("./fastapi");
+      return await analyzeFastApi(req, signal);
+    } catch (e) {
+      if ((e as { status?: number }).status === 422) throw new ApiError((e as Error).message, 422);
+      if (signal?.aborted) throw e;
+    }
+  }
+  return api<AnalyzeResponse>("/api/analyze", { method: "POST", body: JSON.stringify(req), timeoutMs: 150_000, signal });
+};
 
 export const whatIf = (fieldId: string, dT: number, dPpct: number, signal?: AbortSignal) =>
   api<{ strategies: Strategy[] }>("/api/whatif", { method: "POST", body: JSON.stringify({ fieldId, dT, dPpct }), timeoutMs: 20_000, signal });

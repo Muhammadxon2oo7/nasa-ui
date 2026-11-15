@@ -42,6 +42,17 @@ NASA Space Apps Challenge 2026 · *Field Shift: Adapting Farms with NASA Data*
 
 Har bir sahifa **profil** (Kim siz?) va **Oddiy / Mutaxassis** rejimiga moslashadi. Ma'lumot yo'q yoki niqoblangan bo'lsa, ❓ va sababi ko'rsatiladi, hech qachon 0 emas.
 
+## Backend (FastAPI)
+
+Asosiy hisob jamoaning FastAPI backend'ida: https://github.com/Muhammadalixon-Qodirov/nasa_agro (`FRONTEND_UCHUN_API.md`).
+Brauzer `/py/*` ga murojaat qiladi, Next.js uni `BACKEND_URL` ga uzatadi (CORS kerak emas).
+Javob `src/api/fastapi.ts` adapteri orqali frontend shartnomasiga (`src/types/api.ts`) o'giriladi.
+Backend ishlamasa, ichki Next.js hisobi (`src/server`) zaxira sifatida ishlaydi.
+
+```bash
+cp .env.example .env.local   # BACKEND_URL=http://agro-nasa-api.e-investment.uz
+```
+
 ## Ishga tushirish
 
 ```bash

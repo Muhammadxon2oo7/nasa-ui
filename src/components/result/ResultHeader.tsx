@@ -76,7 +76,7 @@ export function FieldHeader({ data }: { data: AnalyzeResponse }) {
           <MapPin size={14} /> {t("r.period", { a: f.periodStart, b: f.periodEnd })}
         </div>
         <h1 className="mt-0.5 text-[clamp(22px,3.4vw,30px)] leading-tight font-semibold tracking-[-0.025em] text-balance">
-          {[f.region, f.district].filter(Boolean).join(", ") || "—"} · <span className="tnum">{num(f.areaHa, 1)}</span> {t("ha")}
+          {[f.region, f.district].filter(Boolean).join(", ") || `${f.centroid[0].toFixed(3)}°N, ${f.centroid[1].toFixed(3)}°E`} · <span className="tnum">{num(f.areaHa, 1)}</span> {t("ha")}
         </h1>
       </div>
       <div className="flex items-center gap-1.5">

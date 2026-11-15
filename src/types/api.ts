@@ -19,6 +19,8 @@ export interface AnalyzeRequest {
   soil?: { eceDsM?: number; humusPct?: number; ecwDsM?: number };
   constraints?: { equipment?: string[]; hasLivestock?: boolean };
   lang: "uz" | "en";
+  /** FastAPI backend: temporary manual salinity until satellite detection is calibrated */
+  salinityLevel?: Level | null;
   // ---- v2.1 platform (FRONTEND_REJASI §5.3) ----
   profile?: Profile;
   modules?: Module[]; // the core is always computed
