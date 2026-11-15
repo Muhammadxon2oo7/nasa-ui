@@ -29,12 +29,19 @@ Iltimos, kunlik vazifaga quyidagi poligonlarni qo'ying. Har biri uchun `lang: "u
 }
 ```
 
-**Frontend yuboradigan so'rov** (jonli demolar uchun):
+**Frontend yuboradigan so'rov** (jonli demolar uchun). ⚠️ Tuzatish (`1262d14` dan keyin tekshirildi): avval bu yerda rotatsiya 3 ta bo'sh yil deb noto'g'ri yozilgan edi. Frontend adapteri barcha ekin noma'lum bo'lsa `rotation: []` yuboradi va bo'sh `soil` obyektini qo'shadi. Jonli tekshiruv: `1262d14` dagi body bilan `200` (kesh, 0.7 s), frontend body bilan `202` (yangi job). Ya'ni hozirgi kunlik kesh bizning demolarga tegmayapti. `demo_body` ni aynan shunday qiling:
 
 ```json
-{"polygon": {"type": "Polygon", "coordinates": [<ring>]}, "rotation": [{"year": 2023, "crop": null}, {"year": 2024, "crop": null}, {"year": 2025, "crop": null}],
- "priorities": ["water", "salinity"], "water": {"availability": "medium", "method": "furrow"}, "profile": "farmer", "lang": "uz" | "en"}
+{"polygon": {"type": "Polygon", "coordinates": [<ring>]},
+ "rotation": [],
+ "priorities": ["water", "salinity"],
+ "water": {"availability": "medium", "method": "furrow"},
+ "soil": {"eceDsM": null, "humusPct": null, "ecwDsM": null},
+ "profile": "farmer",
+ "lang": "uz" | "en"}
 ```
+
+Taqqoslash so'rovi: `{"places": [...], "goal": "<goal>", "method": "furrow", "lang": "uz" | "en"}` (`method` ham bor).
 
 **Taqqoslash:** 3 ta jonli demo joy, 5 ta maqsad (`winter_wheat`, `cotton`, `alfalfa`, `pasture`, `general`), ikki tilda. Joy nomlari so'rovning bir qismi:
 - `uz`: "Paxta dalasi", "Paxta-bug'doy dalasi", "Beda dalasi";
