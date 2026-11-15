@@ -20,7 +20,7 @@ export function incomeShort(inc: StrategyIncome | undefined) {
 }
 
 /** B2: estimated gross revenue with its range, confidence and the yield × price behind it. */
-export function IncomeDetail({ income }: { income?: StrategyIncome }) {
+export function IncomeDetail({ income, profit }: { income?: StrategyIncome; profit?: Strategy["profit"] }) {
   const { lang } = useT();
   const L = (uz: string, en: string) => (lang === "en" ? en : uz);
   if (!income) return null;
@@ -64,6 +64,13 @@ export function IncomeDetail({ income }: { income?: StrategyIncome }) {
             </li>
           ))}
         </ul>
+      )}
+      {profit?.profitUsdPerHa != null && (
+        <div className="flex flex-wrap items-baseline gap-x-2 rounded-xl bg-[var(--surface)] px-2.5 py-2 text-[13px]">
+          <span className="text-[var(--fg-3)]">{L("Sof foyda (standart xarajatlar)", "Net profit (default costs)")}</span>
+          <b className="tnum">≈ ${num(profit.profitUsdPerHa)}</b>
+          {profit.costUsdPerHa != null && <span className="text-[var(--fg-3)] tnum">· {L("xarajat", "costs")} ${num(profit.costUsdPerHa)}</span>}
+        </div>
       )}
       {income.isGross !== false && <p className="text-[12px] text-[var(--fg-3)]">{L("Yalpi tushum: urug', o'g'it, suv va mehnat xarajatlari ayirilmagan. Sof foydani o'z narxlaringiz bilan pastda hisoblang.", "Gross revenue: seed, fertiliser, water and labour costs are not subtracted. Work out net profit with your own prices below.")}</p>}
     </div>

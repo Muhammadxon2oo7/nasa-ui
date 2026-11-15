@@ -3,16 +3,19 @@
 import { useEffect, useState } from "react";
 import type { AnalyzeResponse } from "@/types/api";
 import { analyzeField, loadDemo, readAnalysis, saveAnalysis } from "@/api/client";
+import { useLang } from "@/i18n";
 
 const mem = new Map<string, AnalyzeResponse>();
 
 /** fieldId → memory → localStorage → demo JSON (FRONTEND_REJASI §3.3.1). */
 export function useAnalysis(fieldId: string) {
+  const lang = useLang((x) => x.lang);
   const [state, setState] = useState<{ data: AnalyzeResponse | null; status: "loading" | "ok" | "missing" }>({ data: mem.get(fieldId) ?? null, status: mem.has(fieldId) ? "ok" : "loading" });
   useEffect(() => {
     let dead = false;
     const ctrl = new AbortController();
     (async () => {
+      const uiLang = useLang.getState().lang === "en" ? "en" : "uz";
       let d = mem.get(fieldId) ?? readAnalysis(fieldId);
       // live demo boundaries were redrawn from imagery: a copy saved with an older polygon is stale
       if (d && fieldId.startsWith("live-")) {
@@ -20,12 +23,18 @@ export function useAnalysis(fieldId: string) {
         const ring = LIVE_DEMOS[fieldId.slice(5)]?.ring;
         const first = d.field.polygon?.coordinates?.[0]?.[0];
         if (ring && (!first || Math.abs(first[0] - ring[0][0]) > 1e-6 || Math.abs(first[1] - ring[0][1]) > 1e-6)) d = null;
+        // the backend writes names and reasons in the request language: refetch after a language switch
+        let savedLang: string | undefined;
+        try {
+          savedLang = JSON.parse(localStorage.getItem(`fs:req:${fieldId}`) ?? "null")?.lang;
+        } catch {}
+        if (d && savedLang && savedLang !== uiLang) d = null;
       }
       if (!d && fieldId.startsWith("demo-")) d = await loadDemo(fieldId.slice(5)).catch(() => null);
       // live-<name>: one of the FastAPI backend's cached demo fields, analysed live (~2-10 s)
       if (!d && fieldId.startsWith("live-")) {
         const { liveDemoRequest, LIVE_DEMOS } = await import("@/api/fastapi");
-        const req = liveDemoRequest(fieldId.slice(5), "uz");
+        const req = liveDemoRequest(fieldId.slice(5), uiLang);
         if (req) {
           d = await analyzeField(req).catch(() => null);
           if (d) {
@@ -50,7 +59,7 @@ export function useAnalysis(fieldId: string) {
         setState({ data: d, status: "ok" });
       } else setState({ data: null, status: "missing" });
       if (!d || d.backend !== "fastapi") return;
-      const lang = document.documentElement.lang === "en" ? "en" : "uz";
+      const lang = uiLang;
       const swap = (next: AnalyzeResponse) => {
         const merged = { ...next, fieldId, field: { ...next.field, region: next.field.region ?? d!.field.region } };
         mem.set(fieldId, merged);
@@ -84,6 +93,6 @@ export function useAnalysis(fieldId: string) {
       dead = true;
       ctrl.abort();
     };
-  }, [fieldId]);
+  }, [fieldId, lang]);
   return state;
 }

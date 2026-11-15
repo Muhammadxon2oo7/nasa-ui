@@ -4,6 +4,7 @@ import { clsx } from "clsx";
 import { AnimatePresence, m } from "motion/react";
 import { Beef, Check, ChevronRight, CloudSun, Coins, Crosshair, Droplets, FileUp, FlaskConical, Leaf, Sprout, Timer, Wheat, Loader2, MapPin, Pencil, RotateCcw, Satellite, Search, SquarePen, Thermometer, Trash2 } from "lucide-react";
 import { FieldSnapshot } from "../FieldSnapshot";
+import { useJob } from "@/store/jobStore";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -658,7 +659,8 @@ export function Step3({ onBack }: { onBack: () => void }) {
   }, [run]);
 
   const current = Math.min(STEPS.length - 1, Math.floor(elapsed / 4));
-  const pct = Math.min(95, Math.round((1 - Math.exp(-elapsed / 14)) * 100));
+  const jobProgress = useJob((s) => s.progress);
+  const pct = Math.min(97, Math.max(Math.round((1 - Math.exp(-elapsed / 14)) * 100), Math.round((jobProgress ?? 0) * 100)));
   const dyk = (["dyk.1", "dyk.2", "dyk.3", "dyk.4"] as Key[])[Math.floor(elapsed / 7) % 4];
   const demo = w.demoId ?? "sirdaryo";
 

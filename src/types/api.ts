@@ -208,6 +208,8 @@ export interface Strategy {
   /** what the rotation does to the soil, in physical units */
   soilEffects?: { nFixKgHaPerYear: number; coverDaysPerYear: number; rootDepthMaxCm: number; residueTHa: number; pestBreakYears: number; source?: string };
   laborDaysPerHa?: number;
+  /** B2 net profit with default (or the farmer's) costs */
+  profit?: { revenueUsdPerHa: number | null; costUsdPerHa: number | null; profitUsdPerHa: number | null; profitUzsPerHa?: number | null; basis?: "defaults" | "user" };
   metricConfidence?: Partial<Record<MetricName, "high" | "medium" | "low" | null>>;
   /** spread of the yearly water need across 20 climate years */
   waterP10?: number;

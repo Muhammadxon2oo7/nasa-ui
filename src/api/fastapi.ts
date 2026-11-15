@@ -84,6 +84,7 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
       bare: s.bare ?? undefined,
       soilEffects: s.soilEffects ?? undefined,
       laborDaysPerHa: s.laborDaysPerHa ?? undefined,
+      profit: s.profit ?? undefined,
       metricConfidence: s.metricConfidence ?? undefined,
       waterP10: s.water?.p10M3PerHa ?? undefined,
       waterP90: s.water?.p90M3PerHa ?? undefined,
@@ -156,7 +157,7 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
           typicalDate: x.typicalStart ?? x.typicalDate ?? "",
           windowFrom: x.recommendedFrom ?? x.windowFrom ?? x.typicalStart ?? "",
           // lateStart is "the date in a late year", not the end of a window: only use it when it is after the start
-          windowTo: x.windowTo ?? (x.lateStart && x.recommendedFrom && x.lateStart > x.recommendedFrom ? x.lateStart : ""),
+          windowTo: x.recommendedTo ?? x.windowTo ?? "",
           forecastReachInDays: x.now?.ready ? 0 : (x.forecastReachInDays ?? null),
           source: "SMAP L4",
         })),
@@ -275,7 +276,7 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
     sourceId: b.fieldId,
     backend: "fastapi",
     field: { areaHa: field.areaHa, centroid: field.centroid, periodStart: field.periodStart, periodEnd: field.periodEnd, polygon: field.polygon ?? req?.polygon, elevationM: field.elevationM ?? b.soil?.terrain?.elevationM ?? null, slopeDeg: b.soil?.terrain?.slopeDeg ?? null },
-    summary: { text: b.summary?.text ?? "", salinity: level, waterNeedM3PerHa: b.summary?.waterNeedM3PerHa ?? 0, mainRisk: b.summary?.mainRisk ?? "-", bestStrategyId: L(b.summary?.bestStrategyId ?? b.bestStrategyId ?? strategies[1]?.id ?? "A") },
+    summary: { text: b.summary?.text ?? "", salinity: level, waterNeedM3PerHa: b.summary?.waterNeedM3PerHa ?? 0, mainRisk: b.summary?.mainRisk ?? "-", bestStrategyId: L(b.summary?.bestStrategyId ?? b.bestStrategyId ?? b.preliminaryBestId ?? strategies[1]?.id ?? "A") },
     history,
     climate: {
       lastSpringFrost: { median: c.lastSpringFrost?.median ?? "-", latest: c.lastSpringFrost?.latest ?? "-", latestYear: c.lastSpringFrost?.latest_year ?? c.lastSpringFrost?.latestYear ?? 0 },
@@ -408,7 +409,12 @@ export async function getAnalysisFastApi(fieldId: string, lang: "uz" | "en"): Pr
 
 /** Field-level vulnerability zones (A3). Slow the first time (GEE), cached after. */
 export async function getZonesFastApi(fieldId: string, signal?: AbortSignal): Promise<import("@/types/api").ZonesData | null> {
-  const res = await fetch(`/py/api/zones/${encodeURIComponent(fieldId)}`, { signal });
+  let res = await fetch(`/py/api/zones/${encodeURIComponent(fieldId)}`, { signal });
+  for (let i = 0; res.status === 202 && i < 24; i++) {
+    const wait = Math.min(10, Math.max(2, Number((await res.json().catch(() => ({})))?.retryAfterS) || 5));
+    await sleep(wait * 1000, signal);
+    res = await fetch(`/py/api/zones/${encodeURIComponent(fieldId)}`, { signal });
+  }
   if (!res.ok) return null;
   const j = dashes(await res.json().catch(() => null));
   return j && Array.isArray(j.features) ? j : null;

@@ -361,7 +361,7 @@ function StrategyDetail({ data, st, color }: { data: AnalyzeResponse; st: Strate
         )}
         {st.income && (
           <Block icon={<Coins size={15} />} title={lang === "en" ? "Expected revenue" : "Kutilayotgan tushum"}>
-            <IncomeDetail income={st.income} />
+            <IncomeDetail income={st.income} profit={st.profit} />
           </Block>
         )}
         {!!st.waterNorms?.length && (
