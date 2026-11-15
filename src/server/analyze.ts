@@ -40,23 +40,23 @@ export function validatePolygon(p: GeoJSON.Polygon) {
 const withTimeout = <T,>(p: Promise<T>, ms: number) => Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
 
 const SOURCES: DataSourceRef[] = [
-  { id: "power", name: "NASA POWER (MERRA-2 / GEOS, AG community)", provider: "NASA LaRC", period: "2005–2025", url: "https://power.larc.nasa.gov/" },
-  { id: "sentinel2", name: "Sentinel-2 L2A (SCL cloud mask)", provider: "ESA Copernicus · Microsoft Planetary Computer", period: "2017–2026", url: "https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a" },
+  { id: "power", name: "NASA POWER (MERRA-2 / GEOS, AG community)", provider: "NASA LaRC", period: "2005-2025", url: "https://power.larc.nasa.gov/" },
+  { id: "sentinel2", name: "Sentinel-2 L2A (SCL cloud mask)", provider: "ESA Copernicus · Microsoft Planetary Computer", period: "2017-2026", url: "https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a" },
   { id: "srtm", name: "SRTM GL1 30 m", provider: "NASA / USGS (OpenTopoData)", url: "https://www.earthdata.nasa.gov/data/instruments/srtm" },
   { id: "soilgrids", name: "SoilGrids 2.0 (250 m)", provider: "ISRIC", url: "https://soilgrids.org" },
-  { id: "era5", name: "ERA5 reanalysis (FAO ET0, SEAS5 reference climate)", provider: "ECMWF Copernicus · Open-Meteo (CC BY 4.0)", period: "2005–2025", url: "https://open-meteo.com/en/docs/historical-weather-api" },
+  { id: "era5", name: "ERA5 reanalysis (FAO ET0, SEAS5 reference climate)", provider: "ECMWF Copernicus · Open-Meteo (CC BY 4.0)", period: "2005-2025", url: "https://open-meteo.com/en/docs/historical-weather-api" },
   { id: "seas5", name: "ECMWF SEAS5 seasonal forecast (51 members)", provider: "ECMWF · Open-Meteo (CC BY 4.0)", url: "https://open-meteo.com/en/docs/seasonal-forecast-api" },
-  { id: "modis", name: "MODIS MOD13Q1 NDVI 250 m (pasture norm)", provider: "NASA LP DAAC · Microsoft Planetary Computer", period: "2005–2026", url: "https://planetarycomputer.microsoft.com/dataset/modis-13Q1-061" },
+  { id: "modis", name: "MODIS MOD13Q1 NDVI 250 m (pasture norm)", provider: "NASA LP DAAC · Microsoft Planetary Computer", period: "2005-2026", url: "https://planetarycomputer.microsoft.com/dataset/modis-13Q1-061" },
   { id: "npp", name: "MODIS MOD17A3HGF NPP 500 m", provider: "NASA LP DAAC · Microsoft Planetary Computer", url: "https://planetarycomputer.microsoft.com/dataset/modis-17A3HGF-061" },
-  { id: "jrc", name: "JRC Global Surface Water (occurrence)", provider: "EC JRC / Google · Microsoft Planetary Computer", period: "1984–2020", url: "https://planetarycomputer.microsoft.com/dataset/jrc-gsw" },
-  { id: "era5land", name: "ERA5-Land soil temperature 0–7 cm (sowing, frozen soil)", provider: "ECMWF Copernicus · Open-Meteo (CC BY 4.0)", period: "2005–2025", url: "https://open-meteo.com/en/docs/historical-weather-api" },
+  { id: "jrc", name: "JRC Global Surface Water (occurrence)", provider: "EC JRC / Google · Microsoft Planetary Computer", period: "1984-2020", url: "https://planetarycomputer.microsoft.com/dataset/jrc-gsw" },
+  { id: "era5land", name: "ERA5-Land soil temperature 0-7 cm (sowing, frozen soil)", provider: "ECMWF Copernicus · Open-Meteo (CC BY 4.0)", period: "2005-2025", url: "https://open-meteo.com/en/docs/historical-weather-api" },
   { id: "modis-et", name: "MODIS MOD16A3GF actual ET 500 m (A1 check)", provider: "NASA LP DAAC · Microsoft Planetary Computer", url: "https://planetarycomputer.microsoft.com/dataset/modis-16A3GF-061" },
-  { id: "modis-snow", name: "MODIS MOD10A2 snow cover 500 m (water-supply signal)", provider: "NASA NSIDC · Microsoft Planetary Computer", period: "2001–2026", url: "https://planetarycomputer.microsoft.com/dataset/modis-10A2-061" },
-  { id: "glofas", name: "GloFAS v4 river discharge", provider: "Copernicus EMS · Open-Meteo Flood API", period: "2001–2026", url: "https://open-meteo.com/en/docs/flood-api" },
-  { id: "gaez", name: "FAO GAEZ v4 suitability & attainable yield (5′)", provider: "FAO & IIASA", period: "1981–2010", url: "https://gaez.fao.org" },
+  { id: "modis-snow", name: "MODIS MOD10A2 snow cover 500 m (water-supply signal)", provider: "NASA NSIDC · Microsoft Planetary Computer", period: "2001-2026", url: "https://planetarycomputer.microsoft.com/dataset/modis-10A2-061" },
+  { id: "glofas", name: "GloFAS v4 river discharge", provider: "Copernicus EMS · Open-Meteo Flood API", period: "2001-2026", url: "https://open-meteo.com/en/docs/flood-api" },
+  { id: "gaez", name: "FAO GAEZ v4 suitability & attainable yield (5′)", provider: "FAO & IIASA", period: "1981-2010", url: "https://gaez.fao.org" },
   { id: "forecast", name: "Open-Meteo 16-day forecast", provider: "Open-Meteo (CC BY 4.0)", url: "https://open-meteo.com/en/docs" },
-  { id: "fao56", name: "FAO-56 Penman–Monteith ET0, crop coefficients", provider: "FAO (Allen et al. 1998)", url: "https://www.fao.org/4/x0490e/x0490e00.htm" },
-  { id: "fao29", name: "FAO-29 salinity tolerance (Maas–Hoffman)", provider: "FAO (Ayers & Westcot 1985)", url: "https://www.fao.org/4/t0234e/t0234e00.htm" },
+  { id: "fao56", name: "FAO-56 Penman-Monteith ET0, crop coefficients", provider: "FAO (Allen et al. 1998)", url: "https://www.fao.org/4/x0490e/x0490e00.htm" },
+  { id: "fao29", name: "FAO-29 salinity tolerance (Maas-Hoffman)", provider: "FAO (Ayers & Westcot 1985)", url: "https://www.fao.org/4/t0234e/t0234e00.htm" },
 ];
 
 export type Inputs = {
@@ -279,7 +279,7 @@ export function compute(fieldId: string, inp: Inputs, dT: number, dP: number, wa
     .filter(Boolean)
     .join(" ");
 
-  // ---- v2.2 / v2.3 extras (QOSHIMCHA_FUNKSIYALAR): never fake a number — null + reason (ADR-10)
+  // ---- v2.2 / v2.3 extras (QOSHIMCHA_FUNKSIYALAR): never fake a number - null + reason (ADR-10)
   const extras: Pick<AnalyzeResponse, "calendar" | "actualWater" | "norms" | "waterSupply" | "gaez" | "extrasUnknown"> = {};
   if (!light && !dT && !dP) {
     const unk: NonNullable<AnalyzeResponse["extrasUnknown"]> = {};

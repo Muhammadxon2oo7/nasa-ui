@@ -167,7 +167,7 @@ export function fetchSoil(lat: number, lon: number): Promise<SoilProps> {
 
 export function fetchTerrain(lat: number, lon: number): Promise<{ elevation: number; slopeDeg: number }> {
   return cached("dem", { lat: lat.toFixed(4), lon: lon.toFixed(4) }, 365 * DAY, async () => {
-    const d = 0.0018; // ≈ 150–200 m
+    const d = 0.0018; // ≈ 150-200 m
     const pts = [[0, 0], [d, 0], [-d, 0], [0, d], [0, -d]].map(([a, b]) => `${(lat + a).toFixed(5)},${(lon + b).toFixed(5)}`);
     const j = await getJson<{ results: { elevation: number | null }[] }>(`https://api.opentopodata.org/v1/srtm30m?locations=${pts.join("|")}`, { timeoutMs: 20_000, tries: 2 });
     const z = j.results.map((r) => r.elevation ?? NaN);
@@ -304,7 +304,7 @@ export function fetchNpp(geom: GeoJSON.Polygon): Promise<{ year: number; npp: nu
   });
 }
 
-/** JRC Global Surface Water occurrence around a point → nearest permanent (≥ 75 %) and seasonal (10–74 %) water. */
+/** JRC Global Surface Water occurrence around a point → nearest permanent (≥ 75 %) and seasonal (10-74 %) water. */
 export function fetchWaterSources(lat: number, lon: number): Promise<{ permanentKm: number | null; seasonalKm: number | null; permanentAt?: [number, number]; seasonalAt?: [number, number]; radiusKm: number }> {
   return cached("jrc", { lat: lat.toFixed(3), lon: lon.toFixed(3), v: 1 }, 365 * DAY, async () => {
     const s = await getJson<{ features: { id: string }[] }>(`${PC}/stac/v1/search`, {
@@ -358,9 +358,9 @@ export function fetchForecast7(lat: number, lon: number): Promise<{ date: string
 
 /* ------------------------------------------- v2.2: soil temperature, 16-day forecast, MODIS ET */
 
-export type SoilTemp = { dates: string[]; t: number[] }; // daily mean 0–7 cm, °C
+export type SoilTemp = { dates: string[]; t: number[] }; // daily mean 0-7 cm, °C
 
-/** ERA5-Land soil temperature 0–7 cm (Open-Meteo archive), 2005 → last full year. N2 sowing, N8 frozen soil. */
+/** ERA5-Land soil temperature 0-7 cm (Open-Meteo archive), 2005 → last full year. N2 sowing, N8 frozen soil. */
 export function fetchSoilTemp(lat: number, lon: number): Promise<SoilTemp> {
   const end = `${new Date().getUTCFullYear() - 1}-12-31`;
   return cached("soiltemp", { lat: lat.toFixed(2), lon: lon.toFixed(2), end }, 30 * DAY, async () => {
@@ -385,7 +385,7 @@ export function fetchForecast16(lat: number, lon: number): Promise<Forecast16> {
   });
 }
 
-/** MODIS MOD16A3GF annual actual ET (mm/yr) over the field — independent check for A1. Terra+Aqua averaged per year. */
+/** MODIS MOD16A3GF annual actual ET (mm/yr) over the field - independent check for A1. Terra+Aqua averaged per year. */
 export function fetchModisEt(geom: GeoJSON.Polygon): Promise<{ year: number; etMm: number }[]> {
   return cached("modis-et", { geom, v: 1 }, 90 * DAY, async () => {
     const r = await getJson<{ features: ItemRef[] }>(`${PC}/stac/v1/search`, {

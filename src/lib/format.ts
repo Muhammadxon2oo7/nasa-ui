@@ -2,9 +2,9 @@ import type { CropId } from "@/types/api";
 import { CROPS } from "@/data/crops";
 import type { Lang } from "@/i18n";
 
-/** "6 800" — thin-space thousands for both languages (plan §9). */
+/** "6 800" - thin-space thousands for both languages (plan §9). */
 export function num(n: number | undefined | null, digits = 0) {
-  if (n == null || !Number.isFinite(n)) return "–";
+  if (n == null || !Number.isFinite(n)) return "-";
   const s = Math.abs(n).toFixed(digits);
   const [i, d] = s.split(".");
   const g = i.replace(/\B(?=(\d{3})+(?!\d))/g, " ");

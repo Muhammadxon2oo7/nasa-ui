@@ -16,6 +16,7 @@ import { Button, Card, CardTitle, EmptyState, Segmented, Slider, SourceBadge, sp
 import { SERIES } from "./StrategiesTab";
 import { ActualVsNeedCard, NormComparisonRow, WaterSupplyCard } from "./Extras";
 import { Fold } from "./Sections";
+import { ChartLine, Mountain, Receipt } from "lucide-react";
 
 const FieldMap = dynamic(() => import("../map/FieldMap"), { ssr: false, loading: () => <div className="shimmer h-full w-full bg-[var(--surface-2)]" /> });
 
@@ -69,7 +70,7 @@ export function WaterTab({ data, onTryDry }: { data: AnalyzeResponse; onTryDry?:
           </m.span>
           <span className="text-[14px] text-[var(--fg-3)]">{t("r.perYear")}</span>
           <span className="text-[13.5px] text-[var(--fg-2)] tnum">
-            ({t("w.range")}: {num(Math.round((ws.lowM3PerHa * k) / 100) * 100)} – {num(Math.round((ws.highM3PerHa * k) / 100) * 100)})
+            ({t("w.range")}: {num(Math.round((ws.lowM3PerHa * k) / 100) * 100)} - {num(Math.round((ws.highM3PerHa * k) / 100) * 100)})
           </span>
         </div>
         <dl className="mt-3 grid gap-1.5 text-[14px] sm:grid-cols-3">
@@ -84,7 +85,7 @@ export function WaterTab({ data, onTryDry }: { data: AnalyzeResponse; onTryDry?:
           {limit != null && (
             <div className="rounded-2xl bg-[var(--surface-2)] px-3 py-2">
               <dt className="text-[12px] text-[var(--fg-3)]">{t("w.limit")}: {num(limit)}</dt>
-              <dd className={clsx("font-semibold", gross <= limit ? "text-[var(--accent)]" : "text-[var(--danger-fg)]")}>{gross <= limit ? `✅ ${t("w.fits")}` : `⚠️ ${t("w.over")} ${num(gross - limit)}`}</dd>
+              <dd className={clsx("font-semibold", gross <= limit ? "text-[var(--accent)]" : "text-[var(--danger-fg)]")}>{gross <= limit ? `${t("w.fits")}` : `${t("w.over")} ${num(gross - limit)}`}</dd>
             </div>
           )}
         </dl>
@@ -101,15 +102,15 @@ export function WaterTab({ data, onTryDry }: { data: AnalyzeResponse; onTryDry?:
           </div>
         </Card>
       )}
-      {ui.method !== "drip" && gross - drip > 300 && <p className="rounded-2xl bg-[var(--accent-soft)] px-4 py-3 text-[14px]">💡 {t("w.tip", { n: num(gross - drip) })}</p>}
-      <Fold icon="🧾" title={t("f.actual")} hint={data.actualWater ? `${data.actualWater.year}: ${num(data.actualWater.consumedM3PerHa)} / ${num(data.actualWater.needM3PerHa)} ${t("m3ha")}` : undefined}>
+      {ui.method !== "drip" && gross - drip > 300 && <p className="rounded-2xl bg-[var(--accent-soft)] px-4 py-3 text-[14px]">{t("w.tip", { n: num(gross - drip) })}</p>}
+      <Fold icon={<Receipt size={18} />} title={t("f.actual")} hint={data.actualWater ? `${data.actualWater.year}: ${num(data.actualWater.consumedM3PerHa)} / ${num(data.actualWater.needM3PerHa)} ${t("m3ha")}` : undefined}>
         <ActualVsNeedCard data={data} />
         <NormComparisonRow data={data} />
       </Fold>
-      <Fold icon="🏔️" title={t("f.supply")} hint={data.waterSupply ? data.waterSupply.basinName : undefined}>
+      <Fold icon={<Mountain size={18} />} title={t("f.supply")} hint={data.waterSupply ? data.waterSupply.basinName : undefined}>
         <WaterSupplyCard data={data} onTryDry={onTryDry} />
       </Fold>
-      <Fold icon="📈" title={t("f.balance")}>
+      <Fold icon={<ChartLine size={18} />} title={t("f.balance")}>
       <div className="grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-2">
         <Card>
           <CardTitle info="etc" source="FAO-56 · NASA POWER + ERA5">{t("w.balance")} ({t("mm")})</CardTitle>
@@ -125,7 +126,7 @@ export function WaterTab({ data, onTryDry }: { data: AnalyzeResponse; onTryDry?:
           />
         </Card>
         <Card>
-          <CardTitle info="et0" source="FAO-56 Penman–Monteith">{t("w.et0")}</CardTitle>
+          <CardTitle info="et0" source="FAO-56 Penman-Monteith">{t("w.et0")}</CardTitle>
           {data.water.et0Daily ? (
             <XYChart ariaLabel="ET0" labels={data.water.et0Daily.map((d) => dayMonth(new Date(Date.UTC(2021, 0, d.doy)).toISOString().slice(5, 10), lang))} unit=" mm" digits={1} legend={false} tickEvery={61} layers={[{ type: "line", id: "et0", label: "ET0", values: data.water.et0Daily.map((d) => d.mm), color: "var(--s4)" }]} />
           ) : (
@@ -134,7 +135,7 @@ export function WaterTab({ data, onTryDry }: { data: AnalyzeResponse; onTryDry?:
         </Card>
       </div>
       </Fold>
-      <p className="text-[12.5px] text-[var(--fg-3)]">ℹ️ {t("w.uncertainty")}</p>
+      <p className="text-[12.5px] text-[var(--fg-3)]">{t("w.uncertainty")}</p>
     </div>
   );
 }
@@ -182,7 +183,7 @@ function Week({ data }: { data: AnalyzeResponse }) {
     <Card>
       <CardTitle source="Open-Meteo (CC BY 4.0)">{t("f.week")}</CardTitle>
       <div className="mb-3 grid gap-1.5">
-        {alerts.length ? alerts.map((a) => <p key={a} className="rounded-2xl bg-[var(--warn-bg)] px-3.5 py-2 text-[14px] text-[var(--warn-fg)]">{a}</p>) : <p className="text-[14px] text-[var(--fg-2)]">✅ {t("f.noAlerts")}</p>}
+        {alerts.length ? alerts.map((a) => <p key={a} className="rounded-2xl bg-[var(--warn-bg)] px-3.5 py-2 text-[14px] text-[var(--warn-fg)]">{a}</p>) : <p className="text-[14px] text-[var(--fg-2)]">{t("f.noAlerts")}</p>}
       </div>
       <div className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1">
         {d.time.map((day, i) => (
@@ -194,7 +195,7 @@ function Week({ data }: { data: AnalyzeResponse }) {
           </m.div>
         ))}
       </div>
-      {dry.length >= 2 && <p className="mt-3 text-[14px] text-[var(--fg-2)]">🚜 {t("f.goodDays", { d: dry.join("–") })}</p>}
+      {dry.length >= 2 && <p className="mt-3 text-[14px] text-[var(--fg-2)]">🚜 {t("f.goodDays", { d: dry.join("-") })}</p>}
     </Card>
   );
 }
@@ -249,8 +250,8 @@ function Season({ data }: { data: AnalyzeResponse }) {
             unit="°C"
             digits={1}
             layers={[
-              { type: "band", id: "p1090", label: "P10–P90", lo: s.months.map((m) => m.tempP10), hi: s.months.map((m) => m.tempP90), color: "var(--s2)", opacity: 0.14 },
-              ...(s.months.every((m) => m.tempP25 != null && m.tempP75 != null) ? [{ type: "band" as const, id: "p2575", label: "P25–P75", lo: s.months.map((m) => m.tempP25 ?? null), hi: s.months.map((m) => m.tempP75 ?? null), color: "var(--s2)", opacity: 0.28 }] : []),
+              { type: "band", id: "p1090", label: "P10-P90", lo: s.months.map((m) => m.tempP10), hi: s.months.map((m) => m.tempP90), color: "var(--s2)", opacity: 0.14 },
+              ...(s.months.every((m) => m.tempP25 != null && m.tempP75 != null) ? [{ type: "band" as const, id: "p2575", label: "P25-P75", lo: s.months.map((m) => m.tempP25 ?? null), hi: s.months.map((m) => m.tempP75 ?? null), color: "var(--s2)", opacity: 0.28 }] : []),
               { type: "line", id: "p50", label: "P50", values: s.months.map((m) => m.tempP50), color: "var(--s2)" },
               { type: "line", id: "norm", label: lang === "uz" ? "Norma" : "Normal", values: s.months.map((m) => m.tempNormal), color: "var(--fg-3)", dash: true },
             ]}
@@ -263,7 +264,7 @@ function Season({ data }: { data: AnalyzeResponse }) {
             labels={labels}
             unit=" mm"
             layers={[
-              { type: "band", id: "p1090", label: "P10–P90", lo: s.months.map((m) => m.precipP10), hi: s.months.map((m) => m.precipP90), color: "var(--water)", opacity: 0.2 },
+              { type: "band", id: "p1090", label: "P10-P90", lo: s.months.map((m) => m.precipP10), hi: s.months.map((m) => m.precipP90), color: "var(--water)", opacity: 0.2 },
               { type: "line", id: "p50", label: "P50", values: s.months.map((m) => m.precipP50), color: "var(--water)" },
               { type: "line", id: "norm", label: lang === "uz" ? "Norma" : "Normal", values: s.months.map((m) => m.precipNormal), color: "var(--fg-3)", dash: true },
             ]}
@@ -286,7 +287,7 @@ function Season({ data }: { data: AnalyzeResponse }) {
               </div>
             ))}
         </div>
-        <p className="mt-3 text-[12.5px] text-[var(--fg-3)]">ℹ️ {t("f.prob", { c: t(`lvl.${s.confidence}` as Key).toLowerCase() })}</p>
+        <p className="mt-3 text-[12.5px] text-[var(--fg-3)]">{t("f.prob", { c: t(`lvl.${s.confidence}` as Key).toLowerCase() })}</p>
       </Card>
     </div>
   );
@@ -352,7 +353,7 @@ function WhatIf({ data }: { data: AnalyzeResponse }) {
                 {d !== 0 ? Math.abs(d) : "="}
               </span>
               {moved > 0 && <span className="text-[12.5px] text-[var(--accent)]">⬆</span>}
-              {fail?.detail && <span className="text-[12.5px] text-[var(--danger-fg)]">❌ {fail.detail}</span>}
+              {fail?.detail && <span className="text-[12.5px] text-[var(--danger-fg)]">{fail.detail}</span>}
               <span className="ml-auto text-[12.5px] text-[var(--fg-3)] tnum">💧 {num(r.water)}</span>
             </m.div>
           );

@@ -260,13 +260,13 @@ export function ErrorState({ message, onRetry, onDemo }: { message: string; onRe
 }
 
 export function DegradedNotice({ items }: { items: string[] }) {
-  const { t } = useT();
   if (!items.length) return null;
+  // quiet, factual note - a data gap is information, not an alarm
   return (
-    <div role="status" className="flex items-center gap-2 rounded-2xl border border-[var(--warn-border)] bg-[var(--warn-bg)] px-3.5 py-2 text-[13px] text-[var(--warn-fg)]">
-      <AlertTriangle size={15} className="shrink-0" />
-      {t("r.degraded", { x: items.join(", ") })}
-    </div>
+    <p role="status" className="flex items-start gap-2 px-1 text-[13px] leading-snug text-[var(--fg-3)]">
+      <Info size={14} className="mt-[2px] shrink-0" />
+      <span>{items.join(" · ")}</span>
+    </p>
   );
 }
 

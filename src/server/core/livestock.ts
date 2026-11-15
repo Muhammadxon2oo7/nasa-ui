@@ -34,7 +34,7 @@ export function livestockModule(x: Inputs): LivestockData {
   const { w, climate } = x;
   const lastFull = Math.max(...w.year.filter((y) => w.year.filter((v) => v === y).length > 360));
 
-  /* ---------------- pasture condition vs the 2005–2025 MODIS norm ---------------- */
+  /* ---------------- pasture condition vs the 2005-2025 MODIS norm ---------------- */
   const series = x.modis ?? [];
   const thisYear = new Date().getUTCFullYear();
   const yearHas = (y: number) => series.filter((s) => s.month.startsWith(`${y}`) && s.ndvi != null && +s.month.slice(5, 7) >= 4 && +s.month.slice(5, 7) <= 9).length >= 4;
@@ -94,7 +94,7 @@ export function livestockModule(x: Inputs): LivestockData {
     { name: L("NPP (median, so'nggi 5 yil)", "NPP (median, last 5 years)"), value: nppRecent.length ? round(median(nppRecent), 3) : NaN, unit: "kg C/m²/yil", source: "MODIS MOD17A3HGF" },
     { name: L("Uglerod → quruq modda", "Carbon → dry matter"), value: cToDm, unit: "×", source: "PRO_REJA §3A.3" },
     { name: L("Yer usti ulushi", "Above-ground share"), value: aboveground, unit: "×", source: "PRO_REJA §3A.3" },
-    { name: L("Foydalanish koeffitsienti", "Utilisation"), value: useLo, unit: `– ${useHi}`, source: L("“Yarmini ye, yarmini qoldir” qoidasi", "Take-half-leave-half range") },
+    { name: L("Foydalanish koeffitsienti", "Utilisation"), value: useLo, unit: `- ${useHi}`, source: L("“Yarmini ye, yarmini qoldir” qoidasi", "Take-half-leave-half range") },
     { name: L("Kunlik iste'mol, 1 shartli bosh", "Daily intake, 1 AU"), value: INTAKE, unit: "kg QM", source: "USDA NRCS" },
     { name: L("O'tlatish kunlari", "Grazing days"), value: grazingDays, unit: L("kun", "days"), source: L("Sizning formangiz", "Your form") },
   ].filter((a) => Number.isFinite(a.value));
@@ -145,16 +145,16 @@ export function livestockModule(x: Inputs): LivestockData {
   const capHerd = hi != null ? Math.round(hi * x.areaHa) : null;
   const gaps = [
     L("Sig'im koeffitsientlari umumiy adabiyotdan olingan: mahalliy mutaxassis tekshirishi kerak", "Capacity coefficients come from general literature and need a local expert check"),
-    L("MODIS 250–500 m piksel: kichik yaylovlarda atrofdagi yerlar ham hisobga kiradi", "MODIS 250–500 m pixels: small pastures include surrounding land"),
+    L("MODIS 250-500 m piksel: kichik yaylovlarda atrofdagi yerlar ham hisobga kiradi", "MODIS 250-500 m pixels: small pastures include surrounding land"),
   ];
   const nppSrc = "MODIS MOD17A3HGF";
   if (x.areaHa >= 5) {
     recs.push({
       id: "rotate",
-      title: L("Yaylovni 2–3 qismga bo'lib, navbatlab o'tlatish", "Split the pasture into 2–3 parts and graze in rotation"),
-      why: L("Bir joyda uzoq o'tlatilganda o't tiklanishga ulgurmaydi. Navbatlab o'tlatishda har bir qism 30–45 kun dam oladi.", "Grass can't regrow when animals stay in one place; rotation gives each part 30–45 days of rest."),
+      title: L("Yaylovni 2-3 qismga bo'lib, navbatlab o'tlatish", "Split the pasture into 2-3 parts and graze in rotation"),
+      why: L("Bir joyda uzoq o'tlatilganda o't tiklanishga ulgurmaydi. Navbatlab o'tlatishda har bir qism 30-45 kun dam oladi.", "Grass can't regrow when animals stay in one place; rotation gives each part 30-45 days of rest."),
       evidence: [
-        ...(a != null ? [{ text: L(`Yaylov holati me'yorga nisbatan ${a > 0 ? "+" : ""}${a}%`, `Pasture vs norm: ${a > 0 ? "+" : ""}${a}%`), source: "MODIS NDVI 2005–2025" }] : []),
+        ...(a != null ? [{ text: L(`Yaylov holati me'yorga nisbatan ${a > 0 ? "+" : ""}${a}%`, `Pasture vs norm: ${a > 0 ? "+" : ""}${a}%`), source: "MODIS NDVI 2005-2025" }] : []),
         { text: L(`Yaylov maydoni: ${round(x.areaHa, 1)} ga`, `Pasture area: ${round(x.areaHa, 1)} ha`), source: L("Xarita", "Map") },
       ],
       benefits: [L("O't qoplami saqlanadi, eroziya kamayadi", "Keeps grass cover and cuts erosion"), L("Mavsum oxirigacha yem yetadi", "Forage lasts to the end of the season")],
@@ -173,7 +173,7 @@ export function livestockModule(x: Inputs): LivestockData {
         ? L(`Sizdagi chorva (${herdAu} shartli bosh) taxminiy sig'imdan (${capHerd} shartli bosh) ko'p.`, `Your herd (${herdAu} AU) is above the estimated capacity (${capHerd} AU).`)
         : L("Yaylov odatdagidan kam yashil yoki yaqinda qurg'oqchilik bo'lgan.", "The pasture is less green than usual or a drought happened recently."),
       evidence: [
-        ...(lo != null && hi != null ? [{ text: L(`Sig'im: ${lo}–${hi} shartli bosh/ga`, `Capacity: ${lo}–${hi} AU/ha`), source: nppSrc }] : []),
+        ...(lo != null && hi != null ? [{ text: L(`Sig'im: ${lo}-${hi} shartli bosh/ga`, `Capacity: ${lo}-${hi} AU/ha`), source: nppSrc }] : []),
         ...(a != null ? [{ text: L(`NDVI anomaliyasi: ${a}%`, `NDVI anomaly: ${a}%`), source: "MODIS NDVI" }] : []),
         ...(droughtYears.length ? [{ text: L(`Qurg'oqchil yillar (SPI-3 < −1.5): ${droughtYears.slice(-3).join(", ")}`, `Drought years (SPI-3 < −1.5): ${droughtYears.slice(-3).join(", ")}`), source: "NASA POWER" }] : []),
       ],
@@ -186,7 +186,7 @@ export function livestockModule(x: Inputs): LivestockData {
   if (heat.stressDaysPerYear >= 15) {
     recs.push({
       id: "heat",
-      title: L("Iyul–avgustda issiqdan himoya", "Protect animals from July–August heat"),
+      title: L("Iyul-avgustda issiqdan himoya", "Protect animals from July-August heat"),
       why: L(`Yiliga o'rtacha ${heat.stressDaysPerYear} kun kunlik o'rtacha THI ≥ 72 bo'ladi. Bunday kunlarda sut va vazn kamayadi.`, `About ${heat.stressDaysPerYear} days a year have a daily-mean THI ≥ 72, when milk yield and weight gain drop.`),
       evidence: [
         { text: L(`Stress kunlari: ${heat.stressDaysPerYear}/yil, trend ${heat.trendDaysPerDecade > 0 ? "+" : ""}${heat.trendDaysPerDecade} kun/10 yil`, `Stress days: ${heat.stressDaysPerYear}/yr, trend ${heat.trendDaysPerDecade > 0 ? "+" : ""}${heat.trendDaysPerDecade} days/decade`), source: "NASA POWER · THI" },

@@ -13,7 +13,7 @@ export type SceneState = {
 };
 
 const ESRI = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
-const DEM = "https://tiles.mapterhorn.com/tilejson.json"; // terrarium, CORS-enabled (AWS terrarium tiles send no CORS header)
+const DEM = "https://tiles.mapterhorn.com/{z}/{x}/{y}.webp"; // terrarium, CORS-enabled (AWS terrarium tiles send no CORS header); z ≤ 12 here
 
 /**
  * 3D field twin: Esri imagery draped on Mapterhorn terrain, the field extruded on top.
@@ -46,7 +46,7 @@ export default function Scene3D({ polygon, state, onReady }: { polygon: GeoJSON.
         version: 8,
         sources: {
           sat: { type: "raster", tiles: [ESRI], tileSize: 256, maxzoom: 19, attribution: "Imagery © Esri, Maxar" },
-          dem: { type: "raster-dem", url: DEM, attribution: "Terrain © Mapterhorn" },
+          dem: { type: "raster-dem", tiles: [DEM], tileSize: 512, encoding: "terrarium", maxzoom: 12, attribution: "Terrain © Mapterhorn" },
         },
         layers: [{ id: "sat", type: "raster", source: "sat" }],
         terrain: { source: "dem", exaggeration: 1.6 },
@@ -64,9 +64,9 @@ export default function Scene3D({ polygon, state, onReady }: { polygon: GeoJSON.
       const f = { type: "Feature" as const, properties: {}, geometry: polygon };
       m.addSource("field", { type: "geojson", data: f });
       m.addSource("ghost", { type: "geojson", data: f });
-      m.addLayer({ id: "field-x", type: "fill-extrusion", source: "field", paint: { "fill-extrusion-color": latest.current.color, "fill-extrusion-height": latest.current.heightM, "fill-extrusion-opacity": 0.9, "fill-extrusion-height-transition": { duration: 700, delay: 0 }, "fill-extrusion-color-transition": { duration: 500, delay: 0 } } });
+      m.addLayer({ id: "field-x", type: "fill-extrusion", source: "field", paint: { "fill-extrusion-color": latest.current.color, "fill-extrusion-height": latest.current.heightM, "fill-extrusion-opacity": 0.62, "fill-extrusion-height-transition": { duration: 700, delay: 0 }, "fill-extrusion-color-transition": { duration: 500, delay: 0 } } });
       m.addLayer({ id: "ghost-x", type: "fill-extrusion", source: "ghost", paint: { "fill-extrusion-color": "#ffffff", "fill-extrusion-height": latest.current.ghostHeightM ?? 0, "fill-extrusion-opacity": latest.current.ghostHeightM ? 0.22 : 0, "fill-extrusion-height-transition": { duration: 700, delay: 0 } } });
-      m.addLayer({ id: "field-line", type: "line", source: "field", paint: { "line-color": "#ffffff", "line-width": 2, "line-opacity": 0.9 } });
+      m.addLayer({ id: "field-line", type: "line", source: "field", paint: { "line-color": "#ffffff", "line-width": 2.5, "line-opacity": 1 } });
       const div = document.createElement("div");
       div.className = "twin-label";
       div.style.cssText = "pointer-events:none;display:flex;flex-direction:column;align-items:center;padding:6px 12px;border-radius:14px;background:rgba(11,18,16,.62);color:#fff;backdrop-filter:blur(10px) saturate(1.4);-webkit-backdrop-filter:blur(10px) saturate(1.4);box-shadow:0 8px 24px -10px rgba(0,0,0,.5);white-space:nowrap;line-height:1.25";

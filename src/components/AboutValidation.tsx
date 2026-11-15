@@ -34,7 +34,7 @@ export function BacktestSection() {
         {[
           [L("Sinovlar", "Tests"), `${rows.length}`, L("4 dala × 3 yil", "4 fields × 3 years")],
           [L("Tavsiya top-2 da qoldi", "Advice stayed in top 2"), `${held}/${rows.length}`, L("haqiqiy ob-havoda", "under real weather")],
-          [L("O'rtacha Spearman ρ", "Mean Spearman ρ"), avgRho == null ? "—" : String(avgRho), L("bashorat va haqiqiy reyting", "predicted vs realized rank")],
+          [L("O'rtacha Spearman ρ", "Mean Spearman ρ"), avgRho == null ? "-" : String(avgRho), L("bashorat va haqiqiy reyting", "predicted vs realized rank")],
           [L("Limitdan oshdi", "Went over the limit"), `${curOver} / ${recOver}`, L("hozirgi / tavsiya", "current / advised")],
         ].map(([a, b, c]) => (
           <Card key={a} className="flex flex-col gap-1">
@@ -69,17 +69,17 @@ export function BacktestSection() {
                     {r.weather.precipPct}% · ET0 {r.weather.et0Pct > 0 ? "+" : ""}
                     {r.weather.et0Pct}% · 🔥 {r.weather.heatDays}/{r.weather.normalHeatDays}
                   </td>
-                  <td className="p-3 tnum">{cur ? `${num(cur.realizedWater)} ${cur.overLimit ? "❌" : "✅"}` : "—"}</td>
+                  <td className="p-3 tnum">{cur ? `${num(cur.realizedWater)} ${cur.overLimit ? "❌" : "✅"}` : "-"}</td>
                   <td className="p-3 tnum">
                     {rec ? (
                       <>
                         {rec.strategyId}: {num(rec.realizedWater)} {rec.overLimit ? "❌" : "✅"} · {L(`${rec.realizedRank}-o'rin`, `rank ${rec.realizedRank}`)}
                       </>
                     ) : (
-                      "—"
+                      "-"
                     )}
                   </td>
-                  <td className="p-3 tnum">{r.spearman ?? "—"}</td>
+                  <td className="p-3 tnum">{r.spearman ?? "-"}</td>
                 </tr>
               );
             })}
@@ -108,14 +108,14 @@ export function ValidationNotes({ snow }: { snow: { basin: string; r: number | n
           {snow.map((s) => (
             <li key={s.basin} className="flex justify-between">
               <span>{s.basin}</span>
-              <b>r = {s.r ?? "—"} <span className="font-normal text-[var(--fg-3)]">({s.years})</span></b>
+              <b>r = {s.r ?? "-"} <span className="font-normal text-[var(--fg-3)]">({s.years})</span></b>
             </li>
           ))}
         </ul>
         <p className="mt-2 text-[13px] text-[var(--fg-2)]">
           {L(
-            "MODIS MOD10A2 bo'yicha bahorgi (mart–aprel) qor qoplami tog'li havzada va GloFAS yozgi (iyun–avgust) oqimi. Bog'liqlik kuchsiz: To'xtag'ul, Norak kabi suv omborlari va suv olish oqimni tartibga soladi. Shuning uchun signal tavsiyaga avtomatik ta'sir qilmaydi, faqat ko'rsatiladi.",
-            "Spring (Mar–Apr) snow cover over the mountain basin from MODIS MOD10A2 vs GloFAS summer (Jun–Aug) flow. The link is weak: reservoirs (Toktogul, Nurek) and withdrawals regulate the flow, so the signal is shown but does not change the advice automatically.",
+            "MODIS MOD10A2 bo'yicha bahorgi (mart-aprel) qor qoplami tog'li havzada va GloFAS yozgi (iyun-avgust) oqimi. Bog'liqlik kuchsiz: To'xtag'ul, Norak kabi suv omborlari va suv olish oqimni tartibga soladi. Shuning uchun signal tavsiyaga avtomatik ta'sir qilmaydi, faqat ko'rsatiladi.",
+            "Spring (Mar-Apr) snow cover over the mountain basin from MODIS MOD10A2 vs GloFAS summer (Jun-Aug) flow. The link is weak: reservoirs (Toktogul, Nurek) and withdrawals regulate the flow, so the signal is shown but does not change the advice automatically.",
           )}
         </p>
       </Card>

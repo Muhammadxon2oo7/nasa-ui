@@ -32,7 +32,7 @@ function core(w: string) {
 }
 
 export function toCyrillicWord(w: string) {
-  if (/^[A-D]$/.test(w)) return w; // strategy ids A–D
+  if (/^[A-D]$/.test(w)) return w; // strategy ids A-D
   if (KEEP.has(w) || KEEP.has(w.replace(/['ʻʼ’`]$/, ""))) return w;
   if (/^[A-Z]{2,}$/.test(w) || /[a-z][A-Z]/.test(w)) return w; // acronyms, CamelCase brands
   const lw = w.toLowerCase().replace(/[ʻʼ’`]/g, "'");

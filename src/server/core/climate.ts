@@ -26,7 +26,7 @@ export function prepWx(p: PowerDaily, dT = 0, dPpct = 0): Wx {
 }
 
 /**
- * FAO-56 Penman–Monteith reference ET0 (mm/day), daily, Eq. 6 with
+ * FAO-56 Penman-Monteith reference ET0 (mm/day), daily, Eq. 6 with
  * Rn from POWER all-sky shortwave (Rs), Rso = (0.75 + 2e-5 z) Ra, albedo 0.23, Eq. 39 Rnl.
  */
 export function et0Fao56(w: Wx, latDeg: number): number[] {

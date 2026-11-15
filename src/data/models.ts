@@ -8,7 +8,7 @@ export const MODELS: ModelInfo[] = [
     baseModel: "Now: NDVI phenology rules (baseline B0). Planned: Presto (NASA Harvest, NeurIPS 2023)",
     ourContribution: "Monthly Sentinel-2 NDVI per field with SCL cloud mask; rules for winter wheat, double crop, cotton, alfalfa and fallow; farmer answers override.",
     trainingData: "Planned: Remelgado et al. 2020, 8,435 labelled points in Uzbekistan (40 crops → 8 classes)",
-    validation: "Planned: time split 2015–2017 train / 2018 test, plus a held-out region",
+    validation: "Planned: time split 2015-2017 train / 2018 test, plus a held-out region",
     limitations: [
       "Cotton, maize and rice look alike in NDVI alone",
       "The second crop after wheat is detected, but not its species",
@@ -26,7 +26,7 @@ export const MODELS: ModelInfo[] = [
   {
     id: "M3",
     name: "What-if simulation",
-    baseModel: "FAO-56 water balance + rules R1–R8 + scoring",
+    baseModel: "FAO-56 water balance + rules R1-R8 + scoring",
     ourContribution: "Shifts 20 years of NASA POWER Tmax/Tmin by ΔT and rainfall by ΔP, then recomputes ET0, GDD, frost dates, water need and ranking",
     limitations: ["Does not change humidity, wind or radiation", "Crop yields are not simulated, only suitability and water"],
   },

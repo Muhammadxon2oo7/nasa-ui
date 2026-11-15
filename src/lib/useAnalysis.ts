@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { AnalyzeResponse } from "@/types/api";
-import { loadDemo, readAnalysis } from "@/api/client";
+import { analyzeField, loadDemo, readAnalysis, saveAnalysis } from "@/api/client";
 
 const mem = new Map<string, AnalyzeResponse>();
 
@@ -14,6 +14,22 @@ export function useAnalysis(fieldId: string) {
     (async () => {
       let d = mem.get(fieldId) ?? readAnalysis(fieldId);
       if (!d && fieldId.startsWith("demo-")) d = await loadDemo(fieldId.slice(5)).catch(() => null);
+      // live-<name>: one of the FastAPI backend's cached demo fields, analysed live (~2-10 s)
+      if (!d && fieldId.startsWith("live-")) {
+        const { liveDemoRequest, LIVE_DEMOS } = await import("@/api/fastapi");
+        const req = liveDemoRequest(fieldId.slice(5), "uz");
+        if (req) {
+          d = await analyzeField(req).catch(() => null);
+          if (d) {
+            const demo = LIVE_DEMOS[fieldId.slice(5)];
+            d = { ...d, fieldId, field: { ...d.field, region: d.field.region ?? demo?.uz } };
+            saveAnalysis(d);
+            try {
+              localStorage.setItem(`fs:req:${fieldId}`, JSON.stringify(req));
+            } catch {}
+          }
+        }
+      }
       if (dead) return;
       if (d) {
         mem.set(fieldId, d);

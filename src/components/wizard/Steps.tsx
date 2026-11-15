@@ -203,7 +203,7 @@ export function Step1({ onNext }: { onNext: () => void }) {
           {inputMode === "point" && !polygon && <p className="mb-2 text-[13.5px] text-[var(--accent)]">📍 {t("place.pointHint")}</p>}
           {inputMode === "geojson" && <p className="mb-2 text-[13px] text-[var(--fg-3)]">📂 {t("place.geojsonHint")} <button type="button" className="font-semibold text-[var(--accent)]" onClick={() => fileRef.current?.click()}>{t("place.pick")}</button></p>}
           {fileErr && <p role="alert" className="mb-2 text-[13px] font-medium text-[var(--danger-fg)]">{t("place.badFile")}</p>}
-          {placeType === "point_buffer" && polygon && <p className="mb-2 rounded-xl bg-[var(--warn-bg)] px-2.5 py-1.5 text-[12.5px] text-[var(--warn-fg)]">⚠️ {t("place.approx")}</p>}
+          {placeType === "point_buffer" && polygon && <p className="mb-2 rounded-xl bg-[var(--warn-bg)] px-2.5 py-1.5 text-[12.5px] text-[var(--warn-fg)]">{t("place.approx")}</p>}
           {info ? (
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[14px]">
               <dt className="text-[var(--fg-3)]">{t("s1.area")}</dt>
@@ -275,7 +275,7 @@ function CropSelect({ value, onChange, filter, id }: { value: CropId | null; onC
   return (
     <select id={id} value={value ?? ""} onChange={(e) => onChange(e.target.value as CropId)} className="h-11 min-w-0 flex-1 rounded-2xl bg-[var(--surface-2)] px-3 text-[16px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:text-[14.5px]">
       <option value="" disabled>
-        —
+        -
       </option>
       {SELECTABLE.filter((c) => !filter || filter(c)).map((c) => (
         <option key={c} value={c}>
@@ -471,7 +471,7 @@ function CropForm() {
         </div>
         <div className="mt-3 flex items-center gap-2 text-[13px] text-[var(--fg-3)]">
           <span>
-            {t("s2.order")}: {w.priorities.length ? w.priorities.map((p, i) => `${i + 1}. ${t(`p.${p}` as Key)}`).join("  ") : "–"}
+            {t("s2.order")}: {w.priorities.length ? w.priorities.map((p, i) => `${i + 1}. ${t(`p.${p}` as Key)}`).join("  ") : "-"}
           </span>
           {w.priorities.length > 0 && (
             <button type="button" onClick={() => w.set({ priorities: [] })} className="ml-auto flex items-center gap-1 rounded-full px-2 py-1 text-[var(--accent)] hover:bg-[var(--accent-soft)]" aria-label={t("reset")}>
@@ -670,8 +670,7 @@ export function Step3({ onBack }: { onBack: () => void }) {
           <span>{Math.round(elapsed)} s</span>
         </div>
         <AnimatePresence mode="wait">
-          <m.p key={dyk} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={spring} className="mt-4 rounded-2xl bg-[var(--surface-2)] px-3.5 py-2.5 text-[13.5px] text-[var(--fg-2)]">
-            💡 <b>{t("s3.dyk")}</b> {t(dyk)}
+          <m.p key={dyk} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={spring} className="mt-4 rounded-2xl bg-[var(--surface-2)] px-3.5 py-2.5 text-[13.5px] text-[var(--fg-2)]"><b>{t("s3.dyk")}</b> {t(dyk)}
           </m.p>
         </AnimatePresence>
         {elapsed > 30 && (

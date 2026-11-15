@@ -2,10 +2,10 @@ import type { Crop, CropId, Level } from "@/types/api";
 
 /**
  * Crop parameters.
- * - kc / stage lengths: FAO-56 Tables 11–12 (Allen et al. 1998), adapted to Central Asian sowing dates.
+ * - kc / stage lengths: FAO-56 Tables 11-12 (Allen et al. 1998), adapted to Central Asian sowing dates.
  * - eceThreshold / eceSlope: Maas & Hoffman (1977) via FAO-29 Rev.1 Table 4 (yield % = 100 − slope·(ECe − threshold)).
  * - gddRequired: base tbase °C, typical for Uzbekistan double-crop / main-crop varieties.
- * - market / labor: 1–5 expert estimates (to be replaced with FAO FPMA / local bazaar prices).
+ * - market / labor: 1-5 expert estimates (to be replaced with FAO FPMA / local bazaar prices).
  * ⚠️ PRO_REJA T6: values still to be checked line by line against the FAO originals.
  */
 export type CropParams = {
@@ -24,8 +24,8 @@ export type CropParams = {
   nFixing: boolean;
   rootDepthM: number;
   family: string;
-  market: number; // 1–5
-  labor: number; // 1–5
+  market: number; // 1-5
+  labor: number; // 1-5
   waterClass: Level;
   /** extra water for flooded rice (percolation + ponding), mm/day */
   extraMmDay?: number;

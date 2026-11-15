@@ -13,7 +13,7 @@ export function quantile(a: number[], q: number) {
 }
 export const median = (a: number[]) => quantile(a, 0.5);
 
-/** Theil–Sen slope (per unit x). */
+/** Theil-Sen slope (per unit x). */
 export function theilSen(x: number[], y: number[]) {
   const s: number[] = [];
   for (let i = 0; i < x.length; i++)

@@ -2,7 +2,7 @@
 
 import { clsx } from "clsx";
 import { m } from "motion/react";
-import { Pause, Play } from "lucide-react";
+import { Droplet, FlaskConical, Pause, Play, Sprout, Star } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import type { AnalyzeResponse, CropId, Level, Strategy } from "@/types/api";
@@ -76,14 +76,14 @@ export function FieldTwin({ data, list, bestId, autoPlay = false, className }: {
   const state: SceneState = useMemo(() => {
     if (mode === "water") {
       const over = limit != null && st.waterM3PerHa > limit;
-      return { color: over ? "#E53935" : "#1E88E5", heightM: st.waterM3PerHa / 100, ghostHeightM: limit ? limit / 100 : null, label: `💧 ${num(st.waterM3PerHa)} m³/${L("ga", "ha")}`, sub: limit ? `${L("limit", "limit")} ${num(limit)} ${over ? "⚠️" : "✅"}` : st.id };
+      return { color: over ? "#E53935" : "#1E88E5", heightM: st.waterM3PerHa / 100, ghostHeightM: limit ? limit / 100 : null, label: `${num(st.waterM3PerHa)} m³/${L("ga", "ha")}`, sub: limit ? `${L("limit", "limit")} ${num(limit)} ${over ? "⚠️" : "✅"}` : st.id };
     }
     if (mode === "salt") {
       const lv = data.soil.salinityLevel;
-      return { color: SALT[lv], heightM: 6, label: `🧂 ${t(`lvl.${lv}` as never)}`, sub: data.soil.salinityTrendPct != null ? `${L("trend", "trend")} ${data.soil.salinityTrendPct > 0 ? "+" : ""}${data.soil.salinityTrendPct}%` : undefined };
+      return { color: SALT[lv], heightM: 6, label: `${L("Sho'rlanish", "Salinity")}: ${t(`lvl.${lv}` as never)}`, sub: data.soil.salinityTrendPct != null ? `${L("trend", "trend")} ${data.soil.salinityTrendPct > 0 ? "+" : ""}${data.soil.salinityTrendPct}%` : undefined };
     }
     const c = cropAt(st, cur.y, cur.m);
-    return { color: c ? CROPS[c].color : BARE, heightM: c ? 10 : 2, label: c ? `${CROPS[c].icon} ${cropName(c, lang)}` : `🟫 ${L("Bo'sh", "Bare")}`, sub: `${monthShort(cur.m, lang)} ${cur.y}` };
+    return { color: c ? CROPS[c].color : BARE, heightM: c ? 5 : 1, label: c ? cropName(c, lang) : L("Bo'sh dala", "Bare field"), sub: `${monthShort(cur.m, lang)} ${cur.y}` };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, st, cur.y, cur.m, lang, limit, data.soil]);
 
@@ -100,8 +100,8 @@ export function FieldTwin({ data, list, bestId, autoPlay = false, className }: {
 
       {/* mode switch */}
       <div className="lg absolute top-3 left-3 flex gap-0.5 rounded-full p-1" role="tablist" aria-label="3D">
-        {([["crop", `🌱 ${L("Ekinlar", "Crops")}`], ["water", `💧 ${L("Suv", "Water")}`], ["salt", `🧂 ${L("Sho'r", "Salt")}`]] as const).map(([k, lbl]) => (
-          <button key={k} role="tab" aria-selected={mode === k} type="button" onClick={() => setMode(k)} className={clsx("press relative rounded-full px-3 py-1.5 text-[13px] font-semibold", mode === k ? "text-[var(--fg)]" : "text-[var(--fg-2)]")}>
+        {([["crop", <><Sprout size={14} /> {L("Ekinlar", "Crops")}</>], ["water", <><Droplet size={14} /> {L("Suv", "Water")}</>], ["salt", <><FlaskConical size={14} /> {L("Sho'r", "Salt")}</>]] as const).map(([k, lbl]) => (
+          <button key={k} role="tab" aria-selected={mode === k} type="button" onClick={() => setMode(k)} className={clsx("press relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold", mode === k ? "text-[var(--fg)]" : "text-[var(--fg-2)]")}>
             {mode === k && <m.span layoutId="twin-mode" transition={spring} className="absolute inset-0 -z-10 rounded-full bg-[var(--surface)]" />}
             {lbl}
           </button>
@@ -115,7 +115,7 @@ export function FieldTwin({ data, list, bestId, autoPlay = false, className }: {
             <button key={x.s.id} type="button" onClick={() => setSid(x.s.id)} aria-pressed={sid === x.s.id} title={x.s.name} className={clsx("press flex h-8 min-w-8 items-center justify-center gap-1 rounded-full px-2 text-[13px] font-bold", sid === x.s.id ? "bg-[var(--fg)] text-[var(--bg)]" : "text-[var(--fg)]")}>
               <i className="h-2 w-2 rounded-full" style={{ background: SERIES_TWIN[x.i] }} />
               {x.s.id}
-              {x.s.id === bestId && <span aria-hidden>★</span>}
+              {x.s.id === bestId && <Star size={11} className="fill-current" aria-hidden />}
             </button>
           ))}
         </div>

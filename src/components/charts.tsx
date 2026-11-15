@@ -127,7 +127,7 @@ export function XYChart({
     const i = hasBars ? Math.floor((px - padL) / slot) : Math.round(((px - padL) / iw) * (n - 1));
     setHover(Math.max(0, Math.min(n - 1, i)));
   };
-  const fmt = (v: number | null | undefined) => (v == null || !Number.isFinite(v) ? "–" : `${v.toFixed(digits)}${unit}`);
+  const fmt = (v: number | null | undefined) => (v == null || !Number.isFinite(v) ? "-" : `${v.toFixed(digits)}${unit}`);
 
   return (
     <div ref={ref} className="relative w-full select-none">
@@ -193,7 +193,7 @@ export function XYChart({
             const v = l.type === "line" || l.type === "bars" ? l.values[hover] : l.type === "band" ? null : l.value;
             if (l.type === "band")
               return (
-                <Row key={l.id} color={l.color} label={l.label} value={`${fmt(l.lo[hover])} – ${fmt(l.hi[hover])}`} />
+                <Row key={l.id} color={l.color} label={l.label} value={`${fmt(l.lo[hover])} - ${fmt(l.hi[hover])}`} />
               );
             return <Row key={l.id} color={l.color} label={l.label} value={fmt(v)} />;
           })}

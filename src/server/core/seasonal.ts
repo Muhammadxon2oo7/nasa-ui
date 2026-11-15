@@ -5,7 +5,7 @@ import type { Evaluated } from "./strategies";
 
 /**
  * M2 (PRO_REJA §6.2, delta method): every SEAS5 member's monthly anomaly is taken against the
- * ERA5 2005–2025 normal at the same point (same ECMWF model family), then added to the
+ * ERA5 2005-2025 normal at the same point (same ECMWF model family), then added to the
  * NASA POWER field normal: T_field = T_norm_POWER + ΔT, P_field = P_norm_POWER × (1 + ΔP%).
  * No hindcast skill check yet → confidence stays "low".
  */

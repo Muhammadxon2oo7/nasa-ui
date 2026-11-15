@@ -75,7 +75,7 @@ export function FieldFromSpace() {
               <div className="grid flex-1 grid-cols-12 gap-[2px]">
                 {Array.from({ length: 12 }, (_, i) => {
                   const v = data!.history.ndvi.find((n) => n.date === `${y}-${String(i + 1).padStart(2, "0")}`)?.value ?? null;
-                  return <i key={i} className="h-3 rounded-[3px]" style={{ background: ndviColor(v) }} title={v == null ? "–" : v.toFixed(2)} />;
+                  return <i key={i} className="h-3 rounded-[3px]" style={{ background: ndviColor(v) }} title={v == null ? "-" : v.toFixed(2)} />;
                 })}
               </div>
             </div>

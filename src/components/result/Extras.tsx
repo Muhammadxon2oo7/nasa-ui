@@ -2,7 +2,7 @@
 
 import { clsx } from "clsx";
 import { AnimatePresence, m } from "motion/react";
-import { CalendarPlus, ChevronDown, Pencil, X } from "lucide-react";
+import { CalendarDays, CalendarPlus, ChevronDown, Pencil, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { AnalyzeResponse, CalendarEvent, CropId, EconomicsInput, FeedbackEntry, Level } from "@/types/api";
 import { CROPS } from "@/data/crops";
@@ -39,7 +39,7 @@ function EventRow({ e, lang }: { e: CalendarEvent; lang: "uz" | "en" }) {
     <li className="flex gap-3 rounded-2xl bg-[var(--surface-2)] px-3 py-2.5">
       <span className="w-[86px] shrink-0 text-[12.5px] font-semibold text-[var(--fg-3)] tnum">
         {isoDM(e.date, lang)}
-        {e.endDate && e.endDate !== e.date && <span className="block font-normal">– {isoDM(e.endDate, lang)}</span>}
+        {e.endDate && e.endDate !== e.date && <span className="block font-normal">- {isoDM(e.endDate, lang)}</span>}
       </span>
       <span className="min-w-0 flex-1">
         <b className={clsx("block text-[14.5px] leading-snug font-semibold", e.severity === "high" && "text-[var(--danger-fg)]")}>{e.title}</b>
@@ -59,7 +59,7 @@ export function ThisWeekCard({ data, onOpen }: { data: AnalyzeResponse; onOpen?:
     <Card className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-2">
         <CardTitle className="mb-0 flex-1">
-          📅 {t("cal.thisWeek")} <span className="font-normal text-[var(--fg-3)]">· {isoDM(c.today, lang)} – {isoDM(end, lang)}</span>
+          <CalendarDays size={17} className="mr-1.5 inline -translate-y-px text-[var(--fg-3)]" />{t("cal.thisWeek")} <span className="font-normal text-[var(--fg-3)]">· {isoDM(c.today, lang)} - {isoDM(end, lang)}</span>
         </CardTitle>
         {onOpen && (
           <button type="button" onClick={onOpen} className="press text-[13.5px] font-semibold text-[var(--accent)]">
@@ -87,14 +87,14 @@ export function CalendarTab({ data }: { data: AnalyzeResponse }) {
   const c = data.calendar;
   const download = () => {
     if (!c) return;
-    const blob = new Blob([toIcs([...c.thisWeek, ...c.next90Days.filter((e) => !c.thisWeek.some((w) => w.id === e.id))], `Field Shift · ${data.field.region ?? data.fieldId}`)], { type: "text/calendar" });
+    const blob = new Blob([toIcs([...c.thisWeek, ...c.next90Days.filter((e) => !c.thisWeek.some((w) => w.id === e.id))], `TerraVision · ${data.field.region ?? data.fieldId}`)], { type: "text/calendar" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = `fieldshift-${data.fieldId}.ics`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   };
-  if (!c) return <Card><UnknownValue reason={data.extrasUnknown?.calendar ?? "—"} /></Card>;
+  if (!c) return <Card><UnknownValue reason={data.extrasUnknown?.calendar ?? "-"} /></Card>;
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
       <ThisWeekCard data={data} />
@@ -116,7 +116,7 @@ function LeachingPlanCard({ data }: { data: AnalyzeResponse }) {
   const { t, lang } = useT();
   const l = data.calendar?.leaching;
   const [open, setOpen] = useState(false);
-  if (!l) return <Card><CardTitle>🧂 {t("cal.leach")}</CardTitle><UnknownValue reason={data.extrasUnknown?.leaching ?? "—"} /></Card>;
+  if (!l) return <Card><CardTitle>🧂 {t("cal.leach")}</CardTitle><UnknownValue reason={data.extrasUnknown?.leaching ?? "-"} /></Card>;
   const DEK = (k: string) => {
     const [mo, d] = k.split("-").map(Number);
     return `${monthShort(mo, lang)} ${d}`;
@@ -131,7 +131,7 @@ function LeachingPlanCard({ data }: { data: AnalyzeResponse }) {
           <div className="rounded-2xl bg-[var(--water-soft)] px-3 py-2">
             <div className="text-[12.5px] text-[var(--fg-3)]">{t("cal.total")}</div>
             <div className="text-[22px] font-semibold tnum">
-              {l.totalLowM3PerHa === l.totalHighM3PerHa ? num(l.totalLowM3PerHa) : `${num(l.totalLowM3PerHa)} – ${num(l.totalHighM3PerHa)}`} <span className="text-[13px] font-normal text-[var(--fg-3)]">{t("m3ha")}</span>
+              {l.totalLowM3PerHa === l.totalHighM3PerHa ? num(l.totalLowM3PerHa) : `${num(l.totalLowM3PerHa)} - ${num(l.totalHighM3PerHa)}`} <span className="text-[13px] font-normal text-[var(--fg-3)]">{t("m3ha")}</span>
             </div>
             <div className="text-[12.5px] text-[var(--fg-2)]">{t("cal.cont", { n: num(l.continuousM3PerHa) })}</div>
           </div>
@@ -162,7 +162,7 @@ function LeachingPlanCard({ data }: { data: AnalyzeResponse }) {
         </div>
       )}
       {l.warnings.map((w) => (
-        <p key={w} className="text-[13px] text-[var(--warn-fg,var(--fg-2))]">⚠️ {w}</p>
+        <p key={w} className="text-[13px] text-[var(--warn-fg,var(--fg-2))]">{w}</p>
       ))}
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="press mt-1 flex items-center gap-1 self-start text-[13.5px] font-semibold text-[var(--fg-2)]">
         <ChevronDown size={15} className={clsx("transition-transform", open && "rotate-180")} /> {t("cal.leachHow")}
@@ -271,7 +271,7 @@ export function WaterSupplyCard({ data, onTryDry }: { data: AnalyzeResponse; onT
           )}
         </div>
       )}
-      <p className="text-[12.5px] text-[var(--fg-3)]">ℹ️ {t("ws.disclaimer")}</p>
+      <p className="text-[12.5px] text-[var(--fg-3)]">{t("ws.disclaimer")}</p>
     </Card>
   );
 }
@@ -323,7 +323,7 @@ export function ActualVsNeedCard({ data }: { data: AnalyzeResponse }) {
         <div className="rounded-2xl bg-[var(--surface-2)] px-3 py-2">
           <dt className="text-[12px] text-[var(--fg-3)]">{t("aw.consumed")}</dt>
           <dd className="text-[20px] font-semibold tnum">{num(a.consumedM3PerHa)}</dd>
-          <dd className="text-[12px] text-[var(--fg-3)] tnum">{num(a.consumedLow)} – {num(a.consumedHigh)}</dd>
+          <dd className="text-[12px] text-[var(--fg-3)] tnum">{num(a.consumedLow)} - {num(a.consumedHigh)}</dd>
         </div>
         <div className="rounded-2xl bg-[var(--surface-2)] px-3 py-2">
           <dt className="text-[12px] text-[var(--fg-3)]">{t("aw.applied")}</dt>
@@ -335,7 +335,7 @@ export function ActualVsNeedCard({ data }: { data: AnalyzeResponse }) {
       </dl>
       <p className="text-[12px] text-[var(--fg-3)]">{t("m3ha")} · {t("aw.appliedHint")}</p>
       {excess != null && excess > 500 ? <p className="rounded-2xl bg-[var(--accent-soft)] px-3 py-2 text-[14px]">{t("aw.excess", { n: num(excess) })}</p> : applied ? <p className="text-[14px]">{t("aw.ok")}</p> : null}
-      {gap >= 20 && <p className="text-[13.5px] text-[var(--fg-2)]">ℹ️ {t("aw.gap", { p: gap })}</p>}
+      {gap >= 20 && <p className="text-[13.5px] text-[var(--fg-2)]">{t("aw.gap", { p: gap })}</p>}
       <XYChart
         ariaLabel={t("aw.chart")}
         height={200}
@@ -352,13 +352,13 @@ export function ActualVsNeedCard({ data }: { data: AnalyzeResponse }) {
           {a.checks.map((c) => (
             <li key={c.source} className="flex items-center gap-1 rounded-full bg-[var(--surface-2)] px-2.5 py-1">
               <b>{c.source === "wapor" ? "WaPOR" : c.source === "modis" ? "MODIS ET" : "ECOSTRESS"}</b>
-              {c.m3PerHa != null ? <span className="tnum">{num(c.m3PerHa)} {t("m3ha")}</span> : <UnknownValue reason={c.note ?? "—"} />}
+              {c.m3PerHa != null ? <span className="tnum">{num(c.m3PerHa)} {t("m3ha")}</span> : <UnknownValue reason={c.note ?? "-"} />}
             </li>
           ))}
         </ul>
         {a.checks.find((c) => c.source === "modis" && c.m3PerHa != null)?.note && <p className="mt-1 text-[12px] text-[var(--fg-3)]">{a.checks.find((c) => c.source === "modis")!.note}</p>}
       </div>
-      <p className="text-[12px] text-[var(--fg-3)]">ℹ️ {t("aw.note")} · {a.method}</p>
+      <p className="text-[12px] text-[var(--fg-3)]">{t("aw.note")} · {a.method}</p>
     </Card>
   );
 }
@@ -375,7 +375,7 @@ export function NormComparisonRow({ data }: { data: AnalyzeResponse }) {
           {n.diffPct}% {Math.abs(n.diffPct) <= 25 ? "✅" : "⚠️"}
         </b>
       ) : (
-        <UnknownValue reason={data.extrasUnknown?.norms ?? "—"} />
+        <UnknownValue reason={data.extrasUnknown?.norms ?? "-"} />
       )}
     </Card>
   );
@@ -404,7 +404,7 @@ export function GaezSuitabilityRow({ data }: { data: AnalyzeResponse }) {
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-[12px] text-[var(--fg-3)]">ℹ️ {g.note}</p>
+      <p className="mt-2 text-[12px] text-[var(--fg-3)]">{g.note}</p>
     </Card>
   );
 }
@@ -418,7 +418,7 @@ export function EconomicsCard({ data, strategies }: { data: AnalyzeResponse; str
   useEffect(() => setInp(loadEcon()), []); // eslint-disable-line react-hooks/set-state-in-effect -- localStorage after mount
   const crops = useMemo(() => [...new Set(strategies.flatMap((s) => s.seasons.map((x) => x.crop)))].filter((c) => c !== "fallow") as CropId[], [strategies]);
   const res = strategies.map((s) => ({ s, p: profitOf(s, data, inp) }));
-  const mln = (v: number | null) => (v == null ? "—" : `${v >= 0 ? "" : "−"}${num(Math.abs(v) / 1e6, 1)}`);
+  const mln = (v: number | null) => (v == null ? "-" : `${v >= 0 ? "" : "−"}${num(Math.abs(v) / 1e6, 1)}`);
   const anyMissing = res.some((r) => r.p.missing.length);
   return (
     <Card className="flex flex-col gap-2">
@@ -446,7 +446,7 @@ export function EconomicsCard({ data, strategies }: { data: AnalyzeResponse; str
       </ul>
       {anyMissing && <p className="text-[13px] text-[var(--fg-3)]">{t("econ.need")}</p>}
       {[...new Map(res.flatMap((r) => r.p.capped).map((c) => [c.crop, c])).values()].map((c) => (
-        <p key={c.crop} className="text-[12.5px] text-[var(--fg-3)]">ℹ️ {t("econ.capped", { c: cropName(c.crop, lang), n: c.t })}</p>
+        <p key={c.crop} className="text-[12.5px] text-[var(--fg-3)]">{t("econ.capped", { c: cropName(c.crop, lang), n: c.t })}</p>
       ))}
       <p className="text-[12px] text-[var(--fg-3)]">{t("econ.warn")} {t("econ.method")}</p>
       <AnimatePresence>{open && <CostsDialog crops={crops} value={inp} onClose={() => setOpen(false)} onSave={(v) => (setInp(v), saveEcon(v), setOpen(false))} />}</AnimatePresence>

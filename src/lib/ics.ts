@@ -6,7 +6,7 @@ const esc = (s: string) => s.replace(/[\\,;]/g, (c) => `\\${c}`).replace(/\n/g, 
 /** RFC 5545 all-day events (B1 .ics export). */
 export function toIcs(events: CalendarEvent[], name: string) {
   const stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
-  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Field Shift UZ//Calendar//UZ", "CALSCALE:GREGORIAN", `X-WR-CALNAME:${esc(name)}`];
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//TerraVision//Calendar//UZ", "CALSCALE:GREGORIAN", `X-WR-CALNAME:${esc(name)}`];
   for (const e of events) {
     const end = new Date(`${e.endDate ?? e.date}T00:00:00Z`);
     end.setUTCDate(end.getUTCDate() + 1);

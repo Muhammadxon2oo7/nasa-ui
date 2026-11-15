@@ -1,17 +1,18 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import { Inter } from "next/font/google";
+import { Onest } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/layout/Providers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
-const inter = Inter({ subsets: ["latin", "cyrillic"], variable: "--font-inter", display: "swap", preload: false });
+// Onest: a humanist grotesk with full Latin-Extended (o‘, g‘) and Cyrillic, so both Uzbek scripts look native
+const onest = Onest({ subsets: ["latin", "latin-ext", "cyrillic"], variable: "--font-onest", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Field Shift UZ: dala tahlili va ekin almashlab ekish",
+  title: "TerraVision - yeringizni NASA ma'lumotlari bilan ko'ring",
   description: "NASA Space Apps 2026 · Field Shift. Dalangizni chizing: NASA ma'lumotlari bilan 20 yillik iqlim, dala tarixi, sho'rlanish va suv hisobi asosida rotatsiya strategiyalarini solishtiring.",
-  openGraph: { title: "Field Shift UZ", description: "NASA ma'lumotlari bilan ekin almashlab ekish bo'yicha qaror qabul qilish vositasi", images: ["/og.png"] },
+  openGraph: { title: "TerraVision", description: "NASA ma'lumotlari bilan ekin almashlab ekish bo'yicha qaror qabul qilish vositasi", images: ["/brand/logo.png"] },
 };
 
 export const viewport: Viewport = {
@@ -32,17 +33,12 @@ d.dataset.perf=p;}catch(e){}})();`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="uz" className={inter.variable} suppressHydrationWarning>
+    <html lang="uz" className={onest.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: BOOT }} />
       </head>
       <body className="min-h-dvh">
         <Providers>
-          <div className="orbs" aria-hidden>
-            <i />
-            <i />
-            <i />
-          </div>
           <Suspense fallback={null}>
             <Header />
           </Suspense>

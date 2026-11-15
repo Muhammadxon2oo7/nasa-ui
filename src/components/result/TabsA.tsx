@@ -69,7 +69,7 @@ export function HistoryTab({ data }: { data: AnalyzeResponse }) {
                   <span key={c.start} className="flex items-center gap-1.5 text-[13.5px]">
                     <CropChip crop={c.crop} faded={c.confidence < 0.6} />
                     <span className="text-[var(--fg-3)] tnum">
-                      {dayMonth(c.start, lang)} – {dayMonth(c.end, lang)} · {Math.round(c.confidence * 100)}% {c.confidence < 0.6 ? `(${t("h.lowConf")})` : ""}
+                      {dayMonth(c.start, lang)} - {dayMonth(c.end, lang)} · {Math.round(c.confidence * 100)}% {c.confidence < 0.6 ? `(${t("h.lowConf")})` : ""}
                     </span>
                   </span>
                 ))}
@@ -80,7 +80,7 @@ export function HistoryTab({ data }: { data: AnalyzeResponse }) {
                     </span>
                   ) : editing ? (
                     <select autoFocus aria-label={t("h.fix")} className="h-9 rounded-xl bg-[var(--surface)] px-2 text-[14px]" defaultValue="" onChange={(e) => { persist({ ...fixed, [sel]: e.target.value as CropId }); setEditing(false); }}>
-                      <option value="" disabled>—</option>
+                      <option value="" disabled>-</option>
                       {SELECTABLE.map((c) => (
                         <option key={c} value={c}>{cropIcon(c)} {CROPS[c].name[lang]}</option>
                       ))}
@@ -103,7 +103,7 @@ export function HistoryTab({ data }: { data: AnalyzeResponse }) {
       </Card>
 
       <Card>
-        <CardTitle info="ndvi" source="Sentinel-2 L2A 2017–2026">{t("h.ndvi")}</CardTitle>
+        <CardTitle info="ndvi" source="Sentinel-2 L2A 2017-2026">{t("h.ndvi")}</CardTitle>
         {h.ndvi.some((n) => n.value != null) ? (
           <XYChart
             ariaLabel={t("h.ndvi")}
@@ -139,7 +139,7 @@ export function HistoryTab({ data }: { data: AnalyzeResponse }) {
                 <span className="text-[12px] font-semibold tnum">{y}</span>
                 {Array.from({ length: 12 }, (_, i) => {
                   const v = h.ndvi.find((n) => n.date === `${y}-${String(i + 1).padStart(2, "0")}`)?.value ?? null;
-                  return <i key={i} className="h-6 rounded-[6px]" style={{ background: ndviColor(v) }} title={`${monthShort(i + 1, lang)} ${y}: ${v == null ? "–" : v.toFixed(2)}`} />;
+                  return <i key={i} className="h-6 rounded-[6px]" style={{ background: ndviColor(v) }} title={`${monthShort(i + 1, lang)} ${y}: ${v == null ? "-" : v.toFixed(2)}`} />;
                 })}
               </div>
             ))}
@@ -150,7 +150,7 @@ export function HistoryTab({ data }: { data: AnalyzeResponse }) {
             </div>
           </div>
         </div>
-        <p className="mt-3 rounded-2xl bg-[var(--accent-soft)] px-3.5 py-2.5 text-[14px] text-[var(--fg)]">💡 {bareYears ? t("h.bare", { n: years.length, k: bareYears, d: avgBare }) : t("h.noBare")}</p>
+        <p className="mt-3 rounded-2xl bg-[var(--accent-soft)] px-3.5 py-2.5 text-[14px] text-[var(--fg)]">{bareYears ? t("h.bare", { n: years.length, k: bareYears, d: avgBare }) : t("h.noBare")}</p>
       </Card>
     </div>
   );
@@ -193,14 +193,14 @@ export function ClimateTab({ data }: { data: AnalyzeResponse }) {
       </div>
       <div className="grid gap-3 lg:grid-cols-2">
         <Card>
-          <CardTitle source={`NASA POWER ${data.field.periodStart}–${data.field.periodEnd}`}>{t("c.temp")}</CardTitle>
+          <CardTitle source={`NASA POWER ${data.field.periodStart}-${data.field.periodEnd}`}>{t("c.temp")}</CardTitle>
           <XYChart
             ariaLabel={t("c.temp")}
             labels={months}
             unit="°C"
             digits={1}
             layers={[
-              { type: "band", id: "rng", label: "Tmax P10–P90", lo: c.monthly.map((m) => m.tmaxP10), hi: c.monthly.map((m) => m.tmaxP90), color: "var(--s2)", opacity: 0.16 },
+              { type: "band", id: "rng", label: "Tmax P10-P90", lo: c.monthly.map((m) => m.tmaxP10), hi: c.monthly.map((m) => m.tmaxP90), color: "var(--s2)", opacity: 0.16 },
               { type: "line", id: "tmax", label: "Tmax", values: c.monthly.map((m) => m.tmaxAvg), color: "var(--s2)" },
               { type: "line", id: "tmin", label: "Tmin", values: c.monthly.map((m) => m.tminAvg), color: "var(--s1)" },
               ...(c.lastYearMonthly ? [{ type: "line" as const, id: "ly", label: String(data.field.periodEnd), values: c.lastYearMonthly.map((m) => m.tmax), color: "var(--fg-3)", dash: true }] : []),
@@ -269,7 +269,7 @@ export function SoilTab({ data, onRecompute }: { data: AnalyzeResponse; onRecomp
           <LevelBadge level={s.salinityLevel} big />
           {s.salinityTrendPct != null && <span className="text-[13.5px] text-[var(--fg-2)] tnum">trend: {s.salinityTrendPct > 0 ? "↑ +" : "↓ "}{s.salinityTrendPct}%</span>}
         </div>
-        {s.isEstimated && <p className="mt-3 rounded-2xl bg-[var(--warn-bg)] px-3.5 py-2.5 text-[13.5px] text-[var(--warn-fg)]">⚠️ {t("so.estimated")}</p>}
+        {s.isEstimated && <p className="mt-3 rounded-2xl bg-[var(--warn-bg)] px-3.5 py-2.5 text-[13.5px] text-[var(--warn-fg)]">{t("so.estimated")}</p>}
         <Button size="sm" variant="secondary" className="mt-3" onClick={() => setDlg(true)}>
           <FlaskConical size={14} /> {t("so.enterLab")}
         </Button>
@@ -323,7 +323,7 @@ export function SoilTab({ data, onRecompute }: { data: AnalyzeResponse; onRecomp
                 <span>■ {t("so.sand")}</span>
               </div>
               <p className="mt-3 text-[14px]">
-                → <b>{t(`tx.${s.texture.className}` as Key)}</b> · {t("so.soc")}: <b className="tnum">{s.socGKg ?? "–"} g/kg</b> · pH <b className="tnum">{s.ph ?? "–"}</b>
+                → <b>{t(`tx.${s.texture.className}` as Key)}</b> · {t("so.soc")}: <b className="tnum">{s.socGKg ?? "-"} g/kg</b> · pH <b className="tnum">{s.ph ?? "-"}</b>
               </p>
             </>
           ) : (
@@ -350,7 +350,7 @@ export function SoilTab({ data, onRecompute }: { data: AnalyzeResponse; onRecomp
       )}
 
       <Card>
-        <CardTitle source="FAO-29 (Maas–Hoffman)">{t("so.fit")}</CardTitle>
+        <CardTitle source="FAO-29 (Maas-Hoffman)">{t("so.fit")}</CardTitle>
         <div className="scroll-thin overflow-x-auto">
           <table className="w-full min-w-[360px] text-[14px]">
             <thead>

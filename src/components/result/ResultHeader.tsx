@@ -200,7 +200,7 @@ export function LivestockCards({ data }: { data: AnalyzeResponse }) {
   const water = wp != null && !isUnknown(wp) ? `${wp} km` : ws != null && !isUnknown(ws) ? `${ws} km*` : "❓";
   const cards = [
     { k: "p", icon: "🌿", label: t("ls.cardPasture"), body: <span className="text-[20px] font-semibold">{t(`ls.lvl.${ls.pasture.statusLevel}` as Key)}{!isUnknown(a) && <span className="ml-1.5 text-[14px] text-[var(--fg-3)] tnum">{(a as number) > 0 ? "+" : ""}{a as number}%</span>}</span>, source: "MODIS NDVI" },
-    { k: "c", icon: "🐄", label: t("ls.cardCap"), body: <span className="text-[20px] font-semibold tnum">{!isUnknown(lo) && !isUnknown(hi) ? `${lo}–${hi}` : "❓"}<span className="ml-1 text-[12px] font-medium text-[var(--fg-3)]">{t("ls.capUnit")}</span></span>, source: "MODIS NPP" },
+    { k: "c", icon: "🐄", label: t("ls.cardCap"), body: <span className="text-[20px] font-semibold tnum">{!isUnknown(lo) && !isUnknown(hi) ? `${lo}-${hi}` : "❓"}<span className="ml-1 text-[12px] font-medium text-[var(--fg-3)]">{t("ls.capUnit")}</span></span>, source: "MODIS NPP" },
     { k: "h", icon: "🌡️", label: t("ls.cardHeat"), body: <span className="text-[24px] font-semibold tnum">{ls.heat.stressDaysPerYear}<span className="ml-1 text-[12px] font-medium text-[var(--fg-3)]">{t("c.perYear")}</span></span>, source: "NASA POWER · THI" },
     { k: "w", icon: "💧", label: t("ls.cardWater"), body: <span className="text-[24px] font-semibold tnum">{water}</span>, source: "JRC GSW" },
   ];

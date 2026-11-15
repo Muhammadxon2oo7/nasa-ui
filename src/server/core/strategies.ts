@@ -111,7 +111,7 @@ function evaluate(t: Template, ctx: Ctx, isCurrent: boolean) {
   const cerealOnly = years.filter((y) => y.length === 1 && y[0].prev).length;
   rules.push({ id: "R7", label: L("Bo'sh davr qisqaradi", "Shorter bare period"), status: doubles ? "pass" : cerealOnly ? "warn" : "pass", detail: cerealOnly && !doubles ? L("Bug'doydan keyin dala yozda bo'sh qoladi", "The field stays bare in summer after wheat") : undefined });
 
-  // ---- metrics (0–100)
+  // ---- metrics (0-100)
   const income = clamp((years.reduce((s, y) => s + y.reduce((a, x) => a + (CROPS[x.crop].market * yieldPct(x.crop, ece)) / 100, 0), 0) / years.length / 7) * 100);
   const legumes = all.filter((s) => CROPS[s.crop].nFixing && s.crop !== "alfalfa").length;
   const alfalfaYears = years.filter((y) => y.some((s) => s.crop === "alfalfa")).length;
@@ -234,7 +234,7 @@ function explain(e: Evaluated, cur: Evaluated, ctx: Ctx): Strategy["explanation"
   if (e.isCurrent) why.push(L("Bu sizning hozirgi rotatsiyangiz. Boshqa variantlar shu bilan solishtiriladi.", "This is your current rotation; the other options are compared against it."));
   else {
     if (f.doubles) why.push(L(`Bug'doy o'rimidan birinchi kuzgi sovuqqacha issiqlik yig'indisi ≈${fmt(climate.gddAfterWheat)} GDD. Bu takroriy ekin uchun yetarli, shuning uchun yozgi bo'sh davr ishlatiladi.`, `About ${fmt(climate.gddAfterWheat)} GDD accumulate between the wheat harvest and the first autumn frost, which is enough for a second crop, so the summer bare period gets used.`));
-    if (f.legumes || f.alfalfaYears) why.push(L("Dukkakli ekin (mosh, soya, no'xat yoki beda) tuproqqa azot to'playdi va paxta–bug'doy kasallik siklini uzadi.", "A legume (mung bean, soybean, chickpea or alfalfa) adds nitrogen and breaks the cotton–wheat disease cycle."));
+    if (f.legumes || f.alfalfaYears) why.push(L("Dukkakli ekin (mosh, soya, no'xat yoki beda) tuproqqa azot to'playdi va paxta-bug'doy kasallik siklini uzadi.", "A legume (mung bean, soybean, chickpea or alfalfa) adds nitrogen and breaks the cotton-wheat disease cycle."));
     if (e.t.tag === "salt") why.push(L(`Sho'rga chidamli ekinlar tanlangan: dalada sho'rlanish ${lvl(soil.salinityLevel, lang)}.`, `Salt-tolerant crops were chosen: field salinity is ${lvl(soil.salinityLevel, lang)}.`));
     if (dWater < -300) why.push(L(`Hozirgi rotatsiyadan yiliga ≈${fmt(-dWater)} m³/ga kam suv talab qiladi.`, `Needs about ${fmt(-dWater)} m³/ha less water per year than the current rotation.`));
     if (e.t.tag === "rainfed") why.push(L("Sug'orishsiz (lalmi) yer uchun qurg'oqchilikka chidamli ketma-ketlik.", "A drought-tolerant sequence for rainfed land."));
@@ -242,11 +242,11 @@ function explain(e: Evaluated, cur: Evaluated, ctx: Ctx): Strategy["explanation"
   }
 
   const evidence: Strategy["explanation"]["evidence"] = [
-    { text: L(`Sovuqsiz davr: ${climate.frostFreeDays} kun (median)`, `Frost-free period: ${climate.frostFreeDays} days (median)`), source: "NASA POWER 2005–2025" },
-    { text: L(`Yillik suv talabi: ${fmt(e.water.grossM3PerHa)} m³/ga (oraliq ${fmt(e.water.lowM3PerHa)}–${fmt(e.water.highM3PerHa)})`, `Annual water need: ${fmt(e.water.grossM3PerHa)} m³/ha (range ${fmt(e.water.lowM3PerHa)}–${fmt(e.water.highM3PerHa)})`), source: "FAO-56 · NASA POWER" },
+    { text: L(`Sovuqsiz davr: ${climate.frostFreeDays} kun (median)`, `Frost-free period: ${climate.frostFreeDays} days (median)`), source: "NASA POWER 2005-2025" },
+    { text: L(`Yillik suv talabi: ${fmt(e.water.grossM3PerHa)} m³/ga (oraliq ${fmt(e.water.lowM3PerHa)}-${fmt(e.water.highM3PerHa)})`, `Annual water need: ${fmt(e.water.grossM3PerHa)} m³/ha (range ${fmt(e.water.lowM3PerHa)}-${fmt(e.water.highM3PerHa)})`), source: "FAO-56 · NASA POWER" },
   ];
-  if (f.doubles) evidence.push({ text: L(`Bug'doydan keyingi issiqlik: ${fmt(climate.gddAfterWheat)} GDD`, `Heat after wheat: ${fmt(climate.gddAfterWheat)} GDD`), source: "NASA POWER 2005–2025" });
-  if (bareYears) evidence.push({ text: L(`Dala yozda bo'sh turgan yillar: ${bareYears} / ${yrsSeen}`, `Summers the field stood bare: ${bareYears} of ${yrsSeen}`), source: "Sentinel-2 NDVI 2017–2025" });
+  if (f.doubles) evidence.push({ text: L(`Bug'doydan keyingi issiqlik: ${fmt(climate.gddAfterWheat)} GDD`, `Heat after wheat: ${fmt(climate.gddAfterWheat)} GDD`), source: "NASA POWER 2005-2025" });
+  if (bareYears) evidence.push({ text: L(`Dala yozda bo'sh turgan yillar: ${bareYears} / ${yrsSeen}`, `Summers the field stood bare: ${bareYears} of ${yrsSeen}`), source: "Sentinel-2 NDVI 2017-2025" });
   evidence.push({ text: L(`Sho'rlanish darajasi: ${lvl(soil.salinityLevel, lang)}${soil.salinityTrendPct != null ? ` (trend ${soil.salinityTrendPct > 0 ? "+" : ""}${soil.salinityTrendPct}%)` : ""}`, `Salinity level: ${lvl(soil.salinityLevel, lang)}${soil.salinityTrendPct != null ? ` (trend ${soil.salinityTrendPct > 0 ? "+" : ""}${soil.salinityTrendPct}%)` : ""}`), source: soil.isEstimated ? "Sentinel-2 SI" : L("Fermer tahlili", "Farmer's lab test") });
   if (f.heatSens) evidence.push({ text: L(`40°C+ kunlar: o'rtacha ${round(f.heat, 0)} kun/yil (oxirgi 10 yil)`, `40°C+ days: ${round(f.heat, 0)} per year on average (last 10 years)`), source: "NASA POWER" });
 

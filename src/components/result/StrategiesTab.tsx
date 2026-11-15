@@ -2,6 +2,7 @@
 
 import { EconomicsCard } from "./Extras";
 import { Fold } from "./Sections";
+import { ChartColumn, Coins, Scale } from "lucide-react";
 
 import { clsx } from "clsx";
 import { AnimatePresence, m } from "motion/react";
@@ -46,7 +47,7 @@ export function StrategiesTab({ data }: { data: AnalyzeResponse }) {
           <AlertTriangle size={15} /> {t("st.nearest")}
         </div>
       )}
-      <p className="px-1 text-[13px] text-[var(--fg-3)]">👆 {t("f.pickHint")}</p>
+      <p className="px-1 text-[13px] text-[var(--fg-3)]">{t("f.pickHint")}</p>
       <div className="snap-x-cards no-scrollbar -mx-3 flex gap-2.5 overflow-x-auto px-3 pb-1 md:mx-0 md:grid md:grid-cols-4 md:overflow-visible md:px-0">
         {list.map((x) => (
           <m.div key={x.s.id} layout transition={{ type: "spring", bounce: 0.15, duration: 0.55 }} className="w-[78vw] max-w-[300px] shrink-0 md:w-auto md:max-w-none">
@@ -63,7 +64,7 @@ export function StrategiesTab({ data }: { data: AnalyzeResponse }) {
         )}
       </AnimatePresence>
 
-      <Fold icon="📊" title={t("f.compare")} hint={list.map((x) => `${x.s.id}: ${x.score}`).join(" · ")}>
+      <Fold icon={<ChartColumn size={18} />} title={t("f.compare")} hint={list.map((x) => `${x.s.id}: ${x.score}`).join(" · ")}>
       <Card>
         <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
           <Segmented size="sm" value={view} onChange={setView} options={[{ value: "table", label: t("st.table") }, { value: "radar", label: t("st.radar") }]} />
@@ -71,10 +72,10 @@ export function StrategiesTab({ data }: { data: AnalyzeResponse }) {
         {view === "table" ? <ComparisonTable list={list} /> : <Radar axes={METRIC_KEYS.map((k) => t(`mt.${k}` as Key))} series={list.map((x) => ({ id: x.s.id, label: `${x.s.id} · ${x.s.name}`, color: SERIES[x.i], values: METRIC_KEYS.map((k) => x.s.metrics[k] ?? 0) }))} />}
       </Card>
       </Fold>
-      <Fold icon="⚖️" title={t("f.weights")} hint={t("f.weightsHint")}>
+      <Fold icon={<Scale size={18} />} title={t("f.weights")} hint={t("f.weightsHint")}>
         <WeightSliders />
       </Fold>
-      <Fold icon="💰" title={t("f.profit")}>
+      <Fold icon={<Coins size={18} />} title={t("f.profit")}>
         <EconomicsCard data={data} strategies={list.map((x) => x.s)} />
       </Fold>
     </div>
@@ -119,7 +120,7 @@ function StrategyCard({ st, score, gross, color, isBest, open, onToggle }: { st:
         )}
       </div>
       <div className="mt-2 min-h-[44px] text-[15px] leading-snug font-semibold">{st.name}</div>
-      {st.isNearest && !st.isCurrent && <div className="mt-1 text-[11.5px] font-medium text-[var(--warn-fg)]">⚠️ {t("st.nearest").split(".")[0]}</div>}
+      {st.isNearest && !st.isCurrent && <div className="mt-1 text-[11.5px] font-medium text-[var(--warn-fg)]">{t("st.nearest").split(".")[0]}</div>}
       <div className="mt-3 flex items-baseline gap-2">
         <AnimatedNumber value={score} className="text-[30px] leading-none font-semibold tracking-[-0.03em]" />
         <span className="text-[12px] text-[var(--fg-3)]">/ 100</span>
@@ -198,7 +199,7 @@ function ComparisonTable({ list }: { list: { s: Strategy; score: number; i: numb
               </td>
               {list.map((x) => (
                 <td key={x.s.id} className="border-t border-[var(--hairline)] px-2 py-2 text-center tnum">
-                  {x.s.robustness ? `${x.s.robustness.score} (${x.s.robustness.worstScore})` : "–"}
+                  {x.s.robustness ? `${x.s.robustness.score} (${x.s.robustness.worstScore})` : "-"}
                 </td>
               ))}
             </tr>
@@ -247,7 +248,7 @@ function RotationTimeline({ st }: { st: Strategy }) {
                   const left = ((a - startOf(y)) / (startOf(y + 1) - startOf(y))) * 100;
                   const width = ((b - a) / (startOf(y + 1) - startOf(y))) * 100;
                   return (
-                    <m.div key={s.crop + s.start} initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={spring} className="absolute inset-y-1 flex origin-left items-center gap-1 overflow-hidden rounded-lg px-1.5 text-[11.5px] font-semibold whitespace-nowrap text-[#1B2A1E]" style={{ left: `${left}%`, width: `calc(${width}% - 2px)`, background: cropColor(s.crop) }} title={`${cropName(s.crop, lang)}: ${dayMonth(s.start, lang)} – ${dayMonth(s.end, lang)}`}>
+                    <m.div key={s.crop + s.start} initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={spring} className="absolute inset-y-1 flex origin-left items-center gap-1 overflow-hidden rounded-lg px-1.5 text-[11.5px] font-semibold whitespace-nowrap text-[#1B2A1E]" style={{ left: `${left}%`, width: `calc(${width}% - 2px)`, background: cropColor(s.crop) }} title={`${cropName(s.crop, lang)}: ${dayMonth(s.start, lang)} - ${dayMonth(s.end, lang)}`}>
                       <span aria-hidden>{cropIcon(s.crop)}</span>
                       <span className="truncate">{cropName(s.crop, lang)}</span>
                     </m.div>
@@ -260,7 +261,7 @@ function RotationTimeline({ st }: { st: Strategy }) {
       </div>
       {st.sowWindow && st.sowWindow.length > 0 && (
         <p className="mt-2 text-[13px] text-[var(--fg-2)]">
-          🌱 {t("st.sow")}: {st.sowWindow.map((w) => `${cropName(w.crop, lang)} ${dayMonth(w.from, lang)} – ${dayMonth(w.to, lang)}`).join(" · ")}
+          🌱 {t("st.sow")}: {st.sowWindow.map((w) => `${cropName(w.crop, lang)} ${dayMonth(w.from, lang)} - ${dayMonth(w.to, lang)}`).join(" · ")}
         </p>
       )}
     </div>
@@ -309,13 +310,13 @@ function StrategyDetail({ data, st, color }: { data: AnalyzeResponse; st: Strate
           </ul>
         </Block>
         <Block icon={<Sprout size={15} />} title={t("st.benefits")}>
-          <ul className="grid gap-1">{e.benefits.map((b) => <li key={b}>✅ {b}</li>)}</ul>
+          <ul className="grid gap-1">{e.benefits.map((b) => <li key={b}>{b}</li>)}</ul>
         </Block>
         <Block icon={<FileQuestion size={15} />} title={t("st.gaps")}>
           <ul className="grid gap-1">{e.gaps.map((b) => <li key={b}>❓ {b}</li>)}</ul>
         </Block>
         <Block icon={<ShieldAlert size={15} />} title={t("st.risks")} tone="warn">
-          <ul className="grid gap-1">{e.risks.map((b) => <li key={b}>⚠️ {b}</li>)}</ul>
+          <ul className="grid gap-1">{e.risks.map((b) => <li key={b}>{b}</li>)}</ul>
         </Block>
         <Block icon={<span aria-hidden>💧</span>} title={`${t("st.monthlyWater")} (${t("mm")})`}>
           <MiniBars values={wm.map((m) => m.irrigationMm)} color="var(--water)" labels={wm.map((m) => monthShort(m.month, lang))} />

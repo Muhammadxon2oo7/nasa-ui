@@ -37,7 +37,7 @@ export function backtestOne(name: string, fieldId: string, inp: Inputs, evalYear
   const strategies = pred.res.strategies;
   const weights = initialWeights(inp.req.priorities);
 
-  // the real weather of the evaluation year (with the year before, so Oct–Dec sowings are covered)
+  // the real weather of the evaluation year (with the year before, so Oct-Dec sowings are covered)
   const real = cutPower(inp.power, `${evalYear + 1}-01-01`, `${evalYear - 1}-01-01`);
   const wR = prepWx(real);
   let et0R = et0Fao56(wR, inp.lat);

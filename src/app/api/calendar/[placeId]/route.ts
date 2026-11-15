@@ -9,7 +9,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ placeId: string
   if (new URL(req.url).searchParams.get("format") === "ics") {
     const c = d.calendar;
     const ev = [...c.thisWeek, ...c.next90Days.filter((e) => !c.thisWeek.some((w) => w.id === e.id))];
-    return new Response(toIcs(ev, `Field Shift · ${d.field.region ?? placeId}`), { headers: { "Content-Type": "text/calendar; charset=utf-8", "Content-Disposition": `attachment; filename="fieldshift-${placeId}.ics"` } });
+    return new Response(toIcs(ev, `TerraVision · ${d.field.region ?? placeId}`), { headers: { "Content-Type": "text/calendar; charset=utf-8", "Content-Disposition": `attachment; filename="fieldshift-${placeId}.ics"` } });
   }
   return Response.json(d.calendar);
 }

@@ -10,6 +10,8 @@ import { CROPS } from "@/data/crops";
 type Any = any;
 
 const LETTERS = ["A", "B", "C", "D", "E", "F"];
+/** unknown crop ids from a newer backend never crash the UI */
+const crop = (c: string): CropId => ((CROPS as Record<string, unknown>)[c] ? (c as CropId) : "other");
 const ECE: Record<Level, number> = { low: 2.5, medium: 5, high: 8 };
 const tol = (thr: number) => (thr >= 7 ? "tolerant" : thr >= 4 ? "moderate" : "sensitive");
 
@@ -23,6 +25,27 @@ export function toBackendRequest(req: AnalyzeRequest): Any {
     salinityLevel: req.salinityLevel ?? "medium",
     profile: req.profile ?? "farmer",
     lang: req.lang,
+  };
+}
+
+/** Backend's pre-cached demo fields (FRONTEND_UCHUN_API.md §0): fast (cache) and real. */
+export const LIVE_DEMOS: Record<string, { lon: number; lat: number; uz: string; en: string }> = {
+  paxta: { lon: 68.7376, lat: 40.5609, uz: "Paxta dalasi", en: "Cotton field" },
+  "paxta-bugdoy": { lon: 69.0353, lat: 40.4002, uz: "Paxta-bug'doy dalasi", en: "Cotton-wheat field" },
+  beda: { lon: 68.8453, lat: 40.4775, uz: "Beda dalasi", en: "Alfalfa field" },
+};
+export function liveDemoRequest(name: string, lang: "uz" | "en"): AnalyzeRequest | null {
+  const d = LIVE_DEMOS[name];
+  if (!d) return null;
+  const dx = 0.0012, dy = 0.0009;
+  return {
+    polygon: { type: "Polygon", coordinates: [[[d.lon - dx, d.lat - dy], [d.lon + dx, d.lat - dy], [d.lon + dx, d.lat + dy], [d.lon - dx, d.lat + dy], [d.lon - dx, d.lat - dy]]] },
+    rotation: [2023, 2024, 2025].map((year) => ({ year, crop: null })),
+    priorities: ["water", "salinity"],
+    water: { availability: "medium", method: "furrow" },
+    salinityLevel: "medium",
+    profile: "farmer",
+    lang,
   };
 }
 
@@ -42,7 +65,7 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
       isCurrent: !!s.isCurrent,
       isNearest: s.isNearest || undefined,
       // backend: year 1..3 + "MM-DD" → real plan years (start > end means the season began the year before)
-      seasons: (s.seasons ?? []).map((x: Any) => ({ year: planStart + (x.year - 1), crop: x.crop as CropId, start: x.start, end: x.end })),
+      seasons: (s.seasons ?? []).map((x: Any) => ({ year: planStart + (x.year - 1), crop: crop(x.crop), start: x.start, end: x.end })),
       metrics: s.metrics,
       unknownReasons: s.unknownReasons,
       score: s.score ?? 0,
@@ -80,7 +103,7 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
   const history = h
     ? {
         ndvi: (h.ndvi ?? []).map((x: Any) => ({ date: x.date, value: x.value })),
-        seasons: (h.seasons ?? []).map((s: Any) => ({ year: s.year, crops: (s.crops ?? []).map((x: Any) => ({ crop: x.crop, start: x.start, end: x.end, confidence: x.confidence ?? 0.5, source: x.source === "user" ? "user" : "rules" })) })),
+        seasons: (h.seasons ?? []).map((s: Any) => ({ year: s.year, crops: (s.crops ?? []).map((x: Any) => ({ crop: crop(x.crop), start: x.start, end: x.end, confidence: x.confidence ?? 0.5, source: x.source === "user" ? "user" : "rules" })) })),
         bareWindows: (h.bareSummers ?? []).filter((x: Any) => x.days > 0).map((x: Any) => ({ start: `${x.year}-06-15`, end: `${x.year}-10-15`, days: x.days })),
         model: h.model ? { name: h.model.name, accuracy: h.model.accuracy ?? undefined } : undefined,
       }
@@ -109,17 +132,25 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
       }
     : null;
 
-  const reasons: string[] = (b.degraded ?? []).map((d: Any) => d.reason ?? d.part);
+  // short, user-facing wording for known backend gaps (the backend's own text is for developers)
+  const FRIENDLY: Record<string, { uz: string; en: string }> = {
+    salinity: { uz: "Sho'rlanish darajasi so'rovnomadagi qiymat bo'yicha olindi", en: "Salinity level taken from your answer" },
+    satellite: { uz: "Sun'iy yo'ldosh qatlami vaqtincha ulanmagan", en: "Satellite layer temporarily unavailable" },
+    forecast: { uz: "7 kunlik prognoz vaqtincha olinmadi", en: "7-day forecast temporarily unavailable" },
+    seasonal: { uz: "Mavsumiy prognoz vaqtincha olinmadi", en: "Seasonal forecast temporarily unavailable" },
+  };
+  const lang = req?.lang === "en" ? "en" : "uz";
+  const reasons: string[] = (b.degraded ?? []).map((d: Any) => FRIENDLY[d.part]?.[lang] ?? d.reason ?? d.part);
   const field = b.field ?? {};
   return {
     fieldId: b.fieldId,
     backend: "fastapi",
     field: { areaHa: field.areaHa, centroid: field.centroid, periodStart: field.periodStart, periodEnd: field.periodEnd, polygon: field.polygon ?? req?.polygon, elevationM: field.elevationM ?? null, slopeDeg: null },
-    summary: { text: b.summary?.text ?? "", salinity: level, waterNeedM3PerHa: b.summary?.waterNeedM3PerHa ?? 0, mainRisk: b.summary?.mainRisk ?? "—", bestStrategyId: L(b.summary?.bestStrategyId ?? strategies[1]?.id ?? "A") },
+    summary: { text: b.summary?.text ?? "", salinity: level, waterNeedM3PerHa: b.summary?.waterNeedM3PerHa ?? 0, mainRisk: b.summary?.mainRisk ?? "-", bestStrategyId: L(b.summary?.bestStrategyId ?? strategies[1]?.id ?? "A") },
     history,
     climate: {
-      lastSpringFrost: { median: c.lastSpringFrost?.median ?? "—", latest: c.lastSpringFrost?.latest ?? "—", latestYear: c.lastSpringFrost?.latest_year ?? c.lastSpringFrost?.latestYear ?? 0 },
-      firstAutumnFrost: { median: c.firstAutumnFrost?.median ?? "—", earliest: c.firstAutumnFrost?.earliest ?? "—", earliestYear: c.firstAutumnFrost?.earliest_year ?? c.firstAutumnFrost?.earliestYear ?? 0 },
+      lastSpringFrost: { median: c.lastSpringFrost?.median ?? "-", latest: c.lastSpringFrost?.latest ?? "-", latestYear: c.lastSpringFrost?.latest_year ?? c.lastSpringFrost?.latestYear ?? 0 },
+      firstAutumnFrost: { median: c.firstAutumnFrost?.median ?? "-", earliest: c.firstAutumnFrost?.earliest ?? "-", earliestYear: c.firstAutumnFrost?.earliest_year ?? c.firstAutumnFrost?.earliestYear ?? 0 },
       frostFreeDays: c.frostFreeDays ?? 0,
       heatDays40: c.heatDays40 ?? [],
       monthly: (c.monthly ?? []).map((m: Any) => ({ ...m, tmaxP10: m.tmaxP10 ?? m.tmaxAvg, tmaxP90: m.tmaxP90 ?? m.tmaxAvg })),
@@ -147,7 +178,7 @@ export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
     sources: (b.sources ?? []).map((s: Any) => ({ id: s.id, name: s.name, provider: s.provider ?? "", url: s.url ?? "" })),
     degraded: reasons.length ? reasons : undefined,
     degradedReasons: reasons,
-    extrasUnknown: { norms: "—", ...(h ? {} : { history: reasons.join("; ") }) },
+    extrasUnknown: { norms: "-", ...(h ? {} : { history: reasons.join("; ") }) },
     generatedAt: b.generatedAt,
     profile: req?.profile ?? "farmer",
     modulesComputed: ["crop"],
@@ -164,5 +195,13 @@ export async function analyzeFastApi(req: AnalyzeRequest, signal?: AbortSignal):
     err.status = res.status;
     throw err;
   }
-  return fromBackend(j, req);
+  return fromBackend(dashes(j), req);
+}
+
+/** House style: plain hyphen instead of en/em dashes in any backend text. */
+function dashes<T>(v: T): T {
+  if (typeof v === "string") return v.replace(/ — /g, " - ").replace(/[—–]/g, "-") as T;
+  if (Array.isArray(v)) return v.map(dashes) as T;
+  if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, dashes(x)])) as T;
+  return v;
 }

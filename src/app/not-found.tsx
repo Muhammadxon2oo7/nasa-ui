@@ -8,7 +8,7 @@ export default function NotFound() {
       </div>
       <h1 className="text-[24px] font-semibold">404 · Sahifa topilmadi</h1>
       <Link href="/" className="rounded-full bg-[var(--accent-fill)] px-5 py-2.5 font-semibold text-white">
-        Field Shift UZ
+        TerraVision
       </Link>
     </div>
   );

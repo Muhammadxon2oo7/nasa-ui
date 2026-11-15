@@ -18,7 +18,7 @@ const MONTHS_EN = ["January", "February", "March", "April", "May", "June", "July
 
 /* ------------------------------------------------------------------ N2: soil temperature → sowing */
 
-/** Minimum 0–7 cm soil temperature for sowing (°C). 🔎 agronomy handbooks, PRO_REJA T12 — starting values. */
+/** Minimum 0-7 cm soil temperature for sowing (°C). 🔎 agronomy handbooks, PRO_REJA T12 - starting values. */
 export const SOIL_TEMP_MIN: Partial<Record<CropId, number>> = { cotton: 12, maize: 10, sorghum: 15, sunflower: 8, mung_bean: 15, rice: 13, soybean: 10, sugar_beet: 6, safflower: 5, chickpea: 7 };
 
 function sowingBySoilTemp(st: SoilTemp, crop: CropId, thr: number, p90LastFrostDoy: number, fc: Forecast16 | null, now: Date): SoilTempSowing | null {
@@ -43,7 +43,7 @@ function sowingBySoilTemp(st: SoilTemp, crop: CropId, thr: number, p90LastFrostD
   const typical = Math.round(median(firsts));
   const from = Math.max(typical, p90LastFrostDoy + 3);
   let forecastReachInDays: number | null = null;
-  // only meaningful in the sowing season (Feb–May): in autumn the soil is still warm from summer
+  // only meaningful in the sowing season (Feb-May): in autumn the soil is still warm from summer
   const m = now.getUTCMonth() + 1;
   if (fc?.length && m >= 2 && m <= 5) {
     const t = fc.map((d) => d.soilT);
@@ -53,7 +53,7 @@ function sowingBySoilTemp(st: SoilTemp, crop: CropId, thr: number, p90LastFrostD
 }
 const md = (doy: number) => new Date(Date.UTC(2021, 0, doy)).toISOString().slice(5, 10);
 
-/* ------------------------------------------------------------------ N8: frozen soil by dekad (Nov–Mar) */
+/* ------------------------------------------------------------------ N8: frozen soil by dekad (Nov-Mar) */
 
 function frozenByDekad(st: SoilTemp) {
   const acc = new Map<string, { f: number; n: number }>();
@@ -177,7 +177,7 @@ export function calendarOf(o: {
   // soil sample in winter when salinity is only a satellite estimate
   if (o.eciSource === "satellite" && o.salinity !== "low") {
     const t = Date.UTC(now.getUTCMonth() >= 1 && now.getUTCMonth() < 10 ? now.getUTCFullYear() : now.getUTCFullYear() + (now.getUTCMonth() >= 10 ? 1 : 0), 0, 15);
-    ev.push({ id: "sample", date: iso(t), type: "soil_sample", title: L("🔍 Tuproq namunasini oling (0–30 va 30–60 sm)", "🔍 Take a soil sample (0–30 and 30–60 cm)"), detail: L("Laboratoriyada ECe o'lchansa, tavsiyalar aniqroq bo'ladi", "A lab ECe makes the advice more precise"), source: "FAO-29" });
+    ev.push({ id: "sample", date: iso(t), type: "soil_sample", title: L("🔍 Tuproq namunasini oling (0-30 va 30-60 sm)", "🔍 Take a soil sample (0-30 and 30-60 cm)"), detail: L("Laboratoriyada ECe o'lchansa, tavsiyalar aniqroq bo'ladi", "A lab ECe makes the advice more precise"), source: "FAO-29" });
   }
 
   // --- plan events for the next 12 months (sowing, irrigation, harvest)
@@ -200,7 +200,7 @@ export function calendarOf(o: {
     ev.push({ id: `irr-${m.month}`, date: iso(t), endDate: iso(t + 25 * DAY), type: "irrigate", m3PerHa: m.m3PerHa, title: L(`💧 ${MON[m.month - 1]}: ${m.times} marta sug'orish, jami ~${m.m3PerHa.toLocaleString("ru-RU")} m³/ga`, `💧 ${MON[m.month - 1]}: irrigate ${m.times}×, ~${m.m3PerHa.toLocaleString("en-US")} m³/ha in total`), source: "FAO-56" });
   }
   if (o.livestock) {
-    ev.push({ id: "ls-heat", date: iso(nextAt("07-01")), endDate: iso(nextAt("08-25")), type: "livestock", title: L("🐄 Iyul–avgust: kunduzi chorvani soyada saqlang, suvni ko'paytiring", "🐄 July–August: keep animals in shade at midday, more water"), source: "THI · NASA POWER" });
+    ev.push({ id: "ls-heat", date: iso(nextAt("07-01")), endDate: iso(nextAt("08-25")), type: "livestock", title: L("🐄 Iyul-avgust: kunduzi chorvani soyada saqlang, suvni ko'paytiring", "🐄 July-August: keep animals in shade at midday, more water"), source: "THI · NASA POWER" });
     ev.push({ id: "ls-winter", date: iso(nextAt("11-20")), type: "livestock", title: L("🐄 Qishki yem zaxirasini tekshiring", "🐄 Check winter feed stock"), source: L("Yaylov holati · MODIS", "Pasture condition · MODIS") });
   }
 
@@ -232,7 +232,7 @@ export function calendarOf(o: {
 
 /* ------------------------------------------------------------------ A1: actual consumption vs need */
 
-/** Kcb = a·NDVI + b (🔎 a 1.2–1.4, b −0.1…0.1; QOSHIMCHA_FUNKSIYALAR A1), simple soil evaporation term. */
+/** Kcb = a·NDVI + b (🔎 a 1.2-1.4, b −0.1…0.1; QOSHIMCHA_FUNKSIYALAR A1), simple soil evaporation term. */
 const KCB_A = 1.3, KCB_B = -0.1;
 const kcAct = (ndvi: number, a = KCB_A) => {
   const kcb = Math.min(1.2, Math.max(0.15, a * ndvi + KCB_B));
@@ -326,7 +326,7 @@ export function waterSupplyOf(region: string | undefined, lon: number, L: L): { 
   const full = b.history.filter((h) => h.n >= 12);
   if (full.length < 8) return { data: null, reason: L("Qor qoplami tarixi yetarli emas", "Not enough snow history") };
   const last = full[full.length - 1];
-  // spring (Mar–Apr) snow: the winter index saturates in the high mountains, the melt-season one varies more
+  // spring (Mar-Apr) snow: the winter index saturates in the high mountains, the melt-season one varies more
   const spr = full.filter((h) => h.marchSnow != null).map((h) => h.marchSnow as number);
   const useSpring = last.marchSnow != null && spr.length >= 8;
   const idx = useSpring ? spr : full.map((h) => h.snowIndex);
@@ -346,7 +346,7 @@ export function waterSupplyOf(region: string | undefined, lon: number, L: L): { 
       basin,
       basinName: b.name,
       flowName: b.flowName,
-      lastSeason: { season: `${last.year - 1}–${String(last.year).slice(2)}`, snowAnomalyPct: anom, percentile: p, level, summerFlowLevel: fp == null ? undefined : lvlOf(fp), summerFlowPct: last.summerFlow != null ? round((last.summerFlow / fMed - 1) * 100, 0) : undefined },
+      lastSeason: { season: `${last.year - 1}-${String(last.year).slice(2)}`, snowAnomalyPct: anom, percentile: p, level, summerFlowLevel: fp == null ? undefined : lvlOf(fp), summerFlowPct: last.summerFlow != null ? round((last.summerFlow / fMed - 1) * 100, 0) : undefined },
       currentSeason: { season: cur.season, from: "11-01", lastDate: cur.lastDate, snowAnomalyPct: anomCur, level: cur.composites < 6 || anomCur == null ? "early" : anomCur <= -15 ? "low" : anomCur >= 15 ? "high" : "medium", confidence: cur.composites < 6 ? "low" : cur.composites < 12 ? "medium" : "high" },
       history: b.history.map(({ year, snowIndex, marchSnow, summerFlow }) => ({ year, snowIndex, marchSnow, summerFlow })),
       correlation: b.correlation,
@@ -377,7 +377,7 @@ export function gaezAt(lat: number, lon: number, rainfedOnly: boolean, L: L): { 
     return { crop, regime, suitability: at(`${crop}_${regime}_su`), attainableKgPerHa: at(`${crop}_${regime}_yl`) };
   }).filter((c) => c.suitability != null);
   if (!crops.length) return { data: null, reason: L("Bu joy GAEZ katagida yo'q", "No GAEZ cell here") };
-  return { data: { regime: rainfedOnly ? "rainfed" : "irrigated", crops, resolutionKm: 9, note: L("Potensial (erishiladigan) hosil, haqiqiy hosil emas. 1981–2010 iqlimi, yuqori agrotexnika", "Attainable (potential) yield, not actual yield. 1981–2010 climate, high inputs") } };
+  return { data: { regime: rainfedOnly ? "rainfed" : "irrigated", crops, resolutionKm: 9, note: L("Potensial (erishiladigan) hosil, haqiqiy hosil emas. 1981-2010 iqlimi, yuqori agrotexnika", "Attainable (potential) yield, not actual yield. 1981-2010 climate, high inputs") } };
 }
 
 export { quantile };

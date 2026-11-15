@@ -93,7 +93,7 @@ export async function compare(req: CompareRequest): Promise<CompareResponse> {
       waterNeed = null;
       pastureTxt = anomaly == null ? "?" : `${anomaly > 0 ? "+" : ""}${anomaly}%`;
     }
-    const last3 = res.history.seasons.slice(-4, -1).map((s) => s.crops.map((c) => cropIcon(c.crop)).join("")).join(" ") || "—";
+    const last3 = res.history.seasons.slice(-4, -1).map((s) => s.crops.map((c) => cropIcon(c.crop)).join("")).join(" ") || "-";
     const risks: string[] = [];
     if (res.soil.salinityLevel === "high") risks.push(L("kuchli sho'r", "high salinity"));
     else if ((res.soil.salinityTrendPct ?? 0) > 10 && res.soil.salinityLevel !== "low") risks.push(L("sho'r ortmoqda", "salinity rising"));
@@ -137,17 +137,17 @@ export async function compare(req: CompareRequest): Promise<CompareResponse> {
     mainRisk: r.mainRisk,
     rows: {
       suitability: { value: String(r.suitability), better: i === bestIdx },
-      region: { value: r.raw.region || "—", better: false },
+      region: { value: r.raw.region || "-", better: false },
       salinity: { value: r.raw.saltUnknown ? "❓" : `${lvlTxt(r.raw.salt)}${(r.raw.trend ?? 0) > 5 ? " ↑" : ""}`, better: !r.raw.saltUnknown && saltRank[r.raw.salt] === bestSalt },
       ...(goal === "pasture"
         ? { pasture: { value: r.raw.pastureTxt ?? "?", better: false } }
-        : { water: { value: r.raw.water == null ? "—" : `${r.raw.water.toLocaleString("ru-RU")} m³/${L("ga", "ha")}`, better: r.raw.water === bestWater } }),
+        : { water: { value: r.raw.water == null ? "-" : `${r.raw.water.toLocaleString("ru-RU")} m³/${L("ga", "ha")}`, better: r.raw.water === bestWater } }),
       frostFree: { value: `${r.raw.ffd} ${L("kun", "days")}`, better: r.raw.ffd === bestFfd },
       slope: { value: r.raw.slope == null ? "❓" : `${r.raw.slope}°`, better: r.raw.slope === bestSlope },
       heat: { value: `${r.raw.heat} ${L("kun/yil", "days/yr")}`, better: r.raw.heat === bestHeat },
       ...(goal === "pasture" ? {} : { gaez: { value: r.raw.gaez == null ? "❓" : `${r.raw.gaez}/100`, better: r.raw.gaez != null && r.raw.gaez === bestGaez } }),
       history: { value: r.raw.last3, better: false },
-      risk: { value: r.mainRisk ?? "—", better: false },
+      risk: { value: r.mainRisk ?? "-", better: false },
     },
   }));
 
@@ -158,7 +158,7 @@ export async function compare(req: CompareRequest): Promise<CompareResponse> {
     why: L(`"${b.name}" ${goalName} uchun eng yuqori moslik baliga ega (${b.suitability}${second ? `, keyingisi ${second.name}: ${second.suitability}` : ""}).`, `"${b.name}" has the highest suitability for ${goalName} (${b.suitability}${second ? `, next ${second.name}: ${second.suitability}` : ""}).`),
     evidence: [
       { text: L(`Sho'rlanish: ${b.raw.saltUnknown ? "noma'lum" : lvlTxt(b.raw.salt)}`, `Salinity: ${b.raw.saltUnknown ? "unknown" : lvlTxt(b.raw.salt)}`), source: "Sentinel-2 SI" },
-      { text: L(`Sovuqsiz davr: ${b.raw.ffd} kun`, `Frost-free period: ${b.raw.ffd} days`), source: "NASA POWER 2005–2025" },
+      { text: L(`Sovuqsiz davr: ${b.raw.ffd} kun`, `Frost-free period: ${b.raw.ffd} days`), source: "NASA POWER 2005-2025" },
       ...(b.raw.water != null ? [{ text: L(`Suv talabi: ${b.raw.water.toLocaleString("ru-RU")} m³/ga`, `Water need: ${b.raw.water.toLocaleString("en-US")} m³/ha`), source: "FAO-56" }] : []),
       ...(b.raw.slope != null ? [{ text: L(`Qiyalik: ${b.raw.slope}°`, `Slope: ${b.raw.slope}°`), source: "SRTM" }] : []),
     ],

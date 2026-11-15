@@ -4,7 +4,7 @@ import type { AnalyzeResponse } from "@/types/api";
 export function toCsv(d: AnalyzeResponse): string {
   const rows: string[][] = [];
   const add = (...r: (string | number | null | undefined)[]) => rows.push(r.map((v) => (v == null ? "" : String(v))));
-  add("# Field Shift UZ export", d.fieldId, d.generatedAt);
+  add("# TerraVision export", d.fieldId, d.generatedAt);
   add("# field", "areaHa", d.field.areaHa, "lat", d.field.centroid[0], "lon", d.field.centroid[1], "region", d.field.region ?? "", "district", d.field.district ?? "");
   add();
   add("section", "month", "ndvi_sentinel2");

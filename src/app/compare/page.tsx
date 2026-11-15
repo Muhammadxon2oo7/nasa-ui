@@ -217,7 +217,7 @@ export default function ComparePage() {
               <p className="text-[15px] leading-relaxed text-[var(--fg-2)]">
                 <b className="text-[var(--fg)]">{t("cmp.why")}</b> {res.explanation.why}
               </p>
-              {res.explanation.risks?.length ? <p className="text-[14px] text-[var(--fg-3)]">⚠️ {res.explanation.risks.join(" · ")}</p> : null}
+              {res.explanation.risks?.length ? <p className="text-[14px] text-[var(--fg-3)]">{res.explanation.risks.join(" · ")}</p> : null}
             </Card>
 
             {/* desktop table */}
@@ -251,7 +251,7 @@ export default function ComparePage() {
                                 <ScoreBar value={p.suitability} className="w-24" color={c?.better ? "var(--accent-fill)" : "var(--fg-3)"} />
                               </div>
                             ) : (
-                              <span className={c?.better ? "rounded-lg bg-[color-mix(in_oklab,var(--level-low)_14%,transparent)] px-1.5 py-0.5 font-semibold text-[var(--fg)]" : "text-[var(--fg-2)]"}>{c?.value ?? "—"}</span>
+                              <span className={c?.better ? "rounded-lg bg-[color-mix(in_oklab,var(--level-low)_14%,transparent)] px-1.5 py-0.5 font-semibold text-[var(--fg)]" : "text-[var(--fg-2)]"}>{c?.value ?? "-"}</span>
                             )}
                           </td>
                         );
@@ -292,7 +292,7 @@ export default function ComparePage() {
                         <div key={r} className="contents">
                           <dt className="text-[var(--fg-3)]">{t(`row.${r}` as Key)}</dt>
                           <dd className={p.rows[r]?.better ? "font-semibold" : "text-[var(--fg-2)]"}>
-                            {p.rows[r]?.value ?? "—"} {p.rows[r]?.better && "✓"}
+                            {p.rows[r]?.value ?? "-"} {p.rows[r]?.better && "✓"}
                           </dd>
                         </div>
                       ))}

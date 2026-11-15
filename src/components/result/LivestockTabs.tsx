@@ -18,7 +18,7 @@ const FieldMap = dynamic(() => import("../map/FieldMap"), { ssr: false, loading:
 const LVL_COLOR = { low: "var(--level-high)", medium: "var(--level-medium)", high: "var(--level-low)" } as const; // low pasture = bad = red
 
 export function MaybeNum({ v, unit, digits = 0 }: { v: MaybeNumber | undefined; unit?: string; digits?: number }) {
-  if (v == null) return <span>–</span>;
+  if (v == null) return <span>-</span>;
   if (isUnknown(v)) return <UnknownValue reason={v.reason} />;
   return (
     <span className="tnum">
@@ -61,7 +61,7 @@ export function PastureTab({ data }: { data: AnalyzeResponse }) {
               {isUnknown(a) || isUnknown(pc) ? <UnknownValue reason={isUnknown(a) ? a.reason : (pc as { reason: string }).reason} /> : t("ls.anomaly", { a: `${(a as number) > 0 ? "+" : ""}${a}`, p: pc as number })}
             </div>
           </div>
-          <SourceBadge source={`MODIS NDVI · 2005–${p.year - 1}`} />
+          <SourceBadge source={`MODIS NDVI · 2005-${p.year - 1}`} />
         </div>
         <p className="mt-2 text-[12px] text-[var(--fg-3)]">{t("ls.statsArea", { a: p.areaHa })}</p>
       </Card>
@@ -75,7 +75,7 @@ export function PastureTab({ data }: { data: AnalyzeResponse }) {
             yMax={0.8}
             digits={2}
             layers={[
-              { type: "band", id: "n", label: "P10–P90", lo: p.ndviNorm.map((x) => x.p10), hi: p.ndviNorm.map((x) => x.p90), color: "var(--accent-fill)", opacity: 0.16 },
+              { type: "band", id: "n", label: "P10-P90", lo: p.ndviNorm.map((x) => x.p10), hi: p.ndviNorm.map((x) => x.p90), color: "var(--accent-fill)", opacity: 0.16 },
               { type: "line", id: "m", label: lang === "uz" ? "Median" : "Median", values: p.ndviNorm.map((x) => x.p50), color: "var(--fg-3)", dash: true },
               { type: "line", id: "y", label: String(p.year), values: p.ndviThisYear.map((x) => x.value), color: "var(--accent-fill)", dots: true, width: 2.5 },
             ]}
@@ -86,7 +86,7 @@ export function PastureTab({ data }: { data: AnalyzeResponse }) {
           <XYChart ariaLabel="peak" labels={xs.map(String)} digits={2} yMin={0} legend={false} layers={[{ type: "bars", id: "pk", label: "NDVI", values: ys, color: "var(--s3)" }, { type: "line", id: "tr", label: "trend", values: xs.map((x) => my + b * (x - mx)), color: "var(--fg-2)", dash: true }]} />
         </Card>
       </div>
-      <p className="rounded-2xl bg-[var(--accent-soft)] px-4 py-3 text-[14px]">💡 {p.droughtYears.length ? t("ls.drought", { y: p.droughtYears.slice(-3).join(", ") }) : t("ls.noDrought")}</p>
+      <p className="rounded-2xl bg-[var(--accent-soft)] px-4 py-3 text-[14px]">{p.droughtYears.length ? t("ls.drought", { y: p.droughtYears.slice(-3).join(", ") }) : t("ls.noDrought")}</p>
     </div>
   );
 }
@@ -109,19 +109,19 @@ export function CapacityTab({ data, onCrop }: { data: AnalyzeResponse; onCrop: (
           <div className="rounded-2xl bg-[var(--surface-2)] p-3">
             <div className="text-[12px] text-[var(--fg-3)]">{t("ls.cap")}</div>
             <div className="text-[24px] font-semibold tracking-[-0.02em]">
-              {lo != null && hi != null ? <span className="tnum">{num(lo, 2)} – {num(hi, 2)}</span> : <MaybeNum v={c.lowAuPerHa} />}
+              {lo != null && hi != null ? <span className="tnum">{num(lo, 2)} - {num(hi, 2)}</span> : <MaybeNum v={c.lowAuPerHa} />}
             </div>
             <div className="text-[12px] text-[var(--fg-3)]">{t("ls.capUnit")}</div>
           </div>
           <div className="rounded-2xl bg-[var(--surface-2)] p-3">
             <div className="text-[12px] text-[var(--fg-3)]">{t("ls.yourPasture", { a: num(area, 1) })}</div>
-            <div className="text-[24px] font-semibold tracking-[-0.02em] tnum">{lo != null && hi != null ? `~${Math.round(lo * area)} – ${Math.round(hi * area)}` : "❓"}</div>
+            <div className="text-[24px] font-semibold tracking-[-0.02em] tnum">{lo != null && hi != null ? `~${Math.round(lo * area)} - ${Math.round(hi * area)}` : "❓"}</div>
             <div className="text-[12px] text-[var(--fg-3)]">{t("ls.capUnit").split("/")[0]}</div>
           </div>
           <div className="rounded-2xl bg-[var(--surface-2)] p-3">
             <div className="text-[12px] text-[var(--fg-3)]">{t("ls.yourHerd")}</div>
             <div className="text-[24px] font-semibold tracking-[-0.02em] tnum">{num(c.herdAu, 1)}</div>
-            <div className={clsx("text-[13px] font-semibold", tone)}>{c.status === "over" ? "⚠️ " : c.status === "ok" ? "✅ " : ""}{t(`ls.st.${c.status}` as Key)}</div>
+            <div className={clsx("text-[13px] font-semibold", tone)}>{c.status === "over" ? "" : c.status === "ok" ? "" : ""}{t(`ls.st.${c.status}` as Key)}</div>
           </div>
         </div>
         <details className="disclosure mt-3 rounded-2xl bg-[var(--surface-2)]">
@@ -129,7 +129,7 @@ export function CapacityTab({ data, onCrop }: { data: AnalyzeResponse; onCrop: (
             <ChevronRight size={15} className="chev text-[var(--fg-3)]" /> {t("ls.how")}
           </summary>
           <div className="px-3.5 pb-3">
-            <code className="block text-[12.5px] break-words text-[var(--fg-2)]">NPP × 2.2 × 0.45 × (0.3–0.5) ÷ (11.5 kg × {c.grazingDays} {t("days")})</code>
+            <code className="block text-[12.5px] break-words text-[var(--fg-2)]">NPP × 2.2 × 0.45 × (0.3-0.5) ÷ (11.5 kg × {c.grazingDays} {t("days")})</code>
             <table className="mt-2 w-full text-[13px]">
               <tbody>
                 {c.assumptions.map((x) => (
@@ -141,7 +141,7 @@ export function CapacityTab({ data, onCrop }: { data: AnalyzeResponse; onCrop: (
                 ))}
               </tbody>
             </table>
-            <p className="mt-2 text-[12.5px] text-[var(--warn-fg)]">⚠️ {t("ls.howNote")}</p>
+            <p className="mt-2 text-[12.5px] text-[var(--warn-fg)]">{t("ls.howNote")}</p>
           </div>
         </details>
       </Card>
@@ -169,9 +169,9 @@ function RecCard({ r, i, onCrop }: { r: Recommendation; i: number; onCrop?: () =
         <Part icon={<ListChecks size={14} />} title={t("st.evidence")}>
           <ul className="grid gap-1">{r.evidence.map((e) => <li key={e.text} className="flex flex-wrap items-center justify-between gap-1">• {e.text} <SourceBadge source={e.source} /></li>)}</ul>
         </Part>
-        <Part icon={<Sprout size={14} />} title={t("st.benefits")}><ul>{r.benefits.map((b) => <li key={b}>✅ {b}</li>)}</ul></Part>
+        <Part icon={<Sprout size={14} />} title={t("st.benefits")}><ul>{r.benefits.map((b) => <li key={b}>{b}</li>)}</ul></Part>
         <Part icon={<FileQuestion size={14} />} title={t("st.gaps")}><ul>{r.gaps.map((b) => <li key={b}>❓ {b}</li>)}</ul></Part>
-        <Part icon={<ShieldAlert size={14} />} title={t("st.risks")} warn><ul>{r.risks.map((b) => <li key={b}>⚠️ {b}</li>)}</ul></Part>
+        <Part icon={<ShieldAlert size={14} />} title={t("st.risks")} warn><ul>{r.risks.map((b) => <li key={b}>{b}</li>)}</ul></Part>
         {onCrop && (
           <div className="flex items-center">
             <Button size="sm" variant="secondary" onClick={onCrop}>🌾 {t("ls.toCrop")} →</Button>
@@ -218,7 +218,7 @@ export function HeatTab({ data }: { data: AnalyzeResponse }) {
       </div>
       <div className="grid gap-3 lg:grid-cols-2">
         <Card>
-          <CardTitle info="frost" source="NASA POWER 2005–2025">{t("ls.thiMonthly")}</CardTitle>
+          <CardTitle info="frost" source="NASA POWER 2005-2025">{t("ls.thiMonthly")}</CardTitle>
           <XYChart
             ariaLabel="THI monthly"
             labels={months}
@@ -254,7 +254,7 @@ export function HeatTab({ data }: { data: AnalyzeResponse }) {
           )}
         </Card>
       </div>
-      <p className="rounded-2xl bg-[var(--accent-soft)] px-4 py-3 text-[14px]">💡 {t("ls.heatTip")}</p>
+      <p className="rounded-2xl bg-[var(--accent-soft)] px-4 py-3 text-[14px]">{t("ls.heatTip")}</p>
     </div>
   );
 }
@@ -292,7 +292,7 @@ export function WaterSourcesTab({ data }: { data: AnalyzeResponse }) {
           <div className="text-[12.5px] text-[var(--fg-3)]">🌊 {t("ls.waterSeas")}</div>
           <div className="mt-1 text-[26px] font-semibold tracking-[-0.02em]"><MaybeNum v={w.nearestSeasonalKm} unit="km" digits={1} /> <span className="text-[14px] text-[var(--fg-3)]">{dir(w.nearestSeasonalLatLon)}</span></div>
         </Card>
-        <SourceBadge source="JRC Global Surface Water 1984–2020" />
+        <SourceBadge source="JRC Global Surface Water 1984-2020" />
       </div>
     </div>
   );

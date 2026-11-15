@@ -94,7 +94,7 @@ function Passport() {
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(location.origin), []); // eslint-disable-line react-hooks/set-state-in-effect -- origin is client-only
   if (status === "loading") return <Skeleton className="mx-auto h-[80dvh] max-w-[210mm]" />;
-  if (!data) return <EmptyState title="—" />;
+  if (!data) return <EmptyState title="-" />;
   const f = data.field;
   const L = (uz: string, en: string) => (lang === "uz" ? uz : en);
   const no = `FS-${new Date(data.generatedAt).getUTCFullYear()}-${hash6(data.fieldId)}`;
@@ -118,12 +118,19 @@ function Passport() {
       <article className="passport mx-auto flex max-w-[210mm] flex-col gap-[3mm] bg-white p-[12mm] text-[#111] shadow-[var(--shadow-card)] print:shadow-none">
         <header className="flex items-start gap-[4mm]">
           <div className="min-w-0 flex-1">
-            <div className="text-[18pt] font-bold tracking-[-0.01em]">🌾 {t("passport.title")}</div>
+            <div className="flex items-center gap-[3mm]">
+              {/* eslint-disable-next-line @next/next/no-img-element -- print needs a plain image */}
+              <img src="/brand/mark.png" alt="TerraVision" className="h-[11mm] w-auto" />
+              <div>
+                <div className="text-[18pt] leading-none font-bold tracking-[-0.01em]">{t("passport.title")}</div>
+                <div className="mt-[1mm] text-[9pt] font-semibold"><span style={{ color: "#0E2F6E" }}>Terra</span><span style={{ color: "#23913F" }}>Vision</span></div>
+              </div>
+            </div>
             <div className="text-[10pt] text-black/70">
               № {no} · {t("passport.date")}: {issued.toLocaleDateString(lang === "uz" ? "ru-RU" : "en-GB")}
             </div>
             <div className="mt-[2mm] text-[10pt]">
-              <b>{t("passport.place")}:</b> {[f.region, f.district].filter(Boolean).join(", ") || "—"} · {num(f.areaHa, 1)} {t("ha")} · {f.centroid[0].toFixed(4)}°N {f.centroid[1].toFixed(4)}°E
+              <b>{t("passport.place")}:</b> {[f.region, f.district].filter(Boolean).join(", ") || "-"} · {num(f.areaHa, 1)} {t("ha")} · {f.centroid[0].toFixed(4)}°N {f.centroid[1].toFixed(4)}°E
               {f.elevationM != null && ` · ${Math.round(f.elevationM)} m`}
               {f.slopeDeg != null && ` · ${L("qiyalik", "slope")} ${f.slopeDeg}°`}
             </div>
@@ -139,7 +146,7 @@ function Passport() {
           <p>
             {data.history.seasons
               .slice(-9)
-              .map((s) => `${s.year}: ${s.crops.length ? s.crops.map((x) => `${cropName(x.crop, lang)} (${Math.round(x.confidence * 100)}%)`).join(" + ") : "—"}`)
+              .map((s) => `${s.year}: ${s.crops.length ? s.crops.map((x) => `${cropName(x.crop, lang)} (${Math.round(x.confidence * 100)}%)`).join(" + ") : "-"}`)
               .join(" · ")}
           </p>
           {data.history.bareWindows.length > 0 && <p className="text-black/70">{L("Yozgi bo'sh davrlar", "Summer bare periods")}: {data.history.bareWindows.slice(-4).map((b) => `${b.start.slice(0, 4)} (${b.days} ${L("kun", "d")})`).join(", ")}</p>}
@@ -151,7 +158,7 @@ function Passport() {
             {data.soil.texture && ` · ${L("gil", "clay")} ${data.soil.texture.clay}%, ${L("qum", "sand")} ${data.soil.texture.sand}%`}
             {data.soil.ph != null && ` · pH ${data.soil.ph}`}
           </p>
-          {data.gaez && <p className="text-black/70">FAO GAEZ: {data.gaez.crops.filter((g) => (g.suitability ?? 0) >= 70).map((g) => cropName(g.crop, lang)).join(", ") || "—"} {L("uchun moslik yuqori", "highly suitable")}</p>}
+          {data.gaez && <p className="text-black/70">FAO GAEZ: {data.gaez.crops.filter((g) => (g.suitability ?? 0) >= 70).map((g) => cropName(g.crop, lang)).join(", ") || "-"} {L("uchun moslik yuqori", "highly suitable")}</p>}
         </Section>
         <Section n={4} title={t("passport.s4")}>
           <p>
@@ -171,7 +178,7 @@ function Passport() {
         <Section n={6} title={t("passport.s6")}>
           {leach && <p>🧂 {leach.recommended ? `${leach.reason}: ${leach.stages.map((s, i) => `${i + 1}) ${dayMonth(s.date.slice(5, 10), lang)} ~${num(s.m3PerHa)} m³/ga`).join(", ")}` : leach.reason}</p>}
           {data.calendar?.soilTempSowing?.map((s) => (
-            <p key={s.crop}>🌱 {cropName(s.crop, lang)}: {dayMonth(s.windowFrom, lang)} – {dayMonth(s.windowTo, lang)} ({L("tuproq", "soil")} ≥ {s.thresholdC}°C)</p>
+            <p key={s.crop}>🌱 {cropName(s.crop, lang)}: {dayMonth(s.windowFrom, lang)} - {dayMonth(s.windowTo, lang)} ({L("tuproq", "soil")} ≥ {s.thresholdC}°C)</p>
           ))}
           {data.calendar && <p className="text-black/70">{data.calendar.next90Days.slice(0, 5).map((e) => `${dayMonth(e.date.slice(5, 10), lang)}: ${e.title}`).join(" · ")}</p>}
         </Section>
@@ -188,14 +195,14 @@ function Passport() {
               ))}
             </tbody>
           </table>
-          {best.explanation.risks.length > 0 && <p className="mt-[1mm] text-black/70">⚠️ {best.explanation.risks.slice(0, 2).join(" · ")}</p>}
+          {best.explanation.risks.length > 0 && <p className="mt-[1mm] text-black/70">{best.explanation.risks.slice(0, 2).join(" · ")}</p>}
         </Section>
         <Section n={8} title={t("passport.s8")}>
           <p className="text-black/70">{data.sources.map((s) => s.name).join(" · ")}</p>
           <p className="text-black/70">{L("Cheklovlar: sho'rlanish chegaralari kalibrlanmagan; narxlar va rasmiy me'yorlar ulanmagan; NASA POWER katagi ~50 km.", "Limits: salinity thresholds not calibrated; prices and official norms not connected; NASA POWER cell ~50 km.")}</p>
-          <p className="text-black/70">{monthShort(issued.getUTCMonth() + 1, lang)} {issued.getUTCFullYear()} · Field Shift UZ · NASA Space Apps 2026</p>
+          <p className="text-black/70">{monthShort(issued.getUTCMonth() + 1, lang)} {issued.getUTCFullYear()} · TerraVision · NASA Space Apps 2026</p>
         </Section>
-        <footer className="mt-[2mm] rounded-[2mm] border border-black/20 p-[3mm] text-[8.5pt] text-black/75">⚠️ {t("passport.disclaimer")}</footer>
+        <footer className="mt-[2mm] rounded-[2mm] border border-black/20 p-[3mm] text-[8.5pt] text-black/75">{t("passport.disclaimer")}</footer>
       </article>
     </div>
   );

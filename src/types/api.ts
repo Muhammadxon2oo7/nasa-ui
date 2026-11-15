@@ -31,7 +31,7 @@ export interface AnalyzeRequest {
 export interface LivestockInput {
   herd: { cattle: number; smallRuminants: number; horses: number };
   grazingFrom: number;
-  grazingTo: number; // months 1–12
+  grazingTo: number; // months 1-12
   pastureType: "natural" | "sown" | "mixed";
   hasWaterOnSite: boolean;
   priorities: ("conserve" | "more_animals" | "heat" | "forage")[];
@@ -61,7 +61,7 @@ export interface AnalyzeResponse {
   profile?: Profile;
   modulesComputed?: Module[];
   livestock?: LivestockData;
-  // ---- v2.2 / v2.3 (QOSHIMCHA_FUNKSIYALAR, FRONTEND_REJASI §5.5–5.6). null = unknown, reason in extrasUnknown
+  // ---- v2.2 / v2.3 (QOSHIMCHA_FUNKSIYALAR, FRONTEND_REJASI §5.5-5.6). null = unknown, reason in extrasUnknown
   calendar?: CalendarData | null; // B1 (+N2, N8)
   actualWater?: ActualWaterData | null; // A1 (+N5 checks)
   norms?: NormsData | null; // A2
@@ -91,7 +91,7 @@ export interface DetectedCrop {
   crop: CropId;
   start: string;
   end: string; // "2021-10-01"
-  confidence: number; // 0–1
+  confidence: number; // 0-1
   source: "M1" | "rules" | "user";
 }
 export interface HistoryData {
@@ -166,10 +166,10 @@ export interface Strategy {
   isNearest?: boolean; // "nearest option"
   seasons: { year: number; crop: CropId; start: string; end: string }[];
   sowWindow?: { crop: CropId; from: string; to: string }[];
-  metrics: Record<MetricName, number | null>; // 0–100 each, null = unknown (ADR-10)
+  metrics: Record<MetricName, number | null>; // 0-100 each, null = unknown (ADR-10)
   unknownReasons?: Partial<Record<MetricName, string>>;
   robustness?: { score: number; worstScore: number; scenarios: { id: string; score: number }[] };
-  /** gross water need in the dry (−30 % rain) scenario — B2 dry-year profit */
+  /** gross water need in the dry (−30 % rain) scenario - B2 dry-year profit */
   dryWaterM3PerHa?: number;
   score: number; // backend's initial score
   waterM3PerHa: number;
@@ -204,9 +204,9 @@ export interface SeasonalOutlook {
     precipP50: number;
     precipP90: number;
     probWarmer: number;
-    probWetter: number; // 0–1
+    probWetter: number; // 0-1
   }[];
-  robustness: Record<string, number>; // strategyId → 0–1
+  robustness: Record<string, number>; // strategyId → 0-1
   confidence: Level;
 }
 
@@ -298,7 +298,7 @@ export interface LivestockData {
 // Land selection
 export type CompareGoal = "winter_wheat" | "cotton" | "alfalfa" | "pasture" | "general";
 export interface CompareRequest {
-  places: { name: string; polygon: GeoJSON.Polygon }[]; // 2–4
+  places: { name: string; polygon: GeoJSON.Polygon }[]; // 2-4
   goal: CompareGoal;
   lang: "uz" | "en";
 }
@@ -308,7 +308,7 @@ export interface CompareResponse {
     placeId: string;
     name: string;
     areaHa: number;
-    suitability: number; // 0–100
+    suitability: number; // 0-100
     rows: Record<string, { value: string; better: boolean }>;
     mainRisk?: string;
     polygon: GeoJSON.Polygon;
@@ -390,7 +390,7 @@ export interface EconomicsInput {
 export interface FeedbackEntry {
   fieldId: string;
   at: string;
-  rating?: number; // 1–5
+  rating?: number; // 1-5
   yieldTPerHa?: number;
   crop?: CropId;
   appliedM3PerHa?: number;

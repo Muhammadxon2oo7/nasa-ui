@@ -2,14 +2,16 @@
 
 import { clsx } from "clsx";
 import { AnimatePresence, m } from "motion/react";
-import { Check, ChevronDown, Menu, Moon, Sprout, Sun, X } from "lucide-react";
+import { Beef, Check, ChevronDown, MapPin, Menu, Microscope, Moon, Sun, Wheat, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { Profile } from "@/types/api";
 import { useLang, useT, type Key } from "@/i18n";
 import { useTheme } from "@/lib/theme";
-import { PROFILE_ICON, useMode, useProfile } from "@/store/platformStore";
+import { useMode, useProfile } from "@/store/platformStore";
+
+const ROLE_ICON = { farmer: Wheat, herder: Beef, land_seeker: MapPin, expert: Microscope } as const;
 import { Segmented, spring, springPop } from "../ui";
 
 const NAV = [
@@ -37,7 +39,10 @@ function ProfileSwitcher({ compact }: { compact?: boolean }) {
   return (
     <div ref={ref} className="relative">
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="press flex h-10 items-center gap-1.5 rounded-full px-3 text-[13.5px] font-semibold hover:bg-[var(--surface)]/60">
-        <span aria-hidden>{PROFILE_ICON[profile]}</span>
+        {(() => {
+          const I = ROLE_ICON[profile];
+          return <I size={17} strokeWidth={1.8} aria-hidden />;
+        })()}
         {!compact && <span>{t(`pr.${profile}` as Key)}</span>}
         <ChevronDown size={14} className={clsx("text-[var(--fg-3)] transition-transform", open && "rotate-180")} />
       </button>
@@ -58,7 +63,10 @@ function ProfileSwitcher({ compact }: { compact?: boolean }) {
                 }}
                 className="press flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-left hover:bg-[var(--surface)]/70"
               >
-                <span className="text-[18px]" aria-hidden>{PROFILE_ICON[p]}</span>
+                {(() => {
+                  const I = ROLE_ICON[p];
+                  return <I size={18} strokeWidth={1.8} className="text-[var(--fg-2)]" aria-hidden />;
+                })()}
                 <span className="flex-1">
                   <b className="block text-[14px]">{t(`pr.${p}` as Key)}</b>
                   <span className="text-[12px] text-[var(--fg-3)]">{t(`pr.${p}Q` as Key)}</span>
@@ -117,10 +125,12 @@ export function Header() {
       <header className="pointer-events-none fixed inset-x-0 top-0 z-40 px-3 pt-[max(10px,env(safe-area-inset-top))] sm:px-5">
         <m.nav animate={{ scale: compact ? 0.96 : 1, y: compact ? -2 : 0 }} transition={spring} className="lg pointer-events-auto mx-auto flex h-14 max-w-6xl items-center gap-1 rounded-full pr-2 pl-2.5" aria-label="Main">
           <Link href="/" className="press flex shrink-0 items-center gap-2 rounded-full py-1 pr-2 pl-1">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--accent-fill)] text-white shadow-[0_6px_16px_-6px_rgb(46_125_50/0.7)]">
-              <Sprout size={18} />
+            {/* eslint-disable-next-line @next/next/no-img-element -- static brand mark */}
+            <img src="/brand/mark.png" alt="" width={50} height={30} className="h-[30px] w-auto" />
+            <span className="hidden text-[16.5px] font-bold tracking-[-0.025em] sm:inline" aria-label={t("brand")}>
+              <span className="text-[var(--brand-navy)]">Terra</span>
+              <span className="text-[var(--brand-green)]">Vision</span>
             </span>
-            <span className="hidden text-[15px] font-semibold tracking-[-0.02em] sm:inline">{t("brand")}</span>
           </Link>
           <div className="mx-auto hidden items-center gap-0.5 lg:flex">
             {NAV.map((n) => {

@@ -63,7 +63,7 @@ export function detectHistory(months: S2Month[], userRotation: { year: number; c
       crops.push({ crop: "other", start: `${y}-${String(springPeak > summerPeak ? springIdx + 1 : summerIdx - 2).padStart(2, "0")}-01`, end: `${y}-10-01`, confidence: 0.4, source: "rules" });
     }
 
-    // summer bare windows (Jun–Oct, NDVI < 0.25, ≥ 2 months in a row)
+    // summer bare windows (Jun-Oct, NDVI < 0.25, ≥ 2 months in a row)
     let runStart = -1;
     for (let i = 5; i <= 9; i++) {
       const low = n[i] != null && (n[i] as number) < 0.25;
