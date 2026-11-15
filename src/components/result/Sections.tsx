@@ -41,13 +41,38 @@ export function Fold({ icon, title, hint, open: initial = false, children }: { i
 }
 
 /** The one-glance answer: what to grow, what it costs in water, what to watch out for, and why. */
-export function AnswerCard({ data, best, bestScore, water, onMore }: { data: AnalyzeResponse; best: Strategy; bestScore: number; water: number; onMore: () => void }) {
+/**
+ * A reason a farmer can check: the recommended plan against what they grow today, in numbers.
+ * Used when the engine's own sentence only repeats the plan's name.
+ */
+export function reasonFromData(best: Strategy, cur: Strategy | undefined, water: number, lang: "uz" | "en"): string | null {
+  const L = (uz: string, en: string) => (lang === "uz" ? uz : en);
+  const parts: string[] = [];
+  if (cur && cur.id !== best.id) {
+    const d = Math.round((cur.waterM3PerHa - water) / 100) * 100;
+    if (d >= 300) parts.push(L(`hozirgi rotatsiyadan yiliga ~${num(d)} m³/ga kam suv talab qiladi`, `needs ~${num(d)} m³/ha less water a year than your current rotation`));
+    const bi = best.income?.usdPerHa, ci = cur.income?.usdPerHa;
+    if (bi != null && ci != null && Math.abs(bi - ci) >= 100)
+      parts.push(bi > ci ? L(`taxminiy tushumi ~$${num(bi - ci)}/ga yuqori`, `about $${num(bi - ci)}/ha more gross revenue`) : L(`tushumi ~$${num(ci - bi)}/ga past, lekin suv va tuproq uchun foydaliroq`, `about $${num(ci - bi)}/ha less revenue, but easier on water and soil`));
+  }
+  if (best.saltFit === "ok") parts.push(L("barcha ekinlari dalangiz sho'rligiga chidamli", "every crop tolerates your field's salinity"));
+  if (best.robustness && best.robustness.worstScore >= 60) parts.push(L(`qurg'oqchil yoki issiq yilda ham ${best.robustness.worstScore} ball oladi`, `still scores ${best.robustness.worstScore} in a dry or hot year`));
+  if (!parts.length) return null;
+  const s = parts.slice(0, 3).join(", ");
+  return s.charAt(0).toUpperCase() + s.slice(1) + ".";
+}
+
+const CURRENT_PREFIX = /^(Hozirgi|Current):\s*/i;
+
+export function AnswerCard({ data, best, bestScore, water, onMore, currentScore }: { data: AnalyzeResponse; best: Strategy; bestScore: number; water: number; onMore: () => void; currentScore?: number }) {
   const { t, lang } = useT();
   const L = (uz: string, en: string) => (lang === "uz" ? uz : en);
   const cur = data.strategies.find((s) => s.isCurrent);
   const keep = cur && cur.id === best.id;
   const diff = cur && !keep ? Math.round((water - cur.waterM3PerHa) / 100) * 100 : 0;
-  const why = best.explanation.why?.trim() || data.summary.text;
+  const own = best.explanation.why?.trim() ?? "";
+  const echoes = !own || own.startsWith(best.name) || own.length < 40;
+  const why = (echoes ? reasonFromData(best, cur, water, lang === "en" ? "en" : "uz") : own) || own || data.summary.text;
   const trend = (data.soil.salinityTrendPct ?? 0) > 5 && data.soil.salinityLevel !== "low";
   return (
     <m.article initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="relative flex flex-col overflow-hidden rounded-[26px] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] ring-1 ring-[var(--gold)]/40 sm:p-6">
@@ -62,7 +87,14 @@ export function AnswerCard({ data, best, bestScore, water, onMore }: { data: Ana
           {best.robustness && <RobustnessBadge score={best.robustness.score} worst={best.robustness.worstScore} />}
         </div>
       </div>
-      <p className="mt-2 max-w-[70ch] text-[14.5px] leading-relaxed text-[var(--fg-2)] line-clamp-2">{why}</p>
+      {cur && !keep && currentScore != null && (
+        <p className="mt-2 flex flex-wrap items-baseline gap-x-1.5 text-[13px] text-[var(--fg-3)]">
+          <span>{L("Hozirgi", "Today")}:</span>
+          <span className="font-medium text-[var(--fg-2)]">{cur.name.replace(CURRENT_PREFIX, "")}</span>
+          <span className="tnum">· {currentScore} {t("score.unit" as never)}</span>
+        </p>
+      )}
+      <p className="mt-2 max-w-[70ch] text-[14.5px] leading-relaxed text-[var(--fg-2)] line-clamp-3">{why}</p>
       <dl className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1">
         <div className="rounded-2xl bg-[var(--surface-2)] px-3.5 py-2.5">
           <dt className="flex items-center gap-1.5 text-[12.5px] text-[var(--fg-3)]"><Droplet size={13} /> {L("Suv, yiliga", "Water per year")}</dt>

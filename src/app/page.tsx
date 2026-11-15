@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 
 const PROFILES: Profile[] = ["farmer", "herder", "land_seeker", "expert"];
 const ROLE_ICON = { farmer: Wheat, herder: Beef, land_seeker: MapPin, expert: Microscope } as const;
-const DATA = ["NASA POWER", "SMAP", "MODIS", "GPM IMERG", "SRTM", "Sentinel-2", "ERA5", "ECMWF SEAS5", "SoilGrids", "FAO-56"];
+const DATA = ["NASA POWER", "SMAP", "MODIS", "Landsat/Sentinel-2 HLS", "GPM IMERG", "GRACE/GRACE-FO", "SRTM", "ERA5", "ECMWF SEAS5", "SoilGrids", "FAO-56"];
 
 export default function Landing() {
   const { t, lang } = useT();

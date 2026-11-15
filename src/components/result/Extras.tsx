@@ -206,7 +206,7 @@ function SowingCard({ data }: { data: AnalyzeResponse }) {
           ))}
         </ul>
       ) : (
-        <UnknownValue reason={lang === "uz" ? "Rejada bahorgi ekin yo'q yoki tuproq harorati olinmadi" : "No spring crop in the plan or no soil temperature"} />
+        <p className="text-[14px] text-[var(--fg-2)]">{lang === "uz" ? "Tavsiya etilgan rejada bahorda ekiladigan ekin yo'q: kuzgi ekinlar sovuq tushishidan oldingi muddatga qarab ekiladi." : "The recommended plan has no spring-sown crop: autumn crops are timed by the first frost instead."}</p>
       )}
     </Card>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, m } from "motion/react";
-import { Beef, CalendarDays, Check, Info, CloudSun, Droplet, Flame, FlaskConical, Globe, Layers, Leaf, MapPin, Satellite, ScrollText, Sprout, ThermometerSun, Wheat } from "lucide-react";
+import { Beef, CalendarDays, Check, Info, CloudSun, Droplet, Flame, FlaskConical, Globe, Leaf, MapPin, Satellite, ScrollText, Sprout, ThermometerSun, Wheat } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import type { AnalyzeRequest } from "@/types/api";
@@ -17,15 +17,17 @@ import { CapacityTab, HeatTab, PastureTab, WaterSourcesTab } from "@/components/
 import { useProfile } from "@/store/platformStore";
 import { StrategiesTab, useRanked } from "@/components/result/StrategiesTab";
 import { ClimateTab, HistoryTab, SoilTab } from "@/components/result/TabsA";
-import { ForecastTab, MapTab, WaterTab } from "@/components/result/TabsB";
+import { MapTab, Season, WaterTab, Week, WhatIf } from "@/components/result/TabsB";
 import { CalendarTab, FeedbackPrompt, ThisWeekCard } from "@/components/result/Extras";
 import { Button, DegradedNotice, EmptyState, Segmented, Skeleton, spring } from "@/components/ui";
 
-// 5 question-shaped sections per module; older tab ids in shared links map onto them
-const TABS = ["plan", "calendar", "water", "field", "space", "weather", "pasture", "heat", "wsrc"] as const;
+// Four farmer questions per module, in the order a decision is made:
+// what to grow -> when to act -> how much water -> what the evidence says about my field.
+// Older tab ids in shared links map onto them.
+const TABS = ["plan", "calendar", "water", "field", "pasture", "heat", "wsrc"] as const;
 type Tab = (typeof TABS)[number];
-const ALIAS: Record<string, Tab> = { strategies: "plan", history: "field", soil: "field", map: "space", climate: "weather", forecast: "weather", capacity: "pasture" };
-const ICON: Record<Tab, React.ReactNode> = { plan: <Sprout size={15} />, calendar: <CalendarDays size={15} />, water: <Droplet size={15} />, field: <Layers size={15} />, space: <Satellite size={15} />, weather: <CloudSun size={15} />, pasture: <Leaf size={15} />, heat: <Flame size={15} />, wsrc: <MapPin size={15} /> };
+const ALIAS: Record<string, Tab> = { strategies: "plan", whatif: "plan", history: "field", soil: "field", space: "field", map: "field", climate: "field", weather: "calendar", forecast: "calendar", capacity: "pasture" };
+const ICON: Record<Tab, React.ReactNode> = { plan: <Sprout size={15} />, calendar: <CalendarDays size={15} />, water: <Droplet size={15} />, field: <Satellite size={15} />, pasture: <Leaf size={15} />, heat: <Flame size={15} />, wsrc: <MapPin size={15} /> };
 
 export default function ResultPage() {
   return (
@@ -171,9 +173,9 @@ function Result() {
 
 type ModuleTab = "crop" | "livestock" | "general";
 const MODULE_TABS: Record<ModuleTab, Tab[]> = {
-  crop: ["plan", "calendar", "water", "field", "space", "weather"],
-  livestock: ["pasture", "heat", "wsrc", "space", "calendar", "weather"],
-  general: ["field", "space", "weather", "water"],
+  crop: ["plan", "calendar", "water", "field"],
+  livestock: ["pasture", "heat", "wsrc", "field"],
+  general: ["field", "water", "calendar"],
 };
 
 function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullable<ReturnType<typeof useAnalysis>["data"]>; tab: Tab; setTab: (t: Tab, mod?: ModuleTab) => void; recompute: (e: number) => void; busy: boolean }) {
@@ -185,7 +187,7 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
   const modParam = sp.get("module") as ModuleTab | null;
   const mod: ModuleTab = modParam && MODULE_TABS[modParam] ? modParam : profile === "herder" ? "livestock" : "crop";
   const tabs = MODULE_TABS[mod];
-  const active: Tab = tabs.includes(tab) && (sp.get("tab") || mod === "crop") ? tab : tabs[0];
+  const active: Tab = tabs.includes(tab) ? tab : tabs[0];
   const ranked = useRanked(data);
   const { best } = ranked;
   const options = useMemo(() => tabs.map((k) => ({ value: k, label: <span className="flex items-center gap-1.5"><span aria-hidden className="text-[var(--fg-3)]">{ICON[k]}</span>{t(`q.${k}` as Key)}</span> })), [t, tabs]);
@@ -224,16 +226,17 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
     <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] gap-3 px-3 sm:px-6">
       <FieldHeader data={data} />
       {data.degraded && <DegradedNotice items={data.degraded} />}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-center gap-2">
         <Segmented<ModuleTab>
           value={mod}
           onChange={switchModule}
           options={[
-            { value: "crop", label: <span className="flex items-center gap-1.5"><Wheat size={15} />{t("mod.crop")}</span> },
-            { value: "livestock", label: <span className="flex items-center gap-1.5"><Beef size={15} />{t("mod.livestock")}</span> },
-            { value: "general", label: <span className="flex items-center gap-1.5"><Globe size={15} />{t("mod.general")}</span> },
+            { value: "crop", label: <span className="flex items-center gap-1.5"><Wheat size={15} className="hidden sm:block" />{t("mod.crop")}</span> },
+            { value: "livestock", label: <span className="flex items-center gap-1.5"><Beef size={15} className="hidden sm:block" />{t("mod.livestock")}</span> },
+            { value: "general", label: <span className="flex items-center gap-1.5"><Globe size={15} className="hidden sm:block" />{t("mod.general")}</span> },
           ]}
           ariaLabel="module"
+          className="w-full sm:w-max"
         />
       </div>
       {mod === "livestock" && data.livestock ? (
@@ -241,7 +244,7 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
       ) : (
         <div className="grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
           <FieldTwin data={data} list={ranked.list} bestId={best.s.id} />
-          <AnswerCard data={data} best={best.s} bestScore={best.score} water={best.gross} onMore={() => setTab("plan", mod)} />
+          <AnswerCard data={data} best={best.s} bestScore={best.score} water={best.gross} currentScore={ranked.list.find((x) => x.s.isCurrent)?.score} onMore={() => setTab("plan", mod)} />
         </div>
       )}
       <p className="-mt-1 flex items-center gap-1.5 px-1 text-[12px] text-[var(--fg-3)]"><Info size={13} /> {t("disclaimer")}</p>
@@ -255,31 +258,43 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
       {loadingLs && <ModuleProgress />}
       <AnimatePresence mode="wait" initial={false}>
         <m.div key={mod + active} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={spring}>
-          {active === "plan" && <StrategiesTab data={data} />}
-          {active === "calendar" && <CalendarTab data={data} />}
+          {active === "plan" && (
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
+              <StrategiesTab data={data} />
+              <Fold icon={<CloudSun size={18} />} title={t("f.whatifTitle" as Key)} hint={t("f.whatifHint" as Key)} open={useResultUi.getState().whatIf.dP !== 0 || useResultUi.getState().whatIf.dT !== 0}>
+                <WhatIf data={data} />
+              </Fold>
+            </div>
+          )}
+          {active === "calendar" && (
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
+              {mod !== "general" && <CalendarTab data={data} />}
+              <Week data={data} />
+              <Fold icon={<CloudSun size={18} />} title={t("f.seasonFold" as Key)} hint={t("f.seasonHint" as Key)}>
+                <Season data={data} />
+              </Fold>
+            </div>
+          )}
           {active === "water" && (
             <WaterTab
               data={data}
               onTryDry={() => {
                 useResultUi.getState().set({ whatIf: { dT: 0, dP: -30, strategies: null, loading: true } });
-                setTab("weather", mod);
+                setTab("plan", mod);
               }}
             />
           )}
           {active === "field" && (
             <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
-              <Fold icon={<FlaskConical size={18} />} title={t("f.soil")} hint={`${t("r.salt")}: ${t(`lvl.${data.soil.salinityLevel}` as Key)}`} open>
-                <SoilTab data={data} onRecompute={recompute} />
-              </Fold>
+              <MapTab data={data} />
+              {mod !== "livestock" && (
+                <Fold icon={<FlaskConical size={18} />} title={t("f.soil")} hint={`${t("r.salt")}: ${t(`lvl.${data.soil.salinityLevel}` as Key)}`}>
+                  <SoilTab data={data} onRecompute={recompute} />
+                </Fold>
+              )}
               <Fold icon={<ScrollText size={18} />} title={t("f.history")} hint={data.history.seasons.length ? `${data.history.seasons[0].year}-${data.history.seasons[data.history.seasons.length - 1].year}` : undefined}>
                 <HistoryTab data={data} />
               </Fold>
-            </div>
-          )}
-          {active === "space" && <MapTab data={data} />}
-          {active === "weather" && (
-            <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
-              <ForecastTab data={data} />
               <Fold icon={<ThermometerSun size={18} />} title={t("f.climate")} hint={`${t("r.risk")}: ${data.summary.mainRisk}`}>
                 <ClimateTab data={data} />
               </Fold>

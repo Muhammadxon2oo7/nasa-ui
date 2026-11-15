@@ -2,7 +2,7 @@
 
 import { EconomicsCard } from "./Extras";
 import { IncomeDetail, incomeShort, NormsDetail } from "./Economics";
-import { Fold } from "./Sections";
+import { Fold, reasonFromData } from "./Sections";
 import { ChartColumn, Coins, Droplet, FlaskConical, Minus, Scale, TrendingDown, TrendingUp } from "lucide-react";
 
 import { clsx } from "clsx";
@@ -329,7 +329,7 @@ function StrategyDetail({ data, st, color }: { data: AnalyzeResponse; st: Strate
       </div>
       <div className="grid gap-2.5 md:grid-cols-2">
         <Block icon={<Compass size={15} />} title={t("st.why")}>
-          <p>{e.why}</p>
+          <p>{!e.why || e.why.startsWith(st.name) || e.why.length < 40 ? reasonFromData(st, data.strategies.find((x) => x.isCurrent), st.waterM3PerHa, lang === "en" ? "en" : "uz") ?? e.why : e.why}</p>
         </Block>
         <Block icon={<ListChecks size={15} />} title={t("st.evidence")}>
           <ul className="grid gap-1.5">

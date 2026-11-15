@@ -163,7 +163,7 @@ export function ForecastTab({ data }: { data: AnalyzeResponse }) {
   );
 }
 
-function Week({ data }: { data: AnalyzeResponse }) {
+export function Week({ data }: { data: AnalyzeResponse }) {
   const { t, lang } = useT();
   const [om, setOm] = useState<OM | null>(null);
   const [err, setErr] = useState(false);
@@ -177,7 +177,9 @@ function Week({ data }: { data: AnalyzeResponse }) {
   if (err) return <EmptyState title={t("f.noForecast")} />;
   if (!om) return <div className="shimmer h-40 rounded-[22px] bg-[var(--surface-2)]" />;
   const d = om.daily;
-  const wd = (s: string) => new Date(s + "T00:00:00").toLocaleDateString(lang === "uz" ? "uz-UZ" : "en-US", { weekday: "short" });
+  // ICU in many browsers has no Uzbek weekday names and silently falls back to English
+  const UZ_WD = ["Yak", "Dush", "Sesh", "Chor", "Pay", "Juma", "Shan"];
+  const wd = (s: string) => (lang === "uz" ? UZ_WD[new Date(s + "T00:00:00").getDay()] : new Date(s + "T00:00:00").toLocaleDateString("en-US", { weekday: "short" }));
   const alerts: string[] = [];
   d.time.forEach((day, i) => {
     if (d.temperature_2m_min[i] <= -2) alerts.push(`${t("f.frostAlert", { d: wd(day), t: Math.round(d.temperature_2m_min[i]) })}`);
@@ -205,7 +207,7 @@ function Week({ data }: { data: AnalyzeResponse }) {
   );
 }
 
-function Season({ data }: { data: AnalyzeResponse }) {
+export function Season({ data }: { data: AnalyzeResponse }) {
   const { t, lang } = useT();
   const s = data.seasonal;
   if (!s) return <EmptyState title={t("f.noForecast")} />;
@@ -298,7 +300,7 @@ function Season({ data }: { data: AnalyzeResponse }) {
   );
 }
 
-function WhatIf({ data }: { data: AnalyzeResponse }) {
+export function WhatIf({ data }: { data: AnalyzeResponse }) {
   const { t } = useT();
   const ui = useResultUi();
   const [dT, setDT] = useState(ui.whatIf.dT);

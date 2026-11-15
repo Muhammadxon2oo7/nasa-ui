@@ -13,8 +13,8 @@ export function Pipeline() {
       sub: L("Har bir dala uchun avtomatik yig'iladi", "Collected automatically for every field"),
       items: [
         [Thermometer, "NASA POWER", L("20 yillik kunlik iqlim", "20 years of daily climate")],
-        [Satellite, "Sentinel-2 · MODIS", L("Dala tarixi, o'simlik holati", "Field history, vegetation")],
-        [Droplets, "SMAP · GPM", L("Tuproq namligi, yog'in", "Soil moisture, rain")],
+        [Satellite, "Landsat · Sentinel-2 · MODIS", L("30 m dala surati, tarix, o'simlik", "30 m field imagery, history, vegetation")],
+        [Droplets, "SMAP · GPM · GRACE", L("Tuproq namligi, yog'in, suv zaxirasi", "Soil moisture, rain, water storage")],
         [Mountain, "SRTM", L("Relyef va qiyalik", "Terrain and slope")],
       ],
     },

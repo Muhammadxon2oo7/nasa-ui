@@ -20,8 +20,8 @@ export function UnknownValue({ reason }: { reason: string }) {
   }, [open]);
   return (
     <span ref={ref} className="relative inline-flex">
-      <button type="button" onClick={() => setOpen((o) => !o)} aria-label={`${t("unk.title")}: ${reason}`} className="rounded-full px-1 font-semibold text-[var(--fg-3)] hover:bg-[var(--surface-2)]">
-        <G e="❓" />
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-label={`${t("unk.title")}: ${reason}`} className="inline-flex items-center gap-1 rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[12.5px] font-medium text-[var(--fg-2)] hover:bg-[var(--surface-3,var(--hairline))]">
+        <G e="❓" /> {t("unk.title")}
       </button>
       <AnimatePresence>
         {open && (
