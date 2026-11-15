@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, m } from "motion/react";
-import { ArrowRight, MapPinned, Plus, Sparkles, Trash2, Trophy } from "lucide-react";
+import { ArrowRight, MapPinned, MousePointerClick, Sparkles, Trash2, Trophy } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import type { CompareGoal, CompareResponse } from "@/types/api";
@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import type { AnalyzeRequest } from "@/types/api";
 import { useProfile } from "@/store/platformStore";
 import { useT, type Key } from "@/i18n";
-import { analyzePolygon } from "@/lib/geo";
+import { analyzePolygon, circlePolygon } from "@/lib/geo";
 import type { MapApi } from "@/components/map/FieldMap";
 import { Button, Card, CardTitle, DisclaimerBanner, ErrorState, ScoreBar, Segmented, Skeleton, spring } from "@/components/ui";
 
@@ -63,19 +63,33 @@ export default function ComparePage() {
     }
   };
 
-  const draftCheck = draft ? analyzePolygon(draft) : null;
-  const canAdd = !!draft && !draftCheck?.errors.length && places.length < 4;
 
-  const add = () => {
-    if (!draft || !canAdd) return;
-    setPlaces((p) => [...p, { name: `${lang === "uz" ? "Joy" : "Place"} ${LETTER[p.length]}`, polygon: draft }]);
-    setDraft(null);
-    api.current?.clear();
+  const [mode, setMode] = useState<"tap" | "draw">("tap");
+  const [fit, setFit] = useState(false); // fit the view only for demo places, never while the user taps
+  const [note, setNote] = useState<string | null>(null);
+  const addPolygon = (poly: GeoJSON.Polygon) => {
+    const chk = analyzePolygon(poly);
+    if (chk.errors.length) return setNote(t(`err.${chk.errors[0]}` as Key));
+    if (places.length >= 4) return setNote(lang === "uz" ? "Ko'pi bilan 4 ta joy" : "At most 4 places");
+    setNote(null);
+    setFit(false);
+    setPlaces((p) => [...p, { name: `${lang === "uz" ? "Joy" : "Place"} ${LETTER[p.length]}`, polygon: poly }]);
     setRes(null);
+  };
+  // tap mode: one click = a 200 m place; draw mode: the finished outline is added at once
+  const onTap = (lat: number, lon: number) => mode === "tap" && addPolygon(circlePolygon(lat, lon, 200));
+  const onDraw = (p: GeoJSON.Polygon | null) => {
+    setDraft(p);
+    if (p && mode === "draw") {
+      addPolygon(p);
+      setDraft(null);
+      api.current?.clear();
+    }
   };
   const loadDemo = async () => {
     const reqs = await Promise.all(DEMO.map((n) => fetch(`/demo/${n}.req.json`).then((r) => r.json())));
     const ps: Place[] = reqs.map((r, i) => ({ name: DEMO_NAME[DEMO[i]], polygon: r.polygon }));
+    setFit(true);
     setPlaces(ps);
     setRes(null);
     return ps;
@@ -138,15 +152,26 @@ export default function ComparePage() {
       <div className="grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="overflow-hidden rounded-[24px] bg-[var(--surface)] shadow-[var(--shadow-card)]">
           <div className="relative h-[min(56vh,460px)]">
-            <FieldMap value={draft} onChange={setDraft} basemap="sat" apiRef={api} extra={{ polygons: places.map((p, i) => ({ coords: p.polygon, label: `${LETTER[i]} · ${p.name}`, color: HEX[i] })) }} fitExtra />
-            <div className="pointer-events-none absolute inset-x-3 bottom-3 flex justify-center">
-              <div className="lg pointer-events-auto flex items-center gap-1.5 rounded-full p-1">
-                <Button size="sm" variant="ghost" onClick={() => api.current?.startDraw()} disabled={places.length >= 4}>
-                  <MapPinned size={15} /> {lang === "uz" ? "Chizish" : "Draw"}
-                </Button>
-                <Button size="sm" onClick={add} disabled={!canAdd}>
-                  <Plus size={15} /> {t("cmp.add")}
-                </Button>
+            <FieldMap value={draft} onChange={onDraw} onMapClick={onTap} basemap="sat" apiRef={api} extra={{ polygons: places.map((p, i) => ({ coords: p.polygon, label: `${LETTER[i]} · ${p.name}`, color: HEX[i] })) }} fitExtra={fit} />
+            {/* above Leaflet's panes (z 400-800) */}
+            <div className="pointer-events-none absolute inset-x-3 bottom-3 z-[1000] flex flex-col items-center gap-2">
+              {note && <p className="lg pointer-events-auto rounded-full px-3.5 py-1.5 text-[13px] font-medium text-[var(--level-high-fg)]">{note}</p>}
+              <div className="lg pointer-events-auto flex items-center gap-1 rounded-full p-1">
+                <button type="button" aria-pressed={mode === "tap"} onClick={() => setMode("tap")} className={`press flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[13.5px] font-semibold ${mode === "tap" ? "bg-[var(--fg)] text-[var(--bg)]" : "text-[var(--fg)]"}`}>
+                  <MousePointerClick size={15} /> {lang === "uz" ? "Bosib qo'shish" : "Tap to add"}
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={mode === "draw"}
+                  disabled={places.length >= 4}
+                  onClick={() => {
+                    setMode("draw");
+                    api.current?.startDraw();
+                  }}
+                  className={`press flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[13.5px] font-semibold disabled:opacity-40 ${mode === "draw" ? "bg-[var(--fg)] text-[var(--bg)]" : "text-[var(--fg)]"}`}
+                >
+                  <MapPinned size={15} /> {lang === "uz" ? "Chegara chizish" : "Draw outline"}
+                </button>
               </div>
             </div>
           </div>
@@ -155,7 +180,6 @@ export default function ComparePage() {
         <Card className="flex flex-col gap-3">
           <CardTitle>{t("cmp.places", { n: places.length })}</CardTitle>
           {places.length === 0 && <p className="text-[14px] text-[var(--fg-3)]">{t("cmp.addHint")}</p>}
-          {draftCheck?.errors[0] && <p className="text-[13px] text-[var(--level-high-fg)]">{t(`err.${draftCheck.errors[0]}` as Key)}</p>}
           <ul className="flex flex-col gap-1.5">
             <AnimatePresence initial={false}>
               {places.map((p, i) => (

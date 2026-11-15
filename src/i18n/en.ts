@@ -396,7 +396,7 @@ export const en: Record<keyof typeof uz, string> = {
   "goal.general": "General",
   "cmp.places": "Places ({n}/4)",
   "cmp.add": "Add place",
-  "cmp.addHint": "Draw on the map, then press \"Add place\"",
+  "cmp.addHint": "Tap the map to add a 200 m place, or use \"Draw outline\" for an exact boundary",
   "cmp.run": "Compare",
   "cmp.demo": "Demo places",
   "cmp.need": "Add at least 2 places",

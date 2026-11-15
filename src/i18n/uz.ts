@@ -394,7 +394,7 @@ export const uz = {
   "goal.general": "Umumiy",
   "cmp.places": "Joylar ({n}/4)",
   "cmp.add": "Joy qo'shish",
-  "cmp.addHint": "Xaritada chizing, so'ng \"Joy qo'shish\" ni bosing",
+  "cmp.addHint": "Xaritada joyni bosing (200 m maydon qo'shiladi) yoki \"Chegara chizish\" bilan aniq chegarasini belgilang",
   "cmp.run": "Solishtirish",
   "cmp.demo": "Demo joylar",
   "cmp.need": "Kamida 2 ta joy qo'shing",

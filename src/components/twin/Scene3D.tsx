@@ -19,7 +19,9 @@ const DEM = "https://tiles.mapterhorn.com/{z}/{x}/{y}.webp"; // terrarium, CORS-
  * 3D field twin: Esri imagery draped on Mapterhorn terrain, the field extruded on top.
  * Camera orbits slowly (paused off-screen, on interaction and under reduced motion).
  */
-export default function Scene3D({ polygon, state, onReady }: { polygon: GeoJSON.Polygon; state: SceneState; onReady?: () => void }) {
+export type CameraApi = { view: (v: "top" | "tilt" | "reset") => void; rotate: (deg: number) => void; zoom: (d: number) => void; setOrbit: (on: boolean) => void };
+
+export default function Scene3D({ polygon, state, onReady, apiRef, autoOrbit = false }: { polygon: GeoJSON.Polygon; state: SceneState; onReady?: () => void; apiRef?: React.MutableRefObject<CameraApi | null>; autoOrbit?: boolean }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<MlMap | null>(null);
   const label = useRef<HTMLDivElement | null>(null);
@@ -38,24 +40,27 @@ export default function Scene3D({ polygon, state, onReady }: { polygon: GeoJSON.
       container: el.current,
       center,
       zoom: 15,
-      pitch: 62,
+      pitch: autoOrbit ? 62 : 50,
       bearing: -20,
-      maxPitch: 80,
+      maxPitch: 78,
+      maxZoom: 18,
+      minZoom: 9,
       attributionControl: false,
       style: {
         version: 8,
         sources: {
-          sat: { type: "raster", tiles: [ESRI], tileSize: 256, maxzoom: 19, attribution: "Imagery © Esri, Maxar" },
+          sat: { type: "raster", tiles: [ESRI], tileSize: 256, maxzoom: 17, attribution: "Imagery © Esri, Maxar" },
           dem: { type: "raster-dem", tiles: [DEM], tileSize: 512, encoding: "terrarium", maxzoom: 12, attribution: "Terrain © Mapterhorn" },
         },
         layers: [{ id: "sat", type: "raster", source: "sat" }],
-        terrain: { source: "dem", exaggeration: 1.6 },
+        terrain: { source: "dem", exaggeration: 1.15 },
         sky: { "sky-color": "#bfe3ff", "horizon-color": "#f3efe6", "sky-horizon-blend": 0.6, "atmosphere-blend": 0.4 },
       },
     });
     map.current = m;
     m.on("error", (e) => console.warn("[twin]", (e as { error?: Error }).error?.message ?? e));
-    m.fitBounds(bounds, { padding: 90, pitch: 62, bearing: -20, duration: 0, maxZoom: 16.5 });
+    const home = () => m.fitBounds(bounds, { padding: 90, pitch: autoOrbit ? 62 : 50, bearing: -20, duration: 0, maxZoom: 16.5 });
+    home();
 
     let inited = false;
     const init = () => {
@@ -64,6 +69,8 @@ export default function Scene3D({ polygon, state, onReady }: { polygon: GeoJSON.
       const f = { type: "Feature" as const, properties: {}, geometry: polygon };
       m.addSource("field", { type: "geojson", data: f });
       m.addSource("ghost", { type: "geojson", data: f });
+      // flat states are draped on the terrain (never clipped by the coarse DEM); tall states extrude
+      m.addLayer({ id: "field-fill", type: "fill", source: "field", paint: { "fill-color": latest.current.color, "fill-opacity": 0.6, "fill-color-transition": { duration: 400, delay: 0 } } });
       m.addLayer({ id: "field-x", type: "fill-extrusion", source: "field", paint: { "fill-extrusion-color": latest.current.color, "fill-extrusion-height": latest.current.heightM, "fill-extrusion-opacity": 0.62, "fill-extrusion-height-transition": { duration: 700, delay: 0 }, "fill-extrusion-color-transition": { duration: 500, delay: 0 } } });
       m.addLayer({ id: "ghost-x", type: "fill-extrusion", source: "ghost", paint: { "fill-extrusion-color": "#ffffff", "fill-extrusion-height": latest.current.ghostHeightM ?? 0, "fill-extrusion-opacity": latest.current.ghostHeightM ? 0.22 : 0, "fill-extrusion-height-transition": { duration: 700, delay: 0 } } });
       m.addLayer({ id: "field-line", type: "line", source: "field", paint: { "line-color": "#ffffff", "line-width": 2.5, "line-opacity": 1 } });
@@ -81,7 +88,20 @@ export default function Scene3D({ polygon, state, onReady }: { polygon: GeoJSON.
     m.on("load", init);
 
     // slow orbit
-    let raf = 0, last = 0, visible = true, user = false;
+    let raf = 0, last = 0, visible = true, user = !autoOrbit;
+    const ease = (o: Parameters<typeof m.easeTo>[0]) => m.easeTo({ ...o, duration: reduce ? 0 : 700 });
+    if (apiRef)
+      apiRef.current = {
+        view: (v) => {
+          user = true;
+          if (v === "top") ease({ pitch: 0, bearing: 0 });
+          else if (v === "tilt") ease({ pitch: 60 });
+          else m.fitBounds(bounds, { padding: 90, pitch: 50, bearing: -20, duration: reduce ? 0 : 900, maxZoom: 16.5 });
+        },
+        rotate: (deg) => ((user = true), ease({ bearing: m.getBearing() + deg })),
+        zoom: (d) => ease({ zoom: m.getZoom() + d }),
+        setOrbit: (on) => (user = !on),
+      };
     const spin = (t: number) => {
       raf = requestAnimationFrame(spin);
       if (!visible || user || reduce || !ready.current) return (last = t);
@@ -110,8 +130,12 @@ export default function Scene3D({ polygon, state, onReady }: { polygon: GeoJSON.
     const m = map.current;
     if (!m || !ready.current) return;
     const s = latest.current;
+    const tall = s.heightM > 12;
+    m.setPaintProperty("field-fill", "fill-color", s.color);
+    m.setPaintProperty("field-fill", "fill-opacity", tall ? 0 : 0.6);
     m.setPaintProperty("field-x", "fill-extrusion-color", s.color);
-    m.setPaintProperty("field-x", "fill-extrusion-height", Math.max(1, s.heightM));
+    m.setPaintProperty("field-x", "fill-extrusion-opacity", tall ? 0.7 : 0);
+    m.setPaintProperty("field-x", "fill-extrusion-height", tall ? s.heightM : 0);
     m.setPaintProperty("ghost-x", "fill-extrusion-height", s.ghostHeightM ?? 0);
     m.setPaintProperty("ghost-x", "fill-extrusion-opacity", s.ghostHeightM ? 0.22 : 0);
     if (label.current) label.current.innerHTML = `<b style="font-size:15px;font-weight:600">${esc(s.label)}</b>${s.sub ? `<span style="font-size:11.5px;opacity:.8">${esc(s.sub)}</span>` : ""}`;

@@ -2,15 +2,15 @@
 
 import { clsx } from "clsx";
 import { m } from "motion/react";
-import { Droplet, FlaskConical, Pause, Play, Sprout, Star } from "lucide-react";
+import { Box, Droplet, FlaskConical, LocateFixed, Minus, Orbit as OrbitIcon, Pause, Play, Plus, RotateCcw, RotateCw, Sprout, Square, Star } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { AnalyzeResponse, CropId, Level, Strategy } from "@/types/api";
 import { CROPS } from "@/data/crops";
 import { cropName, monthShort, num } from "@/lib/format";
 import { useT } from "@/i18n";
 import { spring } from "../ui";
-import type { SceneState } from "./Scene3D";
+import type { CameraApi, SceneState } from "./Scene3D";
 
 const Scene3D = dynamic(() => import("./Scene3D"), { ssr: false, loading: () => null });
 
@@ -34,6 +34,18 @@ export function cropAt(s: Strategy, year: number, month: number): CropId | null 
   return null;
 }
 
+type CamKey = "top" | "tilt" | "l" | "r" | "in" | "out" | "orbit" | "home";
+const CAM_BUTTONS: { k: CamKey; Icon: typeof Square; uz: string; en: string }[] = [
+  { k: "top", Icon: Square, uz: "Yuqoridan", en: "Top view" },
+  { k: "tilt", Icon: Box, uz: "3D ko'rinish", en: "3D view" },
+  { k: "l", Icon: RotateCcw, uz: "Chapga burish", en: "Rotate left" },
+  { k: "r", Icon: RotateCw, uz: "O'ngga burish", en: "Rotate right" },
+  { k: "in", Icon: Plus, uz: "Yaqinlashtirish", en: "Zoom in" },
+  { k: "out", Icon: Minus, uz: "Uzoqlashtirish", en: "Zoom out" },
+  { k: "orbit", Icon: OrbitIcon, uz: "Atrofida aylanish", en: "Orbit" },
+  { k: "home", Icon: LocateFixed, uz: "Dalaga qaytish", en: "Back to field" },
+];
+
 function hasWebGL() {
   try {
     const c = document.createElement("canvas");
@@ -44,6 +56,24 @@ function hasWebGL() {
 }
 
 export function FieldTwin({ data, list, bestId, autoPlay = false, className }: { data: AnalyzeResponse; list: { s: Strategy; score: number; i: number }[]; bestId: string; autoPlay?: boolean; className?: string }) {
+  const cam = useRef<CameraApi | null>(null);
+  const [orbit, setOrbit] = useState(autoPlay);
+  function camera(k: CamKey) {
+    const c = cam.current;
+    if (!c) return;
+    if (k !== "in" && k !== "out" && k !== "tilt" && k !== "orbit") setOrbit(false);
+    if (k === "top") c.view("top");
+    else if (k === "tilt") c.view("tilt");
+    else if (k === "home") c.view("reset");
+    else if (k === "l") c.rotate(-45);
+    else if (k === "r") c.rotate(45);
+    else if (k === "in") c.zoom(0.7);
+    else if (k === "out") c.zoom(-0.7);
+    else if (k === "orbit") {
+      c.setOrbit(!orbit);
+      setOrbit(!orbit);
+    }
+  }
   const { t, lang } = useT();
   const L = (uz: string, en: string) => (lang === "uz" ? uz : en);
   const [mode, setMode] = useState<Mode>("crop");
@@ -91,7 +121,22 @@ export function FieldTwin({ data, list, bestId, autoPlay = false, className }: {
 
   return (
     <div className={clsx("relative h-[clamp(320px,52vh,500px)] overflow-hidden rounded-[26px] bg-[#0d1512] shadow-[var(--shadow-card)]", className)}>
-      {gl ? <Scene3D polygon={data.field.polygon} state={state} onReady={() => setLoaded(true)} /> : null}
+      {gl ? <Scene3D polygon={data.field.polygon} state={state} onReady={() => setLoaded(true)} apiRef={cam} autoOrbit={autoPlay} /> : null}
+
+      {/* camera: any angle, one tap */}
+      {gl && loaded && (
+        <div className="lg absolute top-[106px] right-3 flex flex-col gap-0.5 rounded-[18px] p-1 sm:top-[62px]" role="toolbar" aria-label={L("Kamera", "Camera")}>
+          {CAM_BUTTONS.map((b) => {
+            const label = b.k === "orbit" ? (orbit ? L("Aylanishni to'xtatish", "Stop orbit") : L("Atrofida aylanish", "Orbit")) : L(b.uz, b.en);
+            const active = b.k === "orbit" && orbit;
+            return (
+              <button key={b.k} type="button" onClick={() => camera(b.k)} title={label} aria-label={label} aria-pressed={b.k === "orbit" ? orbit : undefined} className={clsx("press h-9 w-9 items-center justify-center rounded-xl", b.k === "in" || b.k === "out" || b.k === "orbit" ? "hidden sm:flex" : "flex", active ? "bg-[var(--fg)] text-[var(--bg)]" : "text-[var(--fg)] hover:bg-[var(--surface)]/70")}>
+                <b.Icon size={17} strokeWidth={1.9} />
+              </button>
+            );
+          })}
+        </div>
+      )}
       {(!loaded || gl === false) && (
         <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(ellipse_at_center,#24412f,#0d1512)] text-[14px] text-white/70">
           {gl === false ? L("3D uchun WebGL kerak", "3D needs WebGL") : <span className="shimmer h-full w-full opacity-30" />}
