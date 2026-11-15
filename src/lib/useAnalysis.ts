@@ -13,6 +13,13 @@ export function useAnalysis(fieldId: string) {
     let dead = false;
     (async () => {
       let d = mem.get(fieldId) ?? readAnalysis(fieldId);
+      // live demo boundaries were redrawn from imagery: a copy saved with an older polygon is stale
+      if (d && fieldId.startsWith("live-")) {
+        const { LIVE_DEMOS } = await import("@/api/fastapi");
+        const ring = LIVE_DEMOS[fieldId.slice(5)]?.ring;
+        const first = d.field.polygon?.coordinates?.[0]?.[0];
+        if (ring && (!first || Math.abs(first[0] - ring[0][0]) > 1e-6 || Math.abs(first[1] - ring[0][1]) > 1e-6)) d = null;
+      }
       if (!d && fieldId.startsWith("demo-")) d = await loadDemo(fieldId.slice(5)).catch(() => null);
       // live-<name>: one of the FastAPI backend's cached demo fields, analysed live (~2-10 s)
       if (!d && fieldId.startsWith("live-")) {
