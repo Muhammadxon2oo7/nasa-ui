@@ -149,11 +149,11 @@ export function FieldTwin({ data, list, bestId, autoPlay = false, className }: {
           <button type="button" onClick={() => setFull((f) => !f)} title={full ? t("tw.exit" as never) : t("tw.full" as never)} aria-label={full ? t("tw.exit" as never) : t("tw.full" as never)} className="press flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--fg)] text-[var(--bg)]">
             {full ? <Minimize2 size={17} strokeWidth={1.9} /> : <Maximize2 size={17} strokeWidth={1.9} />}
           </button>
-          {CAM_BUTTONS.map((b) => {
+          {CAM_BUTTONS.filter((b) => full || b.k === "top" || b.k === "tilt" || b.k === "home").map((b) => {
             const label = b.k === "orbit" ? (orbit ? L("Aylanishni to'xtatish", "Stop orbit") : L("Atrofida aylanish", "Orbit")) : L(b.uz, b.en);
             const active = b.k === "orbit" && orbit;
             return (
-              <button key={b.k} type="button" onClick={() => camera(b.k)} title={label} aria-label={label} aria-pressed={b.k === "orbit" ? orbit : undefined} className={clsx("press h-9 w-9 items-center justify-center rounded-xl", b.k === "in" || b.k === "out" || b.k === "orbit" ? "hidden sm:flex" : "flex", active ? "bg-[var(--fg)] text-[var(--bg)]" : "text-[var(--fg)] hover:bg-[var(--surface)]/70")}>
+              <button key={b.k} type="button" onClick={() => camera(b.k)} title={label} aria-label={label} aria-pressed={b.k === "orbit" ? orbit : undefined} className={clsx("press flex h-9 w-9 items-center justify-center rounded-xl", active ? "bg-[var(--fg)] text-[var(--bg)]" : "text-[var(--fg)] hover:bg-[var(--surface)]/70")}>
                 <b.Icon size={17} strokeWidth={1.9} />
               </button>
             );

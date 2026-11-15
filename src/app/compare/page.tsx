@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, m } from "motion/react";
-import { ArrowRight, MapPinned, MousePointerClick, Sparkles, Trash2, Trophy } from "lucide-react";
+import { ArrowRight, Info, MapPinned, MousePointerClick, Sparkles, Trash2, Trophy } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import type { CompareGoal, CompareResponse } from "@/types/api";
@@ -12,7 +12,7 @@ import { useProfile } from "@/store/platformStore";
 import { useT, type Key } from "@/i18n";
 import { analyzePolygon, circlePolygon } from "@/lib/geo";
 import type { MapApi } from "@/components/map/FieldMap";
-import { Button, Card, CardTitle, DisclaimerBanner, ErrorState, ScoreBar, Segmented, Skeleton, spring } from "@/components/ui";
+import { Button, Card, CardTitle, ErrorState, ScoreBar, Segmented, Skeleton, spring } from "@/components/ui";
 
 const FieldMap = dynamic(() => import("@/components/map/FieldMap"), { ssr: false, loading: () => <div className="shimmer h-full w-full bg-[var(--surface-2)]" /> });
 
@@ -131,7 +131,7 @@ export default function ComparePage() {
   return (
     <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] gap-3 px-3 pb-8 sm:px-6">
       <div className="pt-2">
-        <h1 className="text-[clamp(26px,4vw,38px)] font-semibold tracking-[-0.03em]">📍 {t("cmp.title")}</h1>
+        <h1 className="text-[clamp(26px,4vw,38px)] font-semibold tracking-[-0.03em]">{t("cmp.title")}</h1>
         <p className="mt-1 max-w-2xl text-[15px] text-[var(--fg-2)]">{t("cmp.sub")}</p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -151,7 +151,7 @@ export default function ComparePage() {
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="overflow-hidden rounded-[24px] bg-[var(--surface)] shadow-[var(--shadow-card)]">
-          <div className="relative h-[min(56vh,460px)]">
+          <div className="relative isolate h-[min(60vh,520px)]">
             <FieldMap value={draft} onChange={onDraw} onMapClick={onTap} basemap="sat" apiRef={api} extra={{ polygons: places.map((p, i) => ({ coords: p.polygon, label: `${LETTER[i]} · ${p.name}`, color: HEX[i] })) }} fitExtra={fit} />
             {/* above Leaflet's panes (z 400-800) */}
             <div className="pointer-events-none absolute inset-x-3 bottom-3 z-[1000] flex flex-col items-center gap-2">
@@ -224,7 +224,7 @@ export default function ComparePage() {
       <AnimatePresence>
         {res && best && (
           <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={spring} className="grid grid-cols-[minmax(0,1fr)] gap-3">
-            <DisclaimerBanner />
+            <p className="flex items-center gap-1.5 px-1 text-[12.5px] text-[var(--fg-3)]"><Info size={13} /> {t("disclaimer")}</p>
             <Card className="flex flex-col gap-2 border-[color-mix(in_oklab,var(--accent)_30%,transparent)]">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--accent-fill)] text-white">

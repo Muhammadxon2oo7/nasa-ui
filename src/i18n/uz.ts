@@ -539,4 +539,5 @@ export const uz = {
   "score.help": "Ball: sizning ustuvorliklaringiz (suv, sho'r, tuproq…) bo'yicha 0-100. Qanchalik yuqori, shuncha mos.",
   "tw.full": "To'liq ekran",
   "tw.exit": "Yopish",
+  "q.space": "Kosmosdan",
 };

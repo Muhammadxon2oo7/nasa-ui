@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, m } from "motion/react";
-import { Beef, CalendarDays, Check, Info, CloudSun, Droplet, Flame, FlaskConical, Globe, Layers, Leaf, Map, MapPin, ScrollText, Sprout, ThermometerSun, Wheat } from "lucide-react";
+import { Beef, CalendarDays, Check, Info, CloudSun, Droplet, Flame, FlaskConical, Globe, Layers, Leaf, MapPin, Satellite, ScrollText, Sprout, ThermometerSun, Wheat } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import type { AnalyzeRequest } from "@/types/api";
@@ -22,10 +22,10 @@ import { CalendarTab, FeedbackPrompt, ThisWeekCard } from "@/components/result/E
 import { Button, DegradedNotice, EmptyState, Segmented, Skeleton, spring } from "@/components/ui";
 
 // 5 question-shaped sections per module; older tab ids in shared links map onto them
-const TABS = ["plan", "calendar", "water", "field", "weather", "pasture", "heat", "wsrc"] as const;
+const TABS = ["plan", "calendar", "water", "field", "space", "weather", "pasture", "heat", "wsrc"] as const;
 type Tab = (typeof TABS)[number];
-const ALIAS: Record<string, Tab> = { strategies: "plan", history: "field", soil: "field", map: "field", climate: "weather", forecast: "weather", capacity: "pasture" };
-const ICON: Record<Tab, React.ReactNode> = { plan: <Sprout size={15} />, calendar: <CalendarDays size={15} />, water: <Droplet size={15} />, field: <Layers size={15} />, weather: <CloudSun size={15} />, pasture: <Leaf size={15} />, heat: <Flame size={15} />, wsrc: <MapPin size={15} /> };
+const ALIAS: Record<string, Tab> = { strategies: "plan", history: "field", soil: "field", map: "space", climate: "weather", forecast: "weather", capacity: "pasture" };
+const ICON: Record<Tab, React.ReactNode> = { plan: <Sprout size={15} />, calendar: <CalendarDays size={15} />, water: <Droplet size={15} />, field: <Layers size={15} />, space: <Satellite size={15} />, weather: <CloudSun size={15} />, pasture: <Leaf size={15} />, heat: <Flame size={15} />, wsrc: <MapPin size={15} /> };
 
 export default function ResultPage() {
   return (
@@ -148,9 +148,9 @@ function Result() {
 
 type ModuleTab = "crop" | "livestock" | "general";
 const MODULE_TABS: Record<ModuleTab, Tab[]> = {
-  crop: ["plan", "calendar", "water", "field", "weather"],
-  livestock: ["pasture", "heat", "wsrc", "calendar", "weather"],
-  general: ["field", "weather", "water"],
+  crop: ["plan", "calendar", "water", "field", "space", "weather"],
+  livestock: ["pasture", "heat", "wsrc", "space", "calendar", "weather"],
+  general: ["field", "space", "weather", "water"],
 };
 
 function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullable<ReturnType<typeof useAnalysis>["data"]>; tab: Tab; setTab: (t: Tab, mod?: ModuleTab) => void; recompute: (e: number) => void; busy: boolean }) {
@@ -240,11 +240,9 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
               <Fold icon={<ScrollText size={18} />} title={t("f.history")} hint={data.history.seasons.length ? `${data.history.seasons[0].year}-${data.history.seasons[data.history.seasons.length - 1].year}` : undefined}>
                 <HistoryTab data={data} />
               </Fold>
-              <Fold icon={<Map size={18} />} title={t("f.map")} hint="MODIS · SMAP · IMERG · SRTM">
-                <MapTab data={data} />
-              </Fold>
             </div>
           )}
+          {active === "space" && <MapTab data={data} />}
           {active === "weather" && (
             <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
               <ForecastTab data={data} />

@@ -45,6 +45,7 @@ export default function FieldMap({
   fitExtra,
   nav,
   navClassName,
+  fitMaxZoom = 17,
 }: {
   value: GeoJSON.Polygon | null;
   onChange?: (p: GeoJSON.Polygon | null) => void;
@@ -59,6 +60,8 @@ export default function FieldMap({
   /** region picker + "my location" (defaults to on for editable maps) */
   nav?: boolean;
   navClassName?: string;
+  /** cap for the automatic fit to the field (e.g. 11 for coarse NASA layers) */
+  fitMaxZoom?: number;
 }) {
   nav = nav ?? !readOnly;
   const el = useRef<HTMLDivElement>(null);
@@ -134,7 +137,7 @@ export default function FieldMap({
       layer.on("pm:edit", emit);
       layer.on("pm:markerdrag", emit);
     }
-    if (fit) m.flyToBounds(layer.getBounds(), { padding: [48, 48], duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1.1, maxZoom: 17 });
+    if (fit) m.flyToBounds(layer.getBounds(), { padding: [48, 48], duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1.1, maxZoom: fitMaxZoom });
   }
   function setBase(b: "sat" | "map") {
     const Lm = L.current, m = map.current;
@@ -186,7 +189,8 @@ export default function FieldMap({
   }, [overlay?.url, overlay?.opacity]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="relative h-full w-full">
+    // isolate: Leaflet's panes use z-index 400-1000; keep them inside the map so the page header stays on top
+    <div className="relative isolate h-full w-full">
       <div ref={el} className="h-full w-full" role="region" aria-label="Map" />
       {nav && <MapNav map={map} L={L} className={navClassName} />}
     </div>

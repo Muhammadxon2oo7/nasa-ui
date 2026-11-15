@@ -541,4 +541,5 @@ export const en: Record<keyof typeof uz, string> = {
   "score.help": "Score 0-100 by your priorities (water, salt, soil…). Higher fits better.",
   "tw.full": "Full screen",
   "tw.exit": "Close",
+  "q.space": "From space",
 };

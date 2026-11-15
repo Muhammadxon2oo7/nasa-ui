@@ -2,13 +2,14 @@
 
 import { clsx } from "clsx";
 import { m } from "motion/react";
-import { ArrowDown, ArrowUp, Loader2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Loader2, Pause, Play, Satellite } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { AnalyzeResponse, IrrigationMethod } from "@/types/api";
 import { whatIf as whatIfApi } from "@/api/client";
 import { grossM3, initialWeights, scoreStrategy } from "@/lib/scoring";
 import { dayMonth, monthShort, num, yearMonth } from "@/lib/format";
+import type { MapApi } from "../map/FieldMap";
 import { useT, type Key } from "@/i18n";
 import { useResultUi } from "@/store/resultUiStore";
 import { XYChart } from "../charts";
@@ -377,45 +378,96 @@ const GIBS_LAYER: Record<Exclude<GibsId, "none">, { layer: string; tms: string; 
   relief: { layer: "SRTM_Color_Index", tms: "GoogleMapsCompatible_Level8", z: 8, attr: "NASA GIBS · SRTM", fixed: true },
 };
 
+const LAYER_INFO: Record<Exclude<GibsId, "none">, { uz: [string, string, string]; en: [string, string, string]; res: string; cadence: "daily" | "8day" | "static" }> = {
+  truecolor: { uz: ["Haqiqiy rangli surat", "Kosmosdan oddiy ko'z bilan ko'rinish: bulut, qor, sug'oriladigan massivlar.", "Dala va qo'shni yerlarning umumiy holati"], en: ["True colour", "What the eye sees from orbit: clouds, snow, irrigated massifs.", "Overall state of the field and its neighbours"], res: "MODIS Terra · 250 m · kunlik", cadence: "daily" },
+  ndvi: { uz: ["O'simlik qoplami (NDVI)", "Yashil = faol o'sayotgan o'simlik, jigarrang = bo'sh yoki qurigan yer.", "Dala qachon bo'sh turishi va ekin qachon stressga tushishini ko'rsatadi"], en: ["Vegetation (NDVI)", "Green = actively growing plants, brown = bare or dry land.", "Shows when the field stands bare and when crops are stressed"], res: "MODIS · 250 m · 8 kunlik", cadence: "8day" },
+  smap: { uz: ["Ildiz zonasi namligi", "Tuproqning 0-100 sm qatlamidagi suv (SMAP L4 modeli).", "Qurg'oqchilik stressi va sug'orish ehtiyoji, chuqur ildizli ekinlar tanlovi"], en: ["Root-zone soil moisture", "Water in the top 0-100 cm of soil (SMAP L4 model).", "Drought stress, irrigation need, deep-rooted crop choice"], res: "SMAP L4 · 9 km · kunlik", cadence: "daily" },
+  rain: { uz: ["Yog'in", "Kosmosdan o'lchangan yog'in jadalligi (GPM IMERG).", "Yog'in ishonchliligi, kuchli jala va eroziya xavfi"], en: ["Precipitation", "Rain rate measured from space (GPM IMERG).", "Rain reliability, storms and erosion risk"], res: "GPM IMERG · 0.1° · kunlik", cadence: "daily" },
+  lst: { uz: ["Yer yuzasi harorati", "Kunduzgi tuproq va o'simlik yuzasi harorati.", "Issiqlik stressi o'choqlari, issiqqa chidamli ekin kerakligi"], en: ["Land surface temperature", "Daytime temperature of soil and canopy.", "Heat-stress hotspots, need for heat-tolerant crops"], res: "MODIS · 1 km · kunlik", cadence: "daily" },
+  snow: { uz: ["Qor qoplami", "Tog'lardagi qor: yozgi sug'orish suvining manbai.", "Kelasi yozda suv yetarlimi degan savolga erta signal"], en: ["Snow cover", "Mountain snow: the source of summer irrigation water.", "An early signal of next summer's water supply"], res: "MODIS NDSI · 500 m · kunlik", cadence: "daily" },
+  relief: { uz: ["Relyef", "Balandlik va qiyalik (SRTM).", "Qiyalik eroziya va suv oqimini belgilaydi"], en: ["Terrain", "Elevation and slope (SRTM).", "Slope drives erosion and run-off"], res: "SRTM · 30 m", cadence: "static" },
+};
+
+/** "From space": NASA GIBS layers over the field, with a month-by-month timeline (challenge: trends over time, overlays). */
 export function MapTab({ data }: { data: AnalyzeResponse }) {
-  const { t } = useT();
-  const [layer, setLayer] = useState<GibsId>("ndvi");
+  const { t, lang } = useT();
+  const [layer, setLayer] = useState<Exclude<GibsId, "none">>("ndvi");
   const [opacity, setOpacity] = useState(70);
-  const [date, setDate] = useState(() => new Date(Date.now() - 10 * 864e5).toISOString().slice(0, 10));
+  // timeline: the 15th of each of the last 36 months (latest = 10 days ago)
+  const [months] = useState(() => {
+    const now = new Date(Date.now() - 10 * 864e5);
+    return Array.from({ length: 36 }, (_, i) => {
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (35 - i), 15));
+      return i === 35 ? now.toISOString().slice(0, 10) : d.toISOString().slice(0, 10);
+    });
+  });
+  const [idx, setIdx] = useState(35);
+  const [playing, setPlaying] = useState(false);
+  const date = months[idx];
+  const info = LAYER_INFO[layer];
+  useEffect(() => {
+    if (!playing) return;
+    const id = setInterval(() => setIdx((i) => (i + 1) % months.length), 1100);
+    return () => clearInterval(id);
+  }, [playing, months.length]);
   const overlay = useMemo(() => {
-    if (layer === "none") return null;
     const g = GIBS_LAYER[layer];
     return { url: GIBS(g.layer, g.tms, g.fixed ? "default" : date, g.ext), opacity: opacity / 100, maxNativeZoom: g.z, attribution: g.attr };
   }, [layer, opacity, date]);
-  // N12: open the same place, date and layer in NASA Worldview (for slides)
+  const api = useRef<MapApi | null>(null);
   const [la, lo] = data.field.centroid;
-  const worldview = `https://worldview.earthdata.nasa.gov/?v=${lo - 0.6},${la - 0.4},${lo + 0.6},${la + 0.4}&l=${layer === "none" || layer === "relief" ? "" : `${GIBS_LAYER[layer].layer},`}MODIS_Terra_CorrectedReflectance_TrueColor,Reference_Labels_15m&t=${date}`;
+  const worldview = `https://worldview.earthdata.nasa.gov/?v=${lo - 0.6},${la - 0.4},${lo + 0.6},${la + 0.4}&l=${layer === "relief" ? "" : `${GIBS_LAYER[layer].layer},`}MODIS_Terra_CorrectedReflectance_TrueColor,Reference_Labels_15m&t=${date}`;
+  const L3 = lang === "en" ? info.en : info.uz;
+  const fmt = (d: string) => `${monthShort(+d.slice(5, 7), lang)} ${d.slice(0, 4)}`;
+  const LAYERS: Exclude<GibsId, "none">[] = ["ndvi", "smap", "rain", "lst", "snow", "truecolor", "relief"];
   return (
-    <div className="grid gap-3 lg:grid-cols-[1fr_280px]">
-      <div className="h-[60dvh] min-h-[380px] overflow-hidden rounded-[24px] shadow-[var(--shadow-card)]">
-        <FieldMap value={data.field.polygon} basemap="sat" readOnly overlay={overlay} />
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="relative isolate h-[min(72dvh,640px)] min-h-[420px] overflow-hidden rounded-[24px] shadow-[var(--shadow-card)]">
+        {/* regional view: GIBS layers are 250 m - 9 km, so they read as patterns at zoom ~11, not as blocks */}
+        <FieldMap value={data.field.polygon} basemap="sat" readOnly overlay={overlay} apiRef={api} fitMaxZoom={11} />
+        {/* layer chips */}
+        <div className="no-scrollbar absolute inset-x-3 top-3 z-[600] overflow-x-auto">
+          <div className="lg flex w-max gap-0.5 rounded-full p-1" role="radiogroup" aria-label={t("map.layers")}>
+            {LAYERS.map((id) => (
+              <button key={id} type="button" role="radio" aria-checked={layer === id} onClick={() => setLayer(id)} className={clsx("press rounded-full px-3 py-1.5 text-[13px] font-semibold whitespace-nowrap", layer === id ? "bg-[var(--fg)] text-[var(--bg)]" : "text-[var(--fg)]")}>
+                {(lang === "en" ? LAYER_INFO[id].en : LAYER_INFO[id].uz)[0]}
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* timeline */}
+        {info.cadence !== "static" && (
+          <div className="lg absolute inset-x-3 bottom-3 z-[600] flex items-center gap-3 rounded-[18px] p-2.5">
+            <button type="button" onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"} className="press flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--accent-fill)] text-white">
+              {playing ? <Pause size={17} /> : <Play size={17} className="translate-x-[1px]" />}
+            </button>
+            <div className="min-w-0 flex-1">
+              <input type="range" min={0} max={months.length - 1} value={idx} onChange={(e) => (setIdx(+e.target.value), setPlaying(false))} aria-label={t("map.date")} className="w-full accent-[var(--accent-fill)]" />
+              <div className="flex justify-between text-[12px] font-medium text-[var(--fg-2)] tnum">
+                <span>{fmt(months[0])}</span>
+                <b className="text-[var(--fg)]">{fmt(date)}</b>
+                <span>{fmt(months[months.length - 1])}</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-      <Card>
-        <CardTitle>{t("map.layers")}</CardTitle>
-        <div className="grid gap-1">
-          {([["none", "map.sat"], ["truecolor", "map.truecolor"], ["ndvi", "map.ndvi"], ["snow", "map.snow"], ["lst", "map.lst"], ["smap", "map.smap"], ["rain", "map.rain"], ["relief", "map.relief"]] as const).map(([id, k]) => (
-            <label key={id} className={clsx("flex cursor-pointer items-center gap-2.5 rounded-xl px-2.5 py-2 text-[14px]", layer === id && "bg-[var(--accent-soft)]")}>
-              <input type="radio" name="layer" className="accent-[var(--accent-fill)]" checked={layer === id} onChange={() => setLayer(id)} />
-              {t(k as Key)}
-            </label>
-          ))}
+      <Card className="flex flex-col gap-3">
+        <div>
+          <h3 className="text-[17px] font-semibold tracking-[-0.01em]">{L3[0]}</h3>
+          <p className="mt-1 text-[14px] text-[var(--fg-2)]">{L3[1]}</p>
         </div>
-        <div className="mt-3">
-          <Slider id="op" label={t("map.opacity")} value={opacity} min={10} max={100} step={5} onChange={setOpacity} format={(v) => `${v}%`} />
+        <div className="rounded-2xl bg-[var(--surface-2)] px-3 py-2.5">
+          <div className="text-[12px] font-semibold text-[var(--fg-3)]">{lang === "en" ? "Why it matters for rotation" : "Rotatsiya uchun nega muhim"}</div>
+          <p className="text-[14px]">{L3[2]}</p>
         </div>
-        <label htmlFor="mapdate" className="mt-2 block text-[13.5px] text-[var(--fg-2)]">
-          {t("map.date")}
-          <input id="mapdate" type="date" value={date} max={new Date().toISOString().slice(0, 10)} min="2016-01-01" onChange={(e) => setDate(e.target.value)} className="mt-1 h-10 w-full rounded-xl bg-[var(--surface-2)] px-3 text-[14px]" />
-        </label>
-        <a href={worldview} target="_blank" rel="noreferrer" className="press mt-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--surface-2)] px-3 py-2 text-[13.5px] font-semibold">
-          🛰️ {t("map.worldview")} ↗
+        <Slider id="op" label={t("map.opacity")} value={opacity} min={10} max={100} step={5} onChange={setOpacity} format={(v) => `${v}%`} />
+        <div className="text-[12.5px] text-[var(--fg-3)]">{info.res}</div>
+        <p className="text-[12.5px] text-[var(--fg-3)]">{lang === "en" ? "Satellite layers are area averages (250 m - 9 km). Field-level detail comes from Sentinel-2 and your own observations." : "Sun'iy yo'ldosh qatlamlari hudud o'rtachasi (250 m - 9 km). Dala darajasidagi aniqlik Sentinel-2 va sizning kuzatuvingizdan keladi."}</p>
+        <a href={worldview} target="_blank" rel="noreferrer" className="press mt-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--surface-2)] px-3 py-2 text-[13.5px] font-semibold">
+          <Satellite size={15} /> {t("map.worldview")} ↗
         </a>
-        <SourceBadge source="NASA GIBS (WMTS)" className="mt-3" />
+        <SourceBadge source="NASA GIBS (WMTS)" />
       </Card>
     </div>
   );
