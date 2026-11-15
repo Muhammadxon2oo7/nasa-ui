@@ -33,7 +33,7 @@ export default function Landing() {
           </m.p>
           <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.12 }} className="mt-8">
             <p className="mb-3 text-[15px] font-medium text-[var(--fg-2)]">{t("landing.who")}</p>
-            <div className="grid gap-1.5 sm:grid-cols-2">
+            <div data-guide="roles" className="grid gap-1.5 sm:grid-cols-2">
               {PROFILES.map((p) => {
                 const Icon = ROLE_ICON[p];
                 const on = profile === p;

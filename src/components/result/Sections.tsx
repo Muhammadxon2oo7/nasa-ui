@@ -81,7 +81,7 @@ export function AnswerCard({ data, best, bestScore, water, onMore, currentScore 
   const why = (echoes ? reasonFromData(best, cur, water, lang === "en" ? "en" : "uz") : own) || own || data.summary.text;
   const trend = (data.soil.salinityTrendPct ?? 0) > 5 && data.soil.salinityLevel !== "low";
   return (
-    <m.article initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="relative flex flex-col overflow-hidden rounded-[26px] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] ring-1 ring-[var(--gold)]/40 sm:p-6">
+    <m.article data-guide="answer" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="relative flex flex-col overflow-hidden rounded-[26px] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] ring-1 ring-[var(--gold)]/40 sm:p-6">
       <div className="mt-1.5 flex flex-wrap items-end gap-x-4 gap-y-2">
         <h2 className="w-full min-w-0 shrink-0 text-[clamp(21px,2.6vw,27px)] leading-tight font-semibold tracking-[-0.025em] text-balance">{best.name}</h2>
         <div className="flex items-center gap-2">

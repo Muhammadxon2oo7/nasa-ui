@@ -51,7 +51,7 @@ export function StrategiesTab({ data }: { data: AnalyzeResponse }) {
         </div>
       )}
       <p className="px-1 text-[13px] text-[var(--fg-3)]">{t("f.pickHint")}</p>
-      <div className="snap-x-cards no-scrollbar -mx-3 flex gap-2.5 overflow-x-auto px-3 pb-1 md:mx-0 md:grid md:grid-cols-4 md:overflow-visible md:px-0">
+      <div data-guide="strategies" className="snap-x-cards no-scrollbar -mx-3 flex gap-2.5 overflow-x-auto px-3 pb-1 md:mx-0 md:grid md:grid-cols-4 md:overflow-visible md:px-0">
         {list.map((x) => (
           <m.div key={x.s.id} layout transition={{ type: "spring", bounce: 0.15, duration: 0.55 }} className="w-[78vw] max-w-[300px] shrink-0 md:w-auto md:max-w-none">
             <StrategyCard st={x.s} score={x.score} gross={x.gross} color={SERIES[x.i]} isBest={x === best} open={ui.selected === x.s.id} onToggle={() => ui.set({ selected: ui.selected === x.s.id ? null : x.s.id })} />

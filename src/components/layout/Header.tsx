@@ -20,6 +20,7 @@ const NAV = [
   { href: "/demo", key: "nav.demo" },
   { href: "/fields", key: "nav.fields" },
   { href: "/about", key: "nav.about" },
+  { href: "/guide", key: "nav.guide" },
 ] as const;
 const PROFILES: Profile[] = ["farmer", "herder", "land_seeker", "expert"];
 
@@ -143,7 +144,7 @@ export function Header() {
               );
             })}
           </div>
-          <div className="ml-auto flex items-center gap-0.5 lg:ml-0">
+          <div data-guide="header-controls" className="ml-auto flex items-center gap-0.5 lg:ml-0">
             <div className="hidden md:block">
               <ModeToggle />
             </div>

@@ -2,6 +2,7 @@ export const uz = {
   brand: "TerraVision",
   "nav.analyze": "Tahlil",
   "nav.fields": "Dalalarim",
+  "nav.guide": "Qo'llanma",
   "nav.about": "Metodologiya",
   "nav.demo": "Demo",
   "footer.data": "NASA · ESA · FAO ma'lumotlari asosida · Space Apps 2026",

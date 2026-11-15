@@ -108,8 +108,10 @@ export function WaterTab({ data, onTryDry }: { data: AnalyzeResponse; onTryDry?:
         </Card>
       )}
       {ui.method !== "drip" && gross - drip > 300 && <p className="rounded-2xl bg-[var(--accent-soft)] px-4 py-3 text-[14px]">{t("w.tip", { n: num(gross - drip) })}</p>}
-      <WaterNormsCard data={data} />
-      <WaterStorageCard data={data} />
+      <div data-guide="norms" className="grid gap-3">
+        <WaterNormsCard data={data} />
+        <WaterStorageCard data={data} />
+      </div>
       <Fold icon={<Receipt size={18} />} title={t("f.actual")} hint={data.actualWater ? `${data.actualWater.year}: ${num(data.actualWater.consumedM3PerHa)} / ${(data.actualWater.needM3PerHa != null ? num(data.actualWater.needM3PerHa) : "?")} ${t("m3ha")}` : undefined}>
         <ActualVsNeedCard data={data} />
         {!data.strategies.some((x) => x.waterNorms?.length) && <NormComparisonRow data={data} />}

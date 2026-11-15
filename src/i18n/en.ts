@@ -4,6 +4,7 @@ export const en: Record<keyof typeof uz, string> = {
   brand: "TerraVision",
   "nav.analyze": "Analyze",
   "nav.fields": "My fields",
+  "nav.guide": "Guide",
   "nav.about": "Methodology",
   "nav.demo": "Demo",
   "footer.data": "Built on NASA · ESA · FAO data · Space Apps 2026",

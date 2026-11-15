@@ -280,7 +280,7 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
         />
       </div>
       {mod === "livestock" && data.livestock ? (
-        <LivestockCards data={data} />
+        <div data-guide="ls-cards"><LivestockCards data={data} /></div>
       ) : (
         <div className="grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
           <FieldTwin data={data} list={ranked.list} bestId={best.s.id} />
@@ -311,15 +311,17 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
           {active === "plan" && (
             <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
               <StrategiesTab data={data} />
+              <div data-guide="whatif">
               <Fold icon={<CloudSun size={18} />} title={t("f.whatifTitle" as Key)} hint={t("f.whatifHint" as Key)} open={useResultUi.getState().whatIf.dP !== 0 || useResultUi.getState().whatIf.dT !== 0}>
                 <WhatIf data={data} />
               </Fold>
+              </div>
             </div>
           )}
           {active === "calendar" && (
             <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
               {mod !== "general" && <CalendarTab data={data} />}
-              {mod === "crop" && <VulnerableWindowsCard data={data} />}
+              {mod === "crop" && <div data-guide="vuln"><VulnerableWindowsCard data={data} /></div>}
               <Week data={data} />
               <Fold icon={<CloudSun size={18} />} title={t("f.seasonFold" as Key)} hint={t("f.seasonHint" as Key)}>
                 <Season data={data} />
@@ -337,7 +339,7 @@ function Body({ data: initial, tab, setTab, recompute, busy }: { data: NonNullab
           )}
           {active === "field" && (
             <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
-              {mod !== "livestock" && <ZonesCard data={data} />}
+              {mod !== "livestock" && <div data-guide="zones"><ZonesCard data={data} /></div>}
               {mod !== "livestock" && <SoilNowCard data={data} />}
               <MapTab data={data} initialLayer={mod === "livestock" ? "ndvi" : "field30"} />
               <RainErosionCard data={data} />

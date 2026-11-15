@@ -238,6 +238,7 @@ export function Step1({ onNext }: { onNext: () => void }) {
               <button
                 key={f.id}
                 type="button"
+                data-guide="demo-field"
                 onClick={() => setPolygon(f.polygon, f.id)}
                 className={clsx("press flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors", demoId === f.id ? "bg-[var(--accent-soft)]" : "hover:bg-[var(--surface-2)]")}
               >

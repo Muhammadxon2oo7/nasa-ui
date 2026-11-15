@@ -286,7 +286,7 @@ export default function ComparePage() {
 
             {/* desktop table */}
             <Card className="hidden overflow-x-auto p-0 md:block">
-              <table className="w-full text-[14px]">
+              <table data-guide="compare-table" className="w-full text-[14px]">
                 <thead>
                   <tr className="border-b border-[var(--separator)]">
                     <th className="p-3 text-left font-medium text-[var(--fg-3)]" />
