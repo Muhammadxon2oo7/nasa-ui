@@ -540,4 +540,9 @@ export const uz = {
   "tw.full": "To'liq ekran",
   "tw.exit": "Yopish",
   "q.space": "Kosmosdan",
+  "s2.yourField": "Sizning dalangiz",
+  "s2.d1": "NASA POWER: 20 yillik kunlik iqlim",
+  "s2.d2": "Sentinel-2: 2017-yildan beri dala tarixi",
+  "s2.d3": "FAO-56: har rotatsiyaning suv talabi",
+  "s2.d4": "ECMWF: 7 kunlik va 6 oylik prognoz",
 };

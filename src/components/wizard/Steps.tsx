@@ -2,7 +2,8 @@
 
 import { clsx } from "clsx";
 import { AnimatePresence, m } from "motion/react";
-import { Check, ChevronRight, Crosshair, FileUp, Loader2, MapPin, Pencil, RotateCcw, Satellite, Search, SquarePen, Trash2 } from "lucide-react";
+import { Beef, Check, ChevronRight, CloudSun, Coins, Crosshair, Droplets, FileUp, FlaskConical, Leaf, Sprout, Timer, Wheat, Loader2, MapPin, Pencil, RotateCcw, Satellite, Search, SquarePen, Thermometer, Trash2 } from "lucide-react";
+import { FieldSnapshot } from "../FieldSnapshot";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -261,13 +262,13 @@ export function Step1({ onNext }: { onNext: () => void }) {
 
 /* ------------------------------------------------------------------ step 2: farmer data */
 
-const PRIORITIES: { id: Priority; icon: string }[] = [
-  { id: "water", icon: "💧" },
-  { id: "salinity", icon: "🧂" },
-  { id: "income", icon: "💰" },
-  { id: "soil", icon: "🌱" },
-  { id: "forage", icon: "🐄" },
-  { id: "labor", icon: "⚡" },
+const PRIORITIES: { id: Priority; icon: React.ReactNode }[] = [
+  { id: "water", icon: <Droplets size={15} /> },
+  { id: "salinity", icon: <FlaskConical size={15} /> },
+  { id: "income", icon: <Coins size={15} /> },
+  { id: "soil", icon: <Sprout size={15} /> },
+  { id: "forage", icon: <Beef size={15} /> },
+  { id: "labor", icon: <Timer size={15} /> },
 ];
 
 function CropSelect({ value, onChange, filter, id }: { value: CropId | null; onChange: (c: CropId) => void; filter?: (c: CropId) => boolean; id: string }) {
@@ -294,11 +295,13 @@ export function Step2({ onBack, onRun }: { onBack: () => void; onRun: () => void
   const showCrop = profile !== "herder";
   const showLs = profile === "herder" || profile === "expert";
   const canRun = profile === "herder" ? true : w.priorities.length > 0;
+  const info = w.polygon ? analyzePolygon(w.polygon) : null;
   return (
-    <div className="mx-auto grid max-w-[720px] gap-3">
+    <div className="mx-auto grid max-w-5xl gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
+    <div className="grid min-w-0 gap-3">
       {showCrop && showLs && (
         <div className="flex justify-center">
-          <Segmented value={tab} onChange={setTab} options={[{ value: "crop", label: `🌾 ${t("mod.crop")}` }, { value: "livestock", label: `🐄 ${t("mod.livestock")}` }]} />
+          <Segmented value={tab} onChange={setTab} options={[{ value: "crop", label: t("mod.crop") }, { value: "livestock", label: t("mod.livestock") }]} />
         </div>
       )}
       {showCrop && (!showLs || tab === "crop") && <CropForm />}
@@ -311,6 +314,27 @@ export function Step2({ onBack, onRun }: { onBack: () => void; onRun: () => void
           <Search size={16} /> {t("s2.run")} →
         </Button>
       </div>
+    </div>
+      {/* the field stays in view while answering */}
+      {w.polygon && info && (
+        <aside className="grid gap-3 lg:sticky lg:top-[96px]">
+          <FieldSnapshot polygon={w.polygon} ratio={4 / 3} />
+          <div className="rounded-[22px] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+            <div className="flex items-baseline justify-between">
+              <b className="text-[15px]">{t("s2.yourField" as Key)}</b>
+              <span className="text-[20px] font-semibold tnum">{info.areaHa} <span className="text-[13px] font-normal text-[var(--fg-3)]">{t("ha")}</span></span>
+            </div>
+            <div className="text-[12.5px] text-[var(--fg-3)] tnum">{info.centroid[0].toFixed(4)}°N, {info.centroid[1].toFixed(4)}°E</div>
+            <ul className="mt-3 grid gap-2 text-[13px]">
+              {([[Thermometer, "s2.d1"], [Satellite, "s2.d2"], [Droplets, "s2.d3"], [CloudSun, "s2.d4"]] as const).map(([Icon, k]) => (
+                <li key={k} className="flex items-center gap-2.5 text-[var(--fg-2)]">
+                  <Icon size={15} className="shrink-0 text-[var(--accent)]" /> {t(k as Key)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+      )}
     </div>
   );
 }
@@ -379,7 +403,7 @@ function LivestockForm() {
                 onClick={() => set({ priorities: on ? ls.priorities.filter((x) => x !== p) : [...ls.priorities, p] })}
                 className={clsx("flex h-11 items-center gap-2 rounded-full pr-4 pl-3 text-[14.5px] font-medium transition-colors", on ? "bg-[var(--accent-fill)] text-white" : "bg-[var(--surface-2)] hover:bg-[var(--surface-3)]")}
               >
-                {on ? <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/25 text-[12px] font-bold">{idx + 1}</span> : <span aria-hidden>{{ conserve: "🌿", more_animals: "🐄", heat: "🌡️", forage: "🌾" }[p]}</span>}
+                {on ? <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/25 text-[12px] font-bold">{idx + 1}</span> : <span aria-hidden className="flex">{{ conserve: <Leaf size={15} />, more_animals: <Beef size={15} />, heat: <Thermometer size={15} />, forage: <Wheat size={15} /> }[p]}</span>}
                 {t(`lp.${p}` as Key)}
               </button>
             );
@@ -642,15 +666,22 @@ export function Step3({ onBack }: { onBack: () => void }) {
       </div>
     );
 
+  const LAYERS = ["NASA POWER", "Sentinel-2", "MODIS", "SMAP", "SRTM", "ECMWF"];
   return (
-    <div className="ai-glow mx-auto max-w-[620px] rounded-[28px]">
-      <span className="ai-ring">
-        <i />
-      </span>
-      <span className="ai-halo">
-        <i />
-      </span>
-      <div className="rounded-[27px] bg-[var(--surface)] p-6" role="status" aria-live="polite">
+    <div className="mx-auto grid max-w-5xl gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start">
+      {w.polygon && (
+        <FieldSnapshot polygon={w.polygon} scan ratio={4 / 3}>
+          <div className="absolute top-3 left-3 flex max-w-[calc(100%-24px)] flex-wrap gap-1.5">
+            {LAYERS.map((l, i) => (
+              <span key={l} className={clsx("rounded-full px-2.5 py-1 text-[12px] font-semibold backdrop-blur-md transition-all duration-500", i <= Math.floor(elapsed / 2.5) ? "bg-white/90 text-[#142019]" : "bg-black/35 text-white/60")}>
+                {i <= Math.floor(elapsed / 2.5) && <Check size={11} className="mr-1 inline -translate-y-px" strokeWidth={3} />}
+                {l}
+              </span>
+            ))}
+          </div>
+        </FieldSnapshot>
+      )}
+      <div className="rounded-[24px] bg-[var(--surface)] p-6 shadow-[var(--shadow-card)]" role="status" aria-live="polite">
         <h2 className="flex items-center gap-2 text-[20px] font-semibold"><Satellite size={20} className="text-[var(--fg-3)]" /> {t("s3.title")}</h2>
         <ul className="mt-4 grid gap-2">
           {STEPS.map((k, i) => (

@@ -6,6 +6,7 @@ import type { ModelInfo } from "@/types/api";
 import { getModels } from "@/api/client";
 import { GLOSSARY } from "@/data/glossary";
 import { BacktestSection, NasaDataUsageTable, ValidationNotes } from "@/components/AboutValidation";
+import { Pipeline } from "@/components/Pipeline";
 import { useT } from "@/i18n";
 import { Card, SourceBadge } from "@/components/ui";
 
@@ -100,6 +101,9 @@ export default function About() {
               "TerraVision pulls NASA and partner-agency data for farmers, herders, land seekers and experts. For a field it computes history, climate risk, salinity and water need, then compares at least 3 rotation strategies with the current one. For a pasture it shows condition vs the 20-year norm, grazing capacity, heat stress and the nearest water. For land selection it compares 2-4 places by goal. Recommendations come from rules and scoring; an LLM only writes explanations. Every number shows its source.",
             )}
           </p>
+                  <div className="mt-6">
+            <Pipeline />
+          </div>
         </section>
         <section id="sources">
           <h2 className="mb-3 text-[22px] font-semibold tracking-[-0.02em]">{L("Ma'lumotlar manbalari", "Data sources")}</h2>

@@ -542,4 +542,9 @@ export const en: Record<keyof typeof uz, string> = {
   "tw.full": "Full screen",
   "tw.exit": "Close",
   "q.space": "From space",
+  "s2.yourField": "Your field",
+  "s2.d1": "NASA POWER: 20 years of daily climate",
+  "s2.d2": "Sentinel-2: field history since 2017",
+  "s2.d3": "FAO-56: water need of every rotation",
+  "s2.d4": "ECMWF: 7-day and 6-month outlook",
 };

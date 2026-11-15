@@ -1,19 +1,19 @@
 "use client";
 
 import { m } from "motion/react";
-import { ArrowRight, Beef, MapPin, Microscope, PencilRuler, PlayCircle, SlidersHorizontal, Sprout, Wheat } from "lucide-react";
+import { ArrowRight, Beef, MapPin, Microscope, PlayCircle, Wheat } from "lucide-react";
 import Link from "next/link";
 import { useT, type Key } from "@/i18n";
 import type { Profile } from "@/types/api";
 import { useMode, useProfile } from "@/store/platformStore";
 import { STATS } from "@/data/stats";
 import { HeroTwin } from "@/components/landing/HeroTwin";
+import { Pipeline } from "@/components/Pipeline";
 import { spring } from "@/components/ui";
 import { useRouter } from "next/navigation";
 
 const PROFILES: Profile[] = ["farmer", "herder", "land_seeker", "expert"];
 const ROLE_ICON = { farmer: Wheat, herder: Beef, land_seeker: MapPin, expert: Microscope } as const;
-const STEP_ICON = [PencilRuler, SlidersHorizontal, Sprout];
 const DATA = ["NASA POWER", "SMAP", "MODIS", "GPM IMERG", "SRTM", "Sentinel-2", "ERA5", "ECMWF SEAS5", "SoilGrids", "FAO-56"];
 
 export default function Landing() {
@@ -72,15 +72,9 @@ export default function Landing() {
       {/* how it works: one line of three verbs, not three cards */}
       <section className="border-t border-[var(--separator)] py-12">
         <h2 className="text-[24px] font-semibold tracking-[-0.02em]">{t("landing.how")}</h2>
-        <ol className="mt-6 grid gap-6 sm:grid-cols-3 sm:gap-10">
-          {STEP_ICON.map((Icon, i) => (
-            <li key={i} className="relative">
-              <Icon size={22} strokeWidth={1.8} className="text-[var(--accent)]" />
-              <b className="mt-3 block text-[17px] font-semibold tracking-[-0.01em]">{t(`landing.step${i + 1}` as "landing.step1")}</b>
-              <span className="mt-1 block max-w-[34ch] text-[14.5px] leading-relaxed text-[var(--fg-2)]">{t(`landing.step${i + 1}d` as "landing.step1d")}</span>
-            </li>
-          ))}
-        </ol>
+        <div className="mt-6">
+          <Pipeline />
+        </div>
       </section>
 
       {/* why it matters: figures inside sentences, each with its source */}

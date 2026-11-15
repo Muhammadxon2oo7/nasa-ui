@@ -460,3 +460,11 @@ html { caret-color: var(--accent-fill); accent-color: var(--accent-fill); scroll
 a { text-underline-offset: 3px; }
 
 [data-theme="dark"] { --brand-navy: #8FB4FF; --brand-green: #5FD07A; }
+
+/* satellite pass over the field while the analysis runs */
+.fs-scan { top: -6rem; background: linear-gradient(180deg, transparent, rgb(124 255 160 / 0.16) 70%, rgb(190 255 205 / 0.75) 96%, transparent); animation: fs-scan 2.6s cubic-bezier(.45,0,.25,1) infinite; }
+@keyframes fs-scan { from { top: -6rem; } to { top: 100%; } }
+.fs-outline { stroke-dasharray: 14 10; animation: fs-dash 1.2s linear infinite; }
+@keyframes fs-dash { to { stroke-dashoffset: -24; } }
+.pipe-flow { animation: fs-dash 0.9s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .fs-scan, .fs-outline, .pipe-flow { animation: none; } .fs-scan { display: none; } }
