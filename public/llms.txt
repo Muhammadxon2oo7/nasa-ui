@@ -1,0 +1,16 @@
+# TerraVision
+
+> Crop-rotation and water decision support for farms in Uzbekistan, built on NASA Earth observation data (SMAP soil moisture, MODIS/VIIRS vegetation, GPM/IMERG rainfall, NASA POWER climate, GIBS imagery). NASA Space Apps Challenge 2026, "Field Shift: Adapting Farms with NASA Data".
+
+## Pages
+
+- [Home](/): what the platform does, a 3D pilot field
+- [Analyze a field](/analyze): draw a field on the map, pick goals, get a 3-5 year rotation plan
+- [Demo results](/demo): ready-made analyses of real pilot fields
+- [Compare fields](/compare): rank several fields side by side
+- [About and data sources](/about): methods, datasets, limitations
+
+## Notes
+
+- Every number on a result page names its source dataset; missing data is shown as "unknown" with a reason, never guessed.
+- Languages: Uzbek (Latin and Cyrillic) and English.

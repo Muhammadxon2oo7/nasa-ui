@@ -375,7 +375,7 @@ const GIBS_LAYER: Record<Exclude<GibsId, "none">, { layer: string; tms: string; 
   lst: { layer: "MODIS_Terra_Land_Surface_Temp_Day", tms: "GoogleMapsCompatible_Level7", z: 7, attr: "NASA GIBS · MODIS LST" },
   smap: { layer: "SMAP_L4_Analyzed_Root_Zone_Soil_Moisture", tms: "GoogleMapsCompatible_Level6", z: 6, attr: "NASA GIBS · SMAP L4" },
   rain: { layer: "IMERG_Precipitation_Rate", tms: "GoogleMapsCompatible_Level6", z: 6, attr: "NASA GIBS · GPM IMERG" },
-  relief: { layer: "SRTM_Color_Index", tms: "GoogleMapsCompatible_Level8", z: 8, attr: "NASA GIBS · SRTM", fixed: true },
+  relief: { layer: "SRTM_Color_Index", tms: "GoogleMapsCompatible_Level12", z: 12, attr: "NASA GIBS · SRTM", fixed: true },
 };
 
 const LAYER_INFO: Record<Exclude<GibsId, "none">, { uz: [string, string, string]; en: [string, string, string]; res: string; cadence: "daily" | "8day" | "static" }> = {

@@ -38,7 +38,7 @@ function ProfileSwitcher({ compact }: { compact?: boolean }) {
   }, [open]);
   return (
     <div ref={ref} className="relative">
-      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="press flex h-10 items-center gap-1.5 rounded-full px-3 text-[13.5px] font-semibold hover:bg-[var(--surface)]/60">
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-haspopup="menu" aria-label={t(`pr.${profile}` as Key)} className="press flex h-10 items-center gap-1.5 rounded-full px-3 text-[13.5px] font-semibold hover:bg-[var(--surface)]/60">
         {(() => {
           const I = ROLE_ICON[profile];
           return <I size={17} strokeWidth={1.8} aria-hidden />;
@@ -124,10 +124,10 @@ export function Header() {
     <>
       <header className="pointer-events-none fixed inset-x-0 top-0 z-40 px-3 pt-[max(10px,env(safe-area-inset-top))] sm:px-5">
         <m.nav animate={{ scale: compact ? 0.96 : 1, y: compact ? -2 : 0 }} transition={spring} className="lg pointer-events-auto mx-auto flex h-14 max-w-6xl items-center gap-1 rounded-full pr-2 pl-2.5" aria-label="Main">
-          <Link href="/" className="press flex shrink-0 items-center gap-2 rounded-full py-1 pr-2 pl-1">
+          <Link href="/" aria-label="TerraVision" className="press flex shrink-0 items-center gap-2 rounded-full py-1 pr-2 pl-1">
             {/* eslint-disable-next-line @next/next/no-img-element -- static brand mark */}
             <img src="/brand/mark.png" alt="" width={50} height={30} className="h-[30px] w-auto" />
-            <span className="hidden text-[16.5px] font-bold tracking-[-0.025em] sm:inline" aria-label={t("brand")}>
+            <span className="hidden text-[16.5px] font-bold tracking-[-0.025em] sm:inline" aria-hidden>
               <span className="text-[var(--brand-navy)]">Terra</span>
               <span className="text-[var(--brand-green)]">Vision</span>
             </span>
@@ -158,7 +158,7 @@ export function Header() {
                 else setLang("uz");
               }}
               className="press flex h-10 min-w-10 items-center justify-center rounded-full px-2.5 text-[13px] font-semibold hover:bg-[var(--surface)]/60"
-              aria-label={lang === "en" ? "Language: English" : script === "cyrl" ? "Til: Ўзбекча (кирилл)" : "Til: O'zbekcha (lotin)"}
+              aria-label={lang === "en" ? "EN - Language: English" : script === "cyrl" ? "ЎЗ - Ўзбекча (кирилл)" : "UZ - O'zbekcha (lotin)"}
               title="O'zbekcha · Ўзбекча · English"
             >
               {lang === "en" ? "EN" : script === "cyrl" ? "ЎЗ" : "UZ"}

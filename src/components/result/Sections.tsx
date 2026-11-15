@@ -71,7 +71,7 @@ export function AnswerCard({ data, best, bestScore, water, onMore }: { data: Ana
           </dd>
           {diff < -300 && <dd className="text-[12.5px] font-semibold text-[var(--accent)] tnum">{L(`hozirgidan ${num(-diff)} kam`, `${num(-diff)} less than now`)}</dd>}
           {diff > 300 && <dd className="text-[12.5px] text-[var(--fg-3)] tnum">{L(`hozirgidan ${num(diff)} ko'p`, `${num(diff)} more than now`)}</dd>}
-          <WaterSupplyBadge data={data} />
+          <dd><WaterSupplyBadge data={data} /></dd>
         </div>
         <div className="rounded-2xl bg-[var(--surface-2)] px-3.5 py-2.5">
           <dt className="flex items-center gap-1.5 text-[12.5px] text-[var(--fg-3)]"><FlaskConical size={13} /> {L("Sho'rlanish", "Salinity")}</dt>

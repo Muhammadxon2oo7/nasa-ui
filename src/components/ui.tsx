@@ -25,7 +25,7 @@ export function Card({ children, className, id }: { children: ReactNode; classNa
 export function CardTitle({ children, info, source, className }: { children: ReactNode; info?: GlossaryKey; source?: string; className?: string }) {
   return (
     <div className={clsx("mb-3 flex flex-wrap items-center gap-x-2 gap-y-1", className)}>
-      <h3 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--fg)]">{children}</h3>
+      <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--fg)]">{children}</h2>
       {info && <InfoTooltip term={info} />}
       {source && <SourceBadge source={source} className="ml-auto" />}
     </div>

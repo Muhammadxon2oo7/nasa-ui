@@ -25,15 +25,15 @@ export default function Landing() {
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
       <section className="grid items-center gap-8 pt-6 pb-12 md:grid-cols-[1.05fr_0.95fr] md:gap-12 md:pt-14">
         <div>
-          <m.h1 initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="text-[clamp(34px,6vw,58px)] leading-[1.02] font-semibold tracking-[-0.035em] text-balance">
+          <m.h1 initial={{ y: 10 }} animate={{ y: 0 }} transition={spring} className="text-[clamp(34px,6vw,58px)] leading-[1.02] font-semibold tracking-[-0.035em] text-balance">
             {t("landing.title2")}
           </m.h1>
-          <m.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.06 }} className="mt-4 max-w-[52ch] text-[18px] leading-relaxed text-[var(--fg-2)]">
+          <m.p initial={{ y: 10 }} animate={{ y: 0 }} transition={{ ...spring, delay: 0.06 }} className="mt-4 max-w-[52ch] text-[18px] leading-relaxed text-[var(--fg-2)]">
             {t("landing.sub2")}
           </m.p>
           <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.12 }} className="mt-8">
             <p className="mb-3 text-[15px] font-medium text-[var(--fg-2)]">{t("landing.who")}</p>
-            <div className="grid gap-1.5 sm:grid-cols-2" role="list">
+            <div className="grid gap-1.5 sm:grid-cols-2">
               {PROFILES.map((p) => {
                 const Icon = ROLE_ICON[p];
                 const on = profile === p;
@@ -41,7 +41,6 @@ export default function Landing() {
                   <button
                     key={p}
                     type="button"
-                    role="listitem"
                     onClick={() => {
                       setProfile(p);
                       setMode(p === "expert" ? "expert" : "simple");

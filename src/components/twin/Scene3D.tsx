@@ -79,6 +79,10 @@ export default function Scene3D({ polygon, state, onReady, apiRef, autoOrbit = f
       div.style.cssText = "pointer-events:none;display:flex;flex-direction:column;align-items:center;padding:6px 12px;border-radius:14px;background:rgba(11,18,16,.62);color:#fff;backdrop-filter:blur(10px) saturate(1.4);-webkit-backdrop-filter:blur(10px) saturate(1.4);box-shadow:0 8px 24px -10px rgba(0,0,0,.5);white-space:nowrap;line-height:1.25";
       label.current = div;
       new maplibregl.Marker({ element: div, anchor: "bottom", offset: [0, -8] }).setLngLat(center).addTo(m);
+      // a visual label, not a control: drop the button role MapLibre adds to markers
+      div.removeAttribute("role");
+      div.removeAttribute("aria-label");
+      div.removeAttribute("tabindex");
       ready.current = true;
       apply();
       onReady?.();

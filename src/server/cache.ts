@@ -3,7 +3,9 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-const DIR = path.join(process.cwd(), process.env.CACHE_DIR ?? ".cache");
+// Serverless hosts (Vercel) only allow writes under /tmp; the ignore hint keeps the tracer
+// from bundling the whole project into the server function.
+const DIR = process.env.CACHE_DIR ?? (process.env.VERCEL ? "/tmp/terravision-cache" : path.join(/* turbopackIgnore: true */ process.cwd(), ".cache"));
 
 export const hash = (v: unknown) => createHash("sha256").update(JSON.stringify(v)).digest("hex").slice(0, 24);
 
