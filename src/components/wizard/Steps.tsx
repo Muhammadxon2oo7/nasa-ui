@@ -4,6 +4,7 @@ import { clsx } from "clsx";
 import { AnimatePresence, m } from "motion/react";
 import { Beef, Check, ChevronRight, CloudSun, Coins, Crosshair, Droplets, FileUp, FlaskConical, Leaf, Sprout, Timer, Wheat, Loader2, MapPin, Pencil, RotateCcw, Satellite, Search, SquarePen, Thermometer, Trash2 } from "lucide-react";
 import { FieldSnapshot } from "../FieldSnapshot";
+import { canonicalRequest } from "@/api/fastapi";
 import { useJob } from "@/store/jobStore";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -629,8 +630,13 @@ export function Step3({ onBack }: { onBack: () => void }) {
       placeType: w.placeType ?? "polygon",
       livestock: modules.includes("livestock") ? (w.livestock ?? DEFAULT_LS) : undefined,
     };
+    // Nothing field-specific given (no rotation, limits or lab data): ask for the canonical request,
+    // the same one step 1 already started (and the demo cache holds). The farmer's priorities and
+    // irrigation method are kept in fs:req and applied by the result page, which re-weights in the browser.
+    const plain = w.rotation.every((r) => !r.crop) && !w.water.limitM3PerHa && !w.water.appliedM3PerHa && w.soil?.eceDsM == null && w.soil?.humusPct == null && w.soil?.ecwDsM == null;
+    const backendReq: AnalyzeRequest = plain && profile !== "herder" ? { ...canonicalRequest(w.polygon, lang === "en" ? "en" : "uz"), placeType: req.placeType } : req;
     let handedOver = false;
-    analyzeField(req, ctrl.signal, (p) => {
+    analyzeField(backendReq, ctrl.signal, (p) => {
       // the backend's first answer (~4 s): open the result now, the page keeps polling the job
       handedOver = true;
       saveAnalysis(p);

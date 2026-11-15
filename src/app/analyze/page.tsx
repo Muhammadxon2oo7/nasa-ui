@@ -2,6 +2,7 @@
 
 import { AnimatePresence, m } from "motion/react";
 import { useWizard } from "@/store/wizardStore";
+import { useLang } from "@/i18n";
 import { StepIndicator, Step1, Step2, Step3 } from "@/components/wizard/Steps";
 import { spring } from "@/components/ui";
 
@@ -25,7 +26,7 @@ export default function Analyze() {
                 // Warm the backend while the farmer answers step 2: the satellite part (GEE) is keyed
                 // by the polygon and cached, so the real analysis in step 3 starts from a warm cache.
                 const pg = useWizard.getState().polygon;
-                if (pg) void import("@/api/fastapi").then((f) => f.prewarmFastApi(pg)).catch(() => {});
+                if (pg) void import("@/api/fastapi").then((f) => f.prewarmFastApi(pg, useLang.getState().lang === "en" ? "en" : "uz")).catch(() => {});
                 go(2);
               }}
             />

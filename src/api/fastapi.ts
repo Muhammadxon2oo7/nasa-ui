@@ -42,14 +42,7 @@ export const LIVE_DEMOS: Record<string, { lon: number; lat: number; ring: number
 export function liveDemoRequest(name: string, lang: "uz" | "en"): AnalyzeRequest | null {
   const d = LIVE_DEMOS[name];
   if (!d) return null;
-  return {
-    polygon: { type: "Polygon", coordinates: [d.ring] },
-    rotation: [2023, 2024, 2025].map((year) => ({ year, crop: null })),
-    priorities: ["water", "salinity"],
-    water: { availability: "medium", method: "furrow" },
-    profile: "farmer",
-    lang,
-  };
+  return canonicalRequest({ type: "Polygon", coordinates: [d.ring] }, lang);
 }
 
 export function fromBackend(b: Any, req?: AnalyzeRequest): AnalyzeResponse {
@@ -360,10 +353,17 @@ export async function analyzeFastApi(req: AnalyzeRequest, signal?: AbortSignal, 
     job.set({ jobId: j.jobId, stage: "queued", progress: 0 });
     const t0 = Date.now();
     let sentPartial = false;
+    let hiccups = 0;
     for (;;) {
       await sleep(sentPartial ? 2500 : 1500, signal);
       const r = await fetch(`/py/api/jobs/${encodeURIComponent(j.jobId)}`, { signal });
-      const q: Any = await r.json().catch(() => ({}));
+      const q: Any = await r.json().catch(() => null);
+      // a gateway hiccup (502/503/504 or an HTML error page) is not a failed job: keep polling
+      if (!q || r.status >= 502) {
+        if (++hiccups > 5) throw apiError({ code: "gateway" }, r.status, lang);
+        continue;
+      }
+      hiccups = 0;
       if (!r.ok) throw apiError(q, r.status, lang);
       job.set({ stage: q.stage ?? null, progress: typeof q.progress === "number" ? q.progress : null });
       if (q.partial && !sentPartial && onPartial && q.status !== "done") {
@@ -382,11 +382,18 @@ export async function analyzeFastApi(req: AnalyzeRequest, signal?: AbortSignal, 
 /** Keep polling a job started elsewhere (wizard handed over a preliminary result). */
 export async function resumeJobFastApi(jobId: string, lang: "uz" | "en", signal?: AbortSignal): Promise<AnalyzeResponse | null> {
   const t0 = Date.now();
+  let hiccups = 0;
   const { useJob } = await import("@/store/jobStore");
   try {
     for (;;) {
       const r = await fetch(`/py/api/jobs/${encodeURIComponent(jobId)}`, { signal });
-      const q: Any = await r.json().catch(() => ({}));
+      const q: Any = await r.json().catch(() => null);
+      if (!q || r.status >= 502) {
+        if (++hiccups > 5) return null;
+        await sleep(2500, signal);
+        continue;
+      }
+      hiccups = 0;
       if (!r.ok) return null;
       useJob.getState().set({ jobId, stage: q.stage ?? null, progress: typeof q.progress === "number" ? q.progress : null });
       if (q.status === "done" && q.result) return fromBackend(dashes(q.result), { lang } as AnalyzeRequest);
@@ -403,12 +410,28 @@ export function sendFeedbackFastApi(body: { fieldId?: string; kind: "rating" | "
   void fetch("/py/api/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), keepalive: true }).catch(() => {});
 }
 
-/** Fire-and-forget: start the backend job for this polygon so GEE results are cached by step 3. */
-export async function prewarmFastApi(polygon: GeoJSON.Polygon) {
+/**
+ * The one backend request used for a field when the farmer gave nothing field-specific (no rotation,
+ * limits or lab data). Priorities and irrigation method only re-weight scores, which the result page
+ * does in the browser, so step 1 (prewarm), step 3 and the demo cache all share one backend job.
+ */
+export function canonicalRequest(polygon: GeoJSON.Polygon, lang: "uz" | "en"): AnalyzeRequest {
+  return {
+    polygon,
+    rotation: [2023, 2024, 2025].map((year) => ({ year, crop: null })),
+    priorities: ["water", "salinity"],
+    water: { availability: "medium", method: "furrow" },
+    profile: "farmer",
+    lang,
+  };
+}
+
+/** Fire-and-forget: start exactly the job step 3 will ask for, while the farmer answers step 2. */
+export async function prewarmFastApi(polygon: GeoJSON.Polygon, lang: "uz" | "en" = "uz") {
   await fetch("/py/api/analyze?async=true", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ polygon, rotation: [], priorities: ["water", "salinity"], water: { availability: "medium", method: "furrow" }, lang: "uz" }),
+    body: JSON.stringify(toBackendRequest(canonicalRequest(polygon, lang))),
     keepalive: true,
   });
 }
