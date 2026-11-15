@@ -33,17 +33,17 @@ export function toBackendRequest(req: AnalyzeRequest): Any {
 }
 
 /** Backend's pre-cached demo fields (FRONTEND_UCHUN_API.md §0): fast (cache) and real. */
-export const LIVE_DEMOS: Record<string, { lon: number; lat: number; uz: string; en: string }> = {
-  paxta: { lon: 68.7376, lat: 40.5609, uz: "Paxta dalasi", en: "Cotton field" },
-  "paxta-bugdoy": { lon: 69.0353, lat: 40.4002, uz: "Paxta-bug'doy dalasi", en: "Cotton-wheat field" },
-  beda: { lon: 68.8453, lat: 40.4775, uz: "Beda dalasi", en: "Alfalfa field" },
+/** Backend demo fields, boundaries digitised from Esri World Imagery (z17) along real ditches and tree lines. */
+export const LIVE_DEMOS: Record<string, { lon: number; lat: number; ring: number[][]; uz: string; en: string }> = {
+  paxta: { lon: 68.73707, lat: 40.56064, ring: [[68.73211, 40.56228], [68.74173, 40.56168], [68.742, 40.55912], [68.73275, 40.55943], [68.73211, 40.56228]], uz: "Paxta dalasi", en: "Cotton field" },
+  "paxta-bugdoy": { lon: 69.03607, lat: 40.40041, ring: [[69.03531, 40.40136], [69.03728, 40.40108], [69.0368, 40.39944], [69.03488, 40.39976], [69.03531, 40.40136]], uz: "Paxta-bug'doy dalasi", en: "Cotton-wheat field" },
+  beda: { lon: 68.84523, lat: 40.47846, ring: [[68.84441, 40.48041], [68.84626, 40.48041], [68.84606, 40.47652], [68.84419, 40.47652], [68.84441, 40.48041]], uz: "Beda dalasi", en: "Alfalfa field" },
 };
 export function liveDemoRequest(name: string, lang: "uz" | "en"): AnalyzeRequest | null {
   const d = LIVE_DEMOS[name];
   if (!d) return null;
-  const dx = 0.0012, dy = 0.0009;
   return {
-    polygon: { type: "Polygon", coordinates: [[[d.lon - dx, d.lat - dy], [d.lon + dx, d.lat - dy], [d.lon + dx, d.lat + dy], [d.lon - dx, d.lat + dy], [d.lon - dx, d.lat - dy]]] },
+    polygon: { type: "Polygon", coordinates: [d.ring] },
     rotation: [2023, 2024, 2025].map((year) => ({ year, crop: null })),
     priorities: ["water", "salinity"],
     water: { availability: "medium", method: "furrow" },
@@ -360,6 +360,16 @@ export async function analyzeFastApi(req: AnalyzeRequest, signal?: AbortSignal):
   } finally {
     useJob.getState().reset();
   }
+}
+
+/** Fire-and-forget: start the backend job for this polygon so GEE results are cached by step 3. */
+export async function prewarmFastApi(polygon: GeoJSON.Polygon) {
+  await fetch("/py/api/analyze?async=true", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ polygon, rotation: [], priorities: ["water", "salinity"], water: { availability: "medium", method: "furrow" }, lang: "uz" }),
+    keepalive: true,
+  });
 }
 
 /** A saved analysis by id (QR passport opened on another phone). */
