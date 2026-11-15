@@ -136,7 +136,7 @@ export function Step1({ onNext }: { onNext: () => void }) {
   return (
     <div className="grid gap-3 lg:grid-cols-[1fr_360px]">
       <div className="relative h-[62dvh] min-h-[420px] overflow-hidden rounded-[28px] shadow-[var(--shadow-card)] lg:h-[calc(100dvh-210px)]">
-        <FieldMap value={polygon} onChange={(p) => setPolygon(p, null)} basemap={basemap} apiRef={api} onMapClick={inputMode === "point" ? (la, lo) => setPolygon(circle(la, lo, 200), null, "point_buffer") : undefined} />
+        <FieldMap navClassName="top-[118px] right-3 sm:top-3" value={polygon} onChange={(p) => setPolygon(p, null)} basemap={basemap} apiRef={api} onMapClick={inputMode === "point" ? (la, lo) => setPolygon(circle(la, lo, 200), null, "point_buffer") : undefined} />
         {/* search */}
         <div className="absolute top-3 right-3 left-3 z-[500] sm:right-auto sm:w-[360px]">
           <div className="lg flex h-11 items-center gap-2 rounded-full px-3.5">

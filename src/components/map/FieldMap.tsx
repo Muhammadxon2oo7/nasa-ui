@@ -2,12 +2,33 @@
 
 import "leaflet/dist/leaflet.css";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { LocateFixed } from "lucide-react";
+import { useLang } from "@/i18n";
 import type * as Leaflet from "leaflet";
 
 export const ESRI = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
 export const OSM = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 const GREEN = "#43A047";
+
+// Uzbekistan (+ margin): the map opens on the whole country and cannot drift away from it
+const UZ_BOUNDS: [[number, number], [number, number]] = [[36.6, 55.4], [46.1, 73.7]];
+/** Regional centres over the irrigated belts (zoom 10 shows individual fields). */
+export const REGIONS: { id: string; uz: string; en: string; c: [number, number] }[] = [
+  { id: "qq", uz: "Qoraqalpog'iston", en: "Karakalpakstan", c: [42.45, 59.6] },
+  { id: "xo", uz: "Xorazm", en: "Khorezm", c: [41.45, 60.65] },
+  { id: "bu", uz: "Buxoro", en: "Bukhara", c: [39.78, 64.42] },
+  { id: "na", uz: "Navoiy", en: "Navoi", c: [40.1, 65.38] },
+  { id: "sa", uz: "Samarqand", en: "Samarkand", c: [39.65, 66.95] },
+  { id: "qa", uz: "Qashqadaryo", en: "Kashkadarya", c: [38.85, 65.8] },
+  { id: "su", uz: "Surxondaryo", en: "Surkhandarya", c: [37.85, 67.55] },
+  { id: "ji", uz: "Jizzax", en: "Jizzakh", c: [40.12, 67.85] },
+  { id: "si", uz: "Sirdaryo", en: "Syrdarya", c: [40.5, 68.75] },
+  { id: "to", uz: "Toshkent", en: "Tashkent", c: [41.05, 69.4] },
+  { id: "na2", uz: "Namangan", en: "Namangan", c: [41.0, 71.65] },
+  { id: "an", uz: "Andijon", en: "Andijan", c: [40.78, 72.35] },
+  { id: "fa", uz: "Farg'ona", en: "Fergana", c: [40.4, 71.78] },
+];
 
 export type MapApi = { flyTo: (lat: number, lon: number, z?: number) => void; startDraw: () => void; toggleEdit: () => void; clear: () => void };
 
@@ -22,6 +43,8 @@ export default function FieldMap({
   onMapClick,
   extra,
   fitExtra,
+  nav,
+  navClassName,
 }: {
   value: GeoJSON.Polygon | null;
   onChange?: (p: GeoJSON.Polygon | null) => void;
@@ -33,7 +56,11 @@ export default function FieldMap({
   extra?: { polygons?: { coords: GeoJSON.Polygon; label: string; color: string }[]; markers?: { lat: number; lon: number; label: string; color: string }[]; lines?: [number, number][][] };
   /** fit the view to the extra layers (+ the main polygon) whenever they change */
   fitExtra?: boolean;
+  /** region picker + "my location" (defaults to on for editable maps) */
+  nav?: boolean;
+  navClassName?: string;
 }) {
+  nav = nav ?? !readOnly;
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<Leaflet.Map | null>(null);
   const L = useRef<typeof Leaflet | null>(null);
@@ -54,7 +81,8 @@ export default function FieldMap({
       if (!readOnly) await import("@geoman-io/leaflet-geoman-free");
       if (dead || !el.current) return;
       L.current = Lmod;
-      const m = Lmod.map(el.current, { center: [41.3, 64.5], zoom: 6, zoomControl: false, attributionControl: true });
+      const m = Lmod.map(el.current, { zoomControl: false, attributionControl: true, maxBounds: UZ_BOUNDS, maxBoundsViscosity: 0.9, minZoom: 5 });
+      m.fitBounds(UZ_BOUNDS, { padding: [8, 8] });
       Lmod.control.zoom({ position: "bottomright" }).addTo(m);
       map.current = m;
       setBase(basemap);
@@ -157,5 +185,72 @@ export default function FieldMap({
     shape.current?.bringToFront();
   }, [overlay?.url, overlay?.opacity]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return <div ref={el} className="h-full w-full" role="region" aria-label="Map" />;
+  return (
+    <div className="relative h-full w-full">
+      <div ref={el} className="h-full w-full" role="region" aria-label="Map" />
+      {nav && <MapNav map={map} L={L} className={navClassName} />}
+    </div>
+  );
+}
+
+/** Jump to a region or to the user's own position — nobody should hunt for Uzbekistan by hand. */
+function MapNav({ map, L, className }: { map: React.MutableRefObject<Leaflet.Map | null>; L: React.MutableRefObject<typeof Leaflet | null>; className?: string }) {
+  const lang = useLang((s) => s.lang);
+  const T = (uz: string, en: string) => (lang === "en" ? en : uz);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const here = useRef<Leaflet.Layer | null>(null);
+  const fly = (lat: number, lon: number, z: number) => map.current?.flyTo([lat, lon], z, { duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1.2 });
+  const locate = () => {
+    if (!("geolocation" in navigator)) return setMsg(T("Brauzer joylashuvni aniqlay olmaydi", "This browser cannot locate you"));
+    setBusy(true);
+    setMsg(null);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setBusy(false);
+        const { latitude: la, longitude: lo } = coords;
+        if (la < UZ_BOUNDS[0][0] || la > UZ_BOUNDS[1][0] || lo < UZ_BOUNDS[0][1] || lo > UZ_BOUNDS[1][1]) return setMsg(T("Siz O'zbekistondan tashqaridasiz. Viloyatni ro'yxatdan tanlang", "You are outside Uzbekistan. Pick a region from the list"));
+        fly(la, lo, 15);
+        const Lm = L.current, m = map.current;
+        if (Lm && m) {
+          here.current?.remove();
+          here.current = Lm.circleMarker([la, lo], { radius: 8, color: "#fff", weight: 3, fillColor: "#1E88E5", fillOpacity: 1 }).addTo(m).bindTooltip(T("Siz shu yerdasiz", "You are here"), { direction: "top" });
+        }
+      },
+      (e) => {
+        setBusy(false);
+        setMsg(e.code === 1 ? T("Joylashuvga ruxsat berilmadi. Brauzer sozlamalarida ruxsat bering yoki viloyatni tanlang", "Location permission denied. Allow it in the browser or pick a region") : T("Joylashuv aniqlanmadi. Viloyatni tanlang", "Could not get your location. Pick a region"));
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
+    );
+  };
+  return (
+    <div className={`absolute z-[500] flex flex-col items-end gap-1.5 ${className ?? "top-3 right-3"}`}>
+      <div className="lg flex items-center gap-1 rounded-full p-1">
+        <label className="sr-only" htmlFor="region-pick">{T("Viloyat", "Region")}</label>
+        <select
+          id="region-pick"
+          defaultValue=""
+          onChange={(e) => {
+            const r = REGIONS.find((x) => x.id === e.target.value);
+            if (r) fly(r.c[0], r.c[1], 10);
+          }}
+          className="h-9 max-w-[150px] cursor-pointer rounded-full bg-transparent pr-1 pl-3 text-[13.5px] font-semibold text-[var(--fg)] outline-none"
+        >
+          <option value="" disabled>
+            {T("Viloyat…", "Region…")}
+          </option>
+          {REGIONS.map((r) => (
+            <option key={r.id} value={r.id}>
+              {lang === "en" ? r.en : r.uz}
+            </option>
+          ))}
+        </select>
+        <button type="button" onClick={locate} disabled={busy} className="press flex h-9 items-center gap-1.5 rounded-full bg-[var(--fg)] px-3 text-[13px] font-semibold text-[var(--bg)] disabled:opacity-60">
+          <LocateFixed size={15} className={busy ? "animate-pulse" : ""} /> {T("Joylashuvim", "My location")}
+        </button>
+      </div>
+      {msg && <p className="lg max-w-[280px] rounded-2xl px-3 py-2 text-right text-[12.5px] font-medium text-[var(--level-high-fg)]">{msg}</p>}
+    </div>
+  );
 }
